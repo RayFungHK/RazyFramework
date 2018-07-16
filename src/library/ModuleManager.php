@@ -39,10 +39,10 @@ namespace Core
         $subModuleFolder = $moduleFolder . $node . DIRECTORY_SEPARATOR;
   			if (is_dir($subModuleFolder)) {
           // Search the setting file
-  				if (file_exists($subModuleFolder . 'setting.php')) {
+  				if (file_exists($subModuleFolder . 'config.php')) {
             try {
               // Create Module Package and load the setting
-              $modulePackage = new ModulePackage($subModuleFolder, require $subModuleFolder . 'setting.php');
+              $modulePackage = new ModulePackage($subModuleFolder, require $subModuleFolder . 'config.php');
               $this->register($modulePackage);
             } catch (Exception $e) {
   						// Error: Fail to load module file

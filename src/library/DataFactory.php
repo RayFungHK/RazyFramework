@@ -65,7 +65,7 @@ namespace Core
 		public function __invoke($index)
 		{
       $this->pointer = $index;
-      return $this->convertor->setEngine($this[$index], $this->reflection()->bindTo($this));
+      return $this->convertor->setPointer($this[$index], $this->reflection()->bindTo($this));
 		}
 
     private function reflection()
@@ -75,6 +75,7 @@ namespace Core
           $this[$this->pointer] = $value;
         };
       }
+
       return $this->reflection;
     }
 	}

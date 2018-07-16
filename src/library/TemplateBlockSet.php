@@ -4,6 +4,7 @@ namespace Core
   class TemplateBlockSet extends \ArrayObject
   {
     static private $filterMapping = array();
+
     public function __construct($blockList)
     {
       parent::__construct((is_array($blockList)) ? $blockList : [$blockList]);

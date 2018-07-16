@@ -12,14 +12,13 @@ namespace Core
   	private $methodMapping = array();
     private $controllerList = array();
 
-  	public function __construct($modulePath, array $settings)
+  	public function __construct($modulePath, $settings)
     {
       $this->moduleRoot = $modulePath;
       $this->methodMapping = array(
         'route' => array(),
         'command' => array(),
-        'event' => array(),
-        'cli' => array()
+        'event' => array()
       );
 
       if (isset($settings['module_code']) && trim($settings['module_code'])) {
@@ -65,14 +64,6 @@ namespace Core
   			foreach ($settings['event'] as $eventName => $funcName) {
           if (!$this->parseMethodName($eventName, $funcName, 'event')) {
   					new ThrowError('ModulePackage', '3003', 'Invalid event\'s class mapping format');
-  				}
-  			}
-  		}
-
-      if (isset($settings['cli']) && is_array($settings['cli'])) {
-  			foreach ($settings['cli'] as $commandName => $funcName) {
-          if (!$this->parseMethodName($commandName, $funcName, 'cli')) {
-  					new ThrowError('ModulePackage', '3004', 'Invalid cli\'s class mapping format');
   				}
   			}
   		}
@@ -213,33 +204,6 @@ namespace Core
 			}
       // Pass all arguments to routed method
 			return call_user_func_array(array($moduleController, $funcName), $args);
-    }
-
-    public function command($commandMethod, $args = array())
-    {
-      $moduleController = null;
-
-      // If method route mapping matched, return the contoller
-      if (isset($this->methodMapping['cli'][$commandMethod])) {
-        list($className, $funcName) = explode('.', $this->methodMapping['cli'][$commandMethod]);
-        $moduleController = $this->getController($className);
-      } else {
-        return false;
-      }
-
-      // Check the methed is callable or not, protected and private method is not executeable
-      if (method_exists($moduleController, $funcName)) {
-        // Method Reflection, get the method type
-        $reflection = new \ReflectionMethod($moduleController, $funcName);
-        if (!$reflection->isPublic()) {
-          // Error: Controller function not callable
-          return false;
-        }
-      }
-
-      // Pass all arguments to routed method
-      call_user_func_array(array($moduleController, $funcName), $args);
-      return true;
     }
 
   	private function getController($className)

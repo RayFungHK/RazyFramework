@@ -78,6 +78,7 @@ namespace Core
           'opcode' => null
         );
       }
+
       $firstByte = sprintf('%08b', ord($data[0]));
       $maskedByte = sprintf('%08b', ord($data[1]));
 

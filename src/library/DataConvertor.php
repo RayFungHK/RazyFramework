@@ -7,13 +7,14 @@ namespace Core
     protected $object = '';
     protected $reflection = '';
 
-    public function setEngine($value, $reflection)
+    public function setPointer($value, $reflection)
     {
       // Create an object for closure binding
   		$this->object = (object) [
         'value' => $value,
         'dataType' => strtolower(gettype($value)),
       ];
+
       $this->reflection = $reflection;
 
       return $this;
