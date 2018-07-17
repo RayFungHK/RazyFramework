@@ -9,7 +9,7 @@ return [
     '(:any)' => 'example.main'
   ),
   'callable' => array(
-    'method' => 'example.method',
+    'getIP' => 'example.getIP',
     'onMessage' => 'example.onMessage'
   )
 ];

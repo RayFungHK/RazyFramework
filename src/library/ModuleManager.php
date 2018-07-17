@@ -78,20 +78,6 @@ namespace Core
   		}
   	}
 
-    public function cli($command, $args = array())
-    {
-      $command = trim($command);
-      list($moduleName, $funcName) = explode('.', $command);
-
-      if ($moduleName && $funcName) {
-        if (isset($this->moduleRegistered[$moduleName])) {
-          return $this->moduleRegistered[$moduleName]->command($funcName, $args);
-        }
-      }
-
-      return false;
-    }
-
     public function trigger()
     {
       $args = func_get_args();
@@ -128,13 +114,13 @@ namespace Core
   	public function route($path)
     {
   		if (count($this->remapMapping)) {
-        // Sort the remap path list by nearest root
+        // Sort the remap path list, the deepest route first
   			if (!$this->remapSorted) {
   				uksort($this->remapMapping, function($path_a, $path_b) {
   					$count_a = substr_count($path_a, '/');
   					$count_b = substr_count($path_b, '/');
   			    if ($count_a == $count_b) {
-  			        return 0;
+              return 0;
   			    }
   			    return ($count_a < $count_b) ? 1 : -1;
     			});
@@ -154,7 +140,7 @@ namespace Core
   					$this->routeArguments = $args;
   					$this->routeModule = $module;
 
-            // Execute and pass the arguments, if no route mapping was matched
+            // Execute and pass the arguments to module
   					if ($module->execute($args)) {
   						return true;
   					}

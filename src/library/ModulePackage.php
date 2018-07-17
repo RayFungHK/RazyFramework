@@ -9,13 +9,14 @@ namespace Core
   	private $version = '';
   	private $remapPath = '';
     private $routeName = '';
-  	private $methodMapping = array();
+  	private $routeMapping = array();
+  	private $callableList = array();
     private $controllerList = array();
 
   	public function __construct($modulePath, $settings)
     {
       $this->moduleRoot = $modulePath;
-      $this->methodMapping = array(
+      $this->callableList = array(
         'route' => array(),
         'command' => array(),
         'event' => array()
@@ -40,10 +41,11 @@ namespace Core
       }
 
   		if (isset($settings['route']) && is_array($settings['route'])) {
-  			foreach ($settings['route'] as $mappingName => $funcName) {
-          if (!$this->parseMethodName($mappingName, $funcName, 'route')) {
+  			foreach ($settings['route'] as $routeName => $namespace) {
+          if (!$this->parseMethodName($routeName, $namespace)) {
             new ThrowError('ModulePackage', '3001', 'Invalid route\'s class mapping format');
           }
+          $this->routeMapping[$routeName] = $namespace;
   			}
 
   			// If the remap parameter is not set, set the remap path by module code
@@ -52,31 +54,24 @@ namespace Core
   			}
   		}
 
-  		if (isset($settings['command']) && is_array($settings['command'])) {
-  			foreach ($settings['command'] as $commandName => $funcName) {
-          if (!$this->parseMethodName($commandName, $funcName, 'command')) {
-  					new ThrowError('ModulePackage', '3002', 'Invalid command\'s class mapping format');
+      // Add callable method into whitelist
+  		if (isset($settings['callable']) && is_array($settings['callable'])) {
+  			foreach ($settings['callable'] as $commandName => $namespace) {
+          if (!$this->parseMethodName($commandName, $namespace)) {
+  					new ThrowError('ModulePackage', '3002', 'Cannot add ' . $funcName . ' to whitelist.');
   				}
-  			}
-  		}
-
-  		if (isset($settings['event']) && is_array($settings['event'])) {
-  			foreach ($settings['event'] as $eventName => $funcName) {
-          if (!$this->parseMethodName($eventName, $funcName, 'event')) {
-  					new ThrowError('ModulePackage', '3003', 'Invalid event\'s class mapping format');
-  				}
+          $this->callableList[$routeName] = $namespace;
   			}
   		}
     }
 
-    private function parseMethodName($mappingName, $funcName, $mapping)
+    private function parseMethodName($routeName, $namespace)
     {
-      $mappingName = trim($mappingName);
-      $funcName = trim($funcName);
+      $routeName = trim($routeName);
+      $funcName = trim($namespace);
 
-      if ($mappingName && $funcName) {
-        if (preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+\.[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+$/', $funcName)) {
-          $this->methodMapping[$mapping][$mappingName] = $funcName;
+      if ($routeName && $namespace) {
+        if (preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+\.[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+$/', $namespace)) {
           return true;
         }
       }
@@ -105,27 +100,22 @@ namespace Core
   	public function execute($args)
     {
   		$moduleController = null;
-      $mappingName = '';
+      $routeName = '';
       // Search method route if there is at least one argument provided
-  		if (count($args)) {
-        // Get the route name from first element of arguments
-  			$mappingName = $args[0];
-      } else {
-        $mappingName = '(:root)';
-      }
+  		$routeName = (count($args)) ? $args[0] : '(:root)';
 
       // If method route mapping matched, return the contoller
-			if (isset($this->methodMapping['route'][$mappingName])) {
+			if (isset($this->routeMapping[$routeName])) {
 				$method = array_shift($args);
-				list($className, $funcName) = explode('.', $this->methodMapping['route'][$mappingName]);
+				list($className, $funcName) = explode('.', $this->routeMapping[$routeName]);
 				$moduleController = $this->getController($className);
 			} else {
+        $routeName = '(:any)';
         // If no method route matched, re-route all argument to (:any).
-        if (isset($this->methodMapping['route']['(:any)'])) {
-  				list($className, $funcName) = explode('.', $this->methodMapping['route']['(:any)']);
+        if (isset($this->routeMapping['(:any)'])) {
+  				list($className, $funcName) = explode('.', $this->routeMapping['(:any)']);
   				$moduleController = $this->getController($className);
   			}
-        $mappingName = '(:any)';
 
         if (!$moduleController) {
           // No (:any) route exists, return 404 not found
@@ -145,7 +135,7 @@ namespace Core
 			}
 
       // Set the matched mapping name as route name
-      $this->routeName = $mappingName;
+      $this->routeName = $routeName;
 
       // Pass all arguments to routed method
 			call_user_func_array(array($moduleController, $funcName), $args);
@@ -160,8 +150,8 @@ namespace Core
 
   	public function invoke($event, $args)
     {
-  		if (isset($this->methodMapping['event'][$event])) {
-  			list($className, $funcName) = explode('.', $this->methodMapping['event'][$event]);
+  		if (isset($this->callableList['event'][$event])) {
+  			list($className, $funcName) = explode('.', $this->callableList['event'][$event]);
   			if (!($moduleController = $this->getController($className))) {
   				// Error: Controller Not Found [Class]
   				new ThrowError('ModulePackage', '4002', 'Controller Not Found [Class]');
@@ -186,8 +176,8 @@ namespace Core
   		$moduleController = null;
 
       // If method route mapping matched, return the contoller
-			if (isset($this->methodMapping['command'][$commandMethod])) {
-				list($className, $funcName) = explode('.', $this->methodMapping['command'][$commandMethod]);
+			if (isset($this->callableList['command'][$commandMethod])) {
+				list($className, $funcName) = explode('.', $this->callableList['command'][$commandMethod]);
 				$moduleController = $this->getController($className);
 			} else {
         new ThrowError('ModulePackage', '3001', 'Command not found');
