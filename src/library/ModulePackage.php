@@ -30,7 +30,9 @@ namespace Core
   		}
 
   		if (isset($settings['remap']) && trim($settings['remap'])) {
-  			$this->remapPath = rtrim(preg_replace('/[\/\\\\]+/', '/', '/' . $settings['remap']), '/') . '/';
+  			$this->remapPath = preg_replace('/[\/\\\\]+/', '/', '/' . $settings['remap'] . '/');
+        // Replace $1 as module code
+        $this->remapPath = str_replace('$1', $this->moduleCode, $this->remapPath);
   		} else {
         $this->remapPath = '/' . $this->moduleCode . '/';
       }
@@ -95,9 +97,7 @@ namespace Core
   	public function route($args)
     {
   		$moduleController = null;
-      $routeName = '';
-      // Search method route if there is at least one argument provided
-  		$routeName = (count($args)) ? $args[0] : '(:root)';
+  		$routeName = (count($args)) ? $args[0] : '(:any)';
 
       // If method route mapping matched, return the contoller
 			if (isset($this->routeMapping[$routeName])) {

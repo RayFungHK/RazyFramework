@@ -113,7 +113,7 @@ namespace Core
 
   	public function route($path)
     {
-      $path = '/' . trim(preg_replace('/[\\\\\/]+/', '/', trim($path)), '\\\/');
+      $path = preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
   		if (count($this->remapMapping)) {
         // Sort the remap path list, the deepest route first
   			if (!$this->remapSorted) {

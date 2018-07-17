@@ -5,9 +5,7 @@ namespace Module
   {
     public function main()
     {
-      echo 'Main Route';
-      $this->manager->trigger('onMessage');
-      echo $this->manager->execute('example.method');
+      $this->loadview('main', true);
     }
 
     public function reroute()

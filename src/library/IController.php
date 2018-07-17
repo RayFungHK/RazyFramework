@@ -61,6 +61,23 @@ namespace Core
       $closure->bindTo($this, get_class($this));
       return call_user_func_array($closure, $arguments);
     }
+
+    public final function loadview($filepath, $moduleview = false)
+    {
+      // If there is no extension provided, default as .tpl
+      if (!preg_match('/\.[a-z]+$/', $filepath)) {
+        $filepath .= '.tpl';
+      }
+
+      $root = (!$moduleview) ? SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : $this->module->getModuleRoot() . 'view' . DIRECTORY_SEPARATOR;
+      $tplManager = new TemplateManager($root . $filepath, $this->module->getCode());
+      $tplManager->globalAssign(array(
+        'view_path' => $root
+      ));
+      $tplManager->addToQueue($this->module->getCode());
+
+      return $tplManager;
+    }
   }
 }
 ?>
