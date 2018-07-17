@@ -20,14 +20,14 @@ namespace Core
   		if (self::$instance === NULL) {
   			self::$instance = $this;
         $moduleFolder = SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'module' . DIRECTORY_SEPARATOR;
-  			$this->scanModule($moduleFolder);
+  			$this->loadModule($moduleFolder);
   		} else {
   			// Error: Loaded Twice
   			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
   		}
     }
 
-    private function scanModule($moduleFolder)
+    private function loadModule($moduleFolder)
     {
   		$contents = array();
   		foreach (scandir($moduleFolder) as $node) {
@@ -49,7 +49,7 @@ namespace Core
   						new ThrowError('ModuleManager', '2001', 'Fail to load module, maybe the setting file was corrupted');
             }
   				} else {
-  					$this->scanModule($subModuleFolder);
+  					$this->loadModule($subModuleFolder);
   				}
   			}
   		}
@@ -78,29 +78,29 @@ namespace Core
   		}
   	}
 
-    public function trigger()
+    public function execute()
     {
       $args = func_get_args();
       $command = trim(array_shift($args));
-      list($moduleName, $funcName) = explode('.', $command);
+      list($moduleName, $mapping) = explode('.', $command);
 
-      if ($moduleName && $funcName) {
+      if ($moduleName && $mapping) {
         if (isset($this->moduleRegistered[$moduleName])) {
-          return $this->moduleRegistered[$moduleName]->trigger($funcName, $args);
+          return $this->moduleRegistered[$moduleName]->execute($mapping, $args);
         }
       }
 
       return false;
     }
 
-  	public function event()
+  	public function trigger()
     {
   		$args = func_get_args();
   		$event = array_shift($args);
   		$event = trim($event);
 
   		foreach ($this->moduleRegistered as $moduleCode => $module) {
-  			$module->invoke($event, $args);
+  			$module->execute($event, $args);
   		}
 
       return $this;
@@ -113,6 +113,7 @@ namespace Core
 
   	public function route($path)
     {
+      $path = '/' . trim(preg_replace('/[\\\\\/]+/', '/', trim($path)), '\\\/');
   		if (count($this->remapMapping)) {
         // Sort the remap path list, the deepest route first
   			if (!$this->remapSorted) {
@@ -136,14 +137,19 @@ namespace Core
             // Extract the path into an arguments array
   					$args = ($argsString) ? explode('/', $argsString) : array();
 
-            // Save the current route module and arguments for internal use
-  					$this->routeArguments = $args;
-  					$this->routeModule = $module;
+            if ($this->routeModule) {
+              // If Razy has routed already, redirect it
+              header('location: ' . URL_BASE . $path);
+            } else {
+              // Save the current route module and arguments for internal use
+    					$this->routeArguments = $args;
+    					$this->routeModule = $module;
 
-            // Execute and pass the arguments to module
-  					if ($module->execute($args)) {
-  						return true;
-  					}
+              // Execute and pass the arguments to module
+    					if ($module->route($args)) {
+    						return true;
+    					}
+            }
   				}
   			}
   		}

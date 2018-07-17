@@ -7,20 +7,23 @@ namespace Core
     protected $module = null;
     protected $manager = null;
     protected $methodList = array();
+    protected $reflection = null;
 
     public final function __construct(ModulePackage $module)
     {
-      $classname = explode('\\', get_class($this));
-      $package = array_shift($classname);
-      if ($package != 'Module') {
+      $this->reflection = new \ReflectionClass($this);
+      if ($this->reflection->getNamespaceName() != 'Module') {
         new ThrowError('IController', '1001', 'The module class was not in Module namespace');
       }
-      // Get called class, remove the 'Module' namespace
-      $calledClass = explode('\\', get_called_class());
-      $this->calledClass = $calledClass[1];
 
+      $this->calledClass = $this->reflection->getShortName();
       $this->manager = ModuleManager::GetInstance();
       $this->module = $module;
+    }
+
+    public final function getReflection()
+    {
+      return $this->reflection;
     }
 
     private final function __methodExists($methodName)

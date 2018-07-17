@@ -16,11 +16,6 @@ namespace Core
   	public function __construct($modulePath, $settings)
     {
       $this->moduleRoot = $modulePath;
-      $this->callableList = array(
-        'route' => array(),
-        'command' => array(),
-        'event' => array()
-      );
 
       if (isset($settings['module_code']) && trim($settings['module_code'])) {
   			$this->moduleCode = $settings['module_code'];
@@ -35,7 +30,7 @@ namespace Core
   		}
 
   		if (isset($settings['remap']) && trim($settings['remap'])) {
-  			$this->remapPath = rtrim(preg_replace('/([\/\\\\]+|\\\\)/', '/', '/' . $settings['remap']), '/') . '/';
+  			$this->remapPath = rtrim(preg_replace('/[\/\\\\]+/', '/', '/' . $settings['remap']), '/') . '/';
   		} else {
         $this->remapPath = '/' . $this->moduleCode . '/';
       }
@@ -58,9 +53,9 @@ namespace Core
   		if (isset($settings['callable']) && is_array($settings['callable'])) {
   			foreach ($settings['callable'] as $commandName => $namespace) {
           if (!$this->parseMethodName($commandName, $namespace)) {
-  					new ThrowError('ModulePackage', '3002', 'Cannot add ' . $funcName . ' to whitelist.');
+  					new ThrowError('ModulePackage', '3002', 'Cannot add ' . $method . ' to whitelist.');
   				}
-          $this->callableList[$routeName] = $namespace;
+          $this->callableList[$commandName] = $namespace;
   			}
   		}
     }
@@ -68,7 +63,7 @@ namespace Core
     private function parseMethodName($routeName, $namespace)
     {
       $routeName = trim($routeName);
-      $funcName = trim($namespace);
+      $method = trim($namespace);
 
       if ($routeName && $namespace) {
         if (preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+\.[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+$/', $namespace)) {
@@ -97,7 +92,7 @@ namespace Core
   		return $this->remapPath;
   	}
 
-  	public function execute($args)
+  	public function route($args)
     {
   		$moduleController = null;
       $routeName = '';
@@ -107,13 +102,13 @@ namespace Core
       // If method route mapping matched, return the contoller
 			if (isset($this->routeMapping[$routeName])) {
 				$method = array_shift($args);
-				list($className, $funcName) = explode('.', $this->routeMapping[$routeName]);
+				list($className, $method) = explode('.', $this->routeMapping[$routeName]);
 				$moduleController = $this->getController($className);
 			} else {
         $routeName = '(:any)';
         // If no method route matched, re-route all argument to (:any).
         if (isset($this->routeMapping['(:any)'])) {
-  				list($className, $funcName) = explode('.', $this->routeMapping['(:any)']);
+  				list($className, $method) = explode('.', $this->routeMapping['(:any)']);
   				$moduleController = $this->getController($className);
   			}
 
@@ -125,9 +120,9 @@ namespace Core
 
 			$methodExists = false;
       // Check the methed is callable or not, protected and private method is not executeable
-			if (method_exists($moduleController, $funcName)) {
+			if (method_exists($moduleController, $method)) {
         // Method Reflection, get the method type
-				$reflection = new \ReflectionMethod($moduleController, $funcName);
+				$reflection = new \ReflectionMethod($moduleController, $method);
 		    if (!$reflection->isPublic()) {
 					// Error: Controller function not callable
 					new ThrowError('ModulePackage', '2002', 'Cannot execute the method, maybe it is not a public method');
@@ -138,7 +133,7 @@ namespace Core
       $this->routeName = $routeName;
 
       // Pass all arguments to routed method
-			call_user_func_array(array($moduleController, $funcName), $args);
+			call_user_func_array(array($moduleController, $method), $args);
 
 			return true;
   	}
@@ -148,53 +143,29 @@ namespace Core
       return $this->routeName;
     }
 
-  	public function invoke($event, $args)
+  	public function execute($mapping, $args)
     {
-  		if (isset($this->callableList['event'][$event])) {
-  			list($className, $funcName) = explode('.', $this->callableList['event'][$event]);
+  		if (isset($this->callableList[$mapping])) {
+  			list($className, $method) = explode('.', $this->callableList[$mapping]);
   			if (!($moduleController = $this->getController($className))) {
   				// Error: Controller Not Found [Class]
   				new ThrowError('ModulePackage', '4002', 'Controller Not Found [Class]');
   			}
 
         // Check the methed is callable or not, protected and private method is not executeable
-  			if (method_exists($moduleController, $funcName)) {
+  			if (method_exists($moduleController, $method)) {
           // Method Reflection, get the method type
-  				$reflection = new \ReflectionMethod($moduleController, $funcName);
+  				$reflection = new \ReflectionMethod($moduleController, $method);
   		    if (!$reflection->isPublic()) {
   					// Error: Controller function not callable
   					new ThrowError('ModulePackage', '3002', 'Cannot execute the method, maybe it is not a public method');
   		    }
   			}
         // Pass all arguments to routed method
-  			call_user_func_array(array($moduleController, $funcName), $args);
+  			return call_user_func_array(array($moduleController, $method), $args);
   		}
+      return null;
   	}
-
-    public function trigger($commandMethod, $args = array())
-    {
-  		$moduleController = null;
-
-      // If method route mapping matched, return the contoller
-			if (isset($this->callableList['command'][$commandMethod])) {
-				list($className, $funcName) = explode('.', $this->callableList['command'][$commandMethod]);
-				$moduleController = $this->getController($className);
-			} else {
-        new ThrowError('ModulePackage', '3001', 'Command not found');
-      }
-
-      // Check the methed is callable or not, protected and private method is not executeable
-			if (method_exists($moduleController, $funcName)) {
-        // Method Reflection, get the method type
-				$reflection = new \ReflectionMethod($moduleController, $funcName);
-		    if (!$reflection->isPublic()) {
-					// Error: Controller function not callable
-					new ThrowError('ModulePackage', '3002', 'Cannot execute the method, maybe it is not a public method');
-		    }
-			}
-      // Pass all arguments to routed method
-			return call_user_func_array(array($moduleController, $funcName), $args);
-    }
 
   	private function getController($className)
     {

@@ -49,8 +49,7 @@ if (php_sapi_name() == 'cli' || defined('STDIN')) {
   } else {
     $urlQuery = $_SERVER['REQUEST_URI'];
   }
-echo $urlQuery;
-die();
+
   $urlQuery = parse_url($urlQuery);
   $urlQuery['path'] = rtrim($urlQuery['path'], '/') . '/';
 

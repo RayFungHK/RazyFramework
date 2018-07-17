@@ -6,10 +6,11 @@ return [
   'remap' => '/',
   'route' => array(
     // (:any)					Pass all arguments to 'any' method if there is no route was matched
-    '(:any)' => 'example.main'
+    '(:any)' => 'example.main',
+    'reroute' => 'example.reroute'
   ),
   'callable' => array(
-    'getIP' => 'example.getIP',
+    'method' => 'example.method',
     'onMessage' => 'example.onMessage'
   )
 ];

@@ -5,7 +5,7 @@ if (php_sapi_name() == 'cli' OR defined('STDIN')) {
 	define('CLI_MODE', true);
 } else {
 	// Get the System path
-	define('URL_ROOT', substr(SYSTEM_ROOT, strpos(SYSTEM_ROOT, $_SERVER['DOCUMENT_ROOT']) + strlen($_SERVER['DOCUMENT_ROOT'])));
+	define('URL_ROOT', preg_replace('/\\\\+/', '/',substr(SYSTEM_ROOT, strpos(SYSTEM_ROOT, $_SERVER['DOCUMENT_ROOT']) + strlen($_SERVER['DOCUMENT_ROOT']))));
 
 	// Get the hostname or domain name
 	define('HTTP_PATH_ROOT', (isset($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : ((isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : 'UNKNOWN'));
@@ -16,6 +16,8 @@ if (php_sapi_name() == 'cli' OR defined('STDIN')) {
 	// Generate the URL path
 	define('URL_BASE', (((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || PORT == '443') ? 'https://' : 'http://') . HTTP_PATH_ROOT . ((PORT != '80' && PORT != '443') ? ':' . PORT : '') . URL_ROOT);
 }
+
+define('MATERIAL_PATH', SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'material' . DIRECTORY_SEPARATOR);
 
 // Register Autoloader
 spl_autoload_register(function($class) {

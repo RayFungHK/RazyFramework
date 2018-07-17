@@ -9,7 +9,7 @@ namespace Core
         die('[' . $errorModule . '] #' . $errorCode . ': ' . $message);
       } else {
         ob_clean();
-        $errorPageOutput = file_get_contents(MATERIAL_PATH . "errorthrow.html\n");
+        $errorPageOutput = file_get_contents(MATERIAL_PATH . 'errorthrow.html');
 
         echo sprintf($errorPageOutput, $errorModule, $errorCode, $message);
         die();
