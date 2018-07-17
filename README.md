@@ -7,6 +7,12 @@
 - Easy routing
 - Supports CLI mode
 - Pluggable controller, better coding management
+# Task List
+- New CLI Mode (Working in progress)
+- FTP library
+- HTTP library
+- Image Manipulation Library
+- Mail library
 # Razy Files Structure
 ```
 - .

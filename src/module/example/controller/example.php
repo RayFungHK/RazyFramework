@@ -22,6 +22,13 @@ namespace Module
     {
       return 'Method';
     }
+
+    public function cli($argA = null, $argB = null)
+    {
+      echo str_repeat('=', 24) . "\n";
+      echo "Here is CLI Mode\n";
+      echo str_repeat('=', 24) . "\n";
+    }
   }
 }
 ?>

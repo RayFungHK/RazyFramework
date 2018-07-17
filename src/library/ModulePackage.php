@@ -12,6 +12,7 @@ namespace Core
   	private $routeMapping = array();
   	private $callableList = array();
     private $controllerList = array();
+    private $cliCommandList = array();
 
   	public function __construct($modulePath, $settings)
     {
@@ -39,7 +40,8 @@ namespace Core
 
   		if (isset($settings['route']) && is_array($settings['route'])) {
   			foreach ($settings['route'] as $routeName => $namespace) {
-          if (!$this->parseMethodName($routeName, $namespace)) {
+          $routeName = trim($routeName);
+          if (!$routeName || !$this->isValidNamespace($namespace)) {
             new ThrowError('ModulePackage', '3001', 'Invalid route\'s class mapping format');
           }
           $this->routeMapping[$routeName] = $namespace;
@@ -54,25 +56,40 @@ namespace Core
       // Add callable method into whitelist
   		if (isset($settings['callable']) && is_array($settings['callable'])) {
   			foreach ($settings['callable'] as $commandName => $namespace) {
-          if (!$this->parseMethodName($commandName, $namespace)) {
+          $commandName = trim($commandName);
+          if (!$commandName || !$this->isValidNamespace($namespace)) {
   					new ThrowError('ModulePackage', '3002', 'Cannot add ' . $method . ' to whitelist.');
   				}
           $this->callableList[$commandName] = $namespace;
   			}
   		}
-    }
 
-    private function parseMethodName($routeName, $namespace)
-    {
-      $routeName = trim($routeName);
-      $method = trim($namespace);
-
-      if ($routeName && $namespace) {
-        if (preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+\.[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+$/', $namespace)) {
-          return true;
+      if (CLI_MODE) {
+        // If cli option is exists and Razy is in CLI Mode
+    		if (isset($settings['cli']) && is_array($settings['cli'])) {
+          foreach ($settings['cli'] as $command => $cliSetting) {
+            $command = trim($command);
+            if ($command && isset($cliSetting['callback']) && $this->isValidNamespace($cliSetting['callback'])) {
+              // If the setting has valid callback namespace, register the CLI command
+              $this->cliCommandList[$command] = $cliSetting;
+            }
+          }
         }
       }
+    }
+
+    private function isValidNamespace($namespace)
+    {
+      $namespace = trim($namespace);
+      if ($namespace && preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+\.[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+$/', $namespace)) {
+        return true;
+      }
       return false;
+    }
+
+    public function getCLICommand()
+    {
+      return $this->cliCommandList;
     }
 
   	public function getCode()

@@ -4,6 +4,7 @@ session_start();
 if (php_sapi_name() == 'cli' OR defined('STDIN')) {
 	define('CLI_MODE', true);
 } else {
+	define('CLI_MODE', false);
 	// Get the System path
 	define('URL_ROOT', preg_replace('/\\\\+/', '/', substr(SYSTEM_ROOT, strpos(SYSTEM_ROOT, $_SERVER['DOCUMENT_ROOT']) + strlen($_SERVER['DOCUMENT_ROOT']))));
 

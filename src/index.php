@@ -6,44 +6,54 @@ namespace Core
   error_reporting(E_ALL);
 
   define('SYSTEM_ROOT', dirname(__FILE__));
-  require './system/core.inc.php';
+  require SYSTEM_ROOT . './system/core.inc.php';
 
   // Load module
   $moduleManager = new ModuleManager();
 
-  if (php_sapi_name() == 'cli' || defined('STDIN')) {
+  if (CLI_MODE) {
     // Cli Mode
     $argv = $_SERVER['argv'];
     $script = array_shift($argv);
-    $route = array_shift($argv);
 
-    // Route
-    if ($route) {
-      $cliArgs = array(
+    // If no args provided, show cli command list
+    if (!count($argv)) {
+      $moduleManager->showCommand();
+      exit(0);
+    }
+
+    $command = array_shift($argv);
+
+    // CLI receive command
+    if ($command) {
+      $args = array(
         'args' => array(),
         'params' => array()
       );
 
       $lastParam = '';
+      $paramStage = false;
       foreach ($argv as $key => $value) {
         if (preg_match('/^(-){1,2}([^\s]+)$/', $value, $matches, PREG_OFFSET_CAPTURE)) {
           $lastParam = $matches[2][0];
-          $cliArgs['params'][$lastParam] = '';
+          $args['params'][$lastParam] = '';
+          $paramStage = true;
         } else {
           if ($lastParam) {
-            $cliArgs['params'][$lastParam] = $value;
+            $args['params'][$lastParam] = $value;
             $lastParam = '';
           } else {
-            $cliArgs['args'][] = $value;
+            if ($paramStage) {
+              die("Invalid parameters\n");
+            }
+            $args['args'][] = $value;
           }
         }
       }
 
-      if (!$moduleManager->cli($route, $cliArgs)) {
-        die("No CLI found\n");
+      if (!$moduleManager->cli($command, $args)) {
+        die("Command [$command] not exists\n");
       }
-    } else {
-      die("The syntax of command is incorrect.\n");
     }
   } else {
     $urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
