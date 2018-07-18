@@ -28,7 +28,7 @@
  - material/
 ```
 # Configuration File
-Razy will deep scan the module folder, when the module folder contain a **config.php**, Razy will assume it is a module. **config.php** is a array-return file, example:
+Razy will deep scan the module folder contains a **config.php**, Razy will assume it is a module. **config.php** is an array-return file, example:
 ```
 <?php
 return [
@@ -56,11 +56,11 @@ return [
 ?>
 ```
 # Controller Rule
-Every module must contain **one** class in **controller** folder, which is named as **module code**. For example if the module code named **user**, you should have:
+Every module must contain **one** class in **controller** folder, which is named as **module code**. For example, if the module code assigned **user**, you should have a controller file in:
 ```
 /module/example/controller/user.php
 ```
-The file must a class file, under **Module** namespace, and extends **IController** class:
+The file must contain a class and the class name same as the file name, under **Module** namespace, and extends **IController** class:
 ```
 <?php
 namespace Module
@@ -90,7 +90,7 @@ namespace Module
 }
 ?>
 ```
-Also, you can separate any method into other file. Such as there is a **getName** in **user** class, you can create a function-return file named:
+Also, you can separate any method into another file. Such as there is a **getName** in **user** class, you can create a function-return file named:
 ```
 /module/example/controller/user.getName.php
 ```
@@ -103,11 +103,11 @@ return function($argA) {
 ?>
 ```
 # CLI Mode
-Razy supports CLI, it can execute via Windows or Linux command line. Razy assume script arguments as a routing path, and you can get the script parameters by:
+Razy supports CLI, and it can execute via Windows or Linux command line. Razy assume script arguments as a routing path, and you can get the script parameters by:
 ```
 $this->manager->getScriptParameters()
 ```
-Razy defined **CLI_MODE** to let develop identify the script is call by command line or open by browser. So we can modify above module sample method **main** to separate CLI Mode and Browser Mode:
+Razy defined **CLI_MODE** to let developer identify command line calls the script or open by the browser. So we can modify above module sample method **main** to separate CLI Mode and Browser Mode:
 ```
 public function main()
 {
@@ -125,7 +125,7 @@ Now, let's call the script via command line like:
 ```
 php index.php admin example -v 1.0.0 --message "Hello World"
 ```
-Then, it result:
+Then, it results:
 ```
 Welcome to CLI mode
 v:           1.0.0
