@@ -2,17 +2,18 @@
 - Supports PHP5+
 - Fast & easy to build a website
 - Weight light, structure clean
-- Separated module folder, you can clone the module to other Razy framework without any modification
+- Separated module folder, you can clone the module to another Razy framework without any modification
 - Cross-module communication
 - Easy routing
 - Supports CLI mode
 - Pluggable controller, better coding management
 # Task List
-- New CLI Mode (Working in progress)
-- FTP library
-- HTTP library
-- Image Manipulation Library
-- Mail library
+- New CLI Mode (Done)
+- FTP library, Class
+- HTTP library, Class
+- Image Manipulation Library, Class
+- Mail library, Class
+- Loggin library, Tarit
 # Razy Files Structure
 ```
 - .
