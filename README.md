@@ -90,8 +90,6 @@ namespace Module
 }
 ?>
 ```
-
-
 Also, you can separate any method into other file. Such as there is a **getName** in **user** class, you can create a function-return file named:
 ```
 /module/example/controller/user.getName.php
@@ -103,3 +101,33 @@ return function($argA) {
   return $this->name;
 };
 ?>
+```
+# CLI Mode
+Razy supports CLI, it can execute via Windows or Linux command line. Razy assume script arguments as a routing path, and you can get the script parameters by:
+```
+$this->manager->getScriptParameters()
+```
+Razy defined **CLI_MODE** to let develop identify the script is call by command line or open by browser. So we can modify above module sample method **main** to separate CLI Mode and Browser Mode:
+```
+public function main()
+{
+  if (CLI_MODE) {
+    echo 'Welcome to CLI mode';
+    foreach ($this->manager->getScriptParameters() as $param => $value) {
+      echo "\n$param:" . str_repeat(' ', 12 - strlen($param)) . $value;
+    }
+  } else {
+    $this->loadview('main', true);
+  }
+}
+```
+Now, let's call the script via command line like:
+```
+php index.php admin example -v 1.0.0 --message "Hello World"
+```
+Then, it result:
+```
+Welcome to CLI mode
+v:           1.0.0
+message:     Hello World
+```
