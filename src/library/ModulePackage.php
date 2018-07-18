@@ -12,7 +12,6 @@ namespace Core
   	private $routeMapping = array();
   	private $callableList = array();
     private $controllerList = array();
-    private $cliCommandList = array();
 
   	public function __construct($modulePath, $settings)
     {
@@ -28,6 +27,17 @@ namespace Core
 
   		if (isset($settings['version']) && trim($settings['version'])) {
   			$this->version = $settings['version'];
+  		}
+
+      // Add callable method into whitelist
+  		if (isset($settings['callable']) && is_array($settings['callable'])) {
+  			foreach ($settings['callable'] as $commandName => $namespace) {
+          $commandName = trim($commandName);
+          if (!$commandName || !$this->isValidNamespace($namespace)) {
+  					new ThrowError('ModulePackage', '3002', 'Cannot add ' . $method . ' to whitelist.');
+  				}
+          $this->callableList[$commandName] = $namespace;
+  			}
   		}
 
   		if (isset($settings['remap']) && trim($settings['remap'])) {
@@ -52,30 +62,6 @@ namespace Core
   				$this->remapPath = '/' . $this->moduleCode . '/';
   			}
   		}
-
-      // Add callable method into whitelist
-  		if (isset($settings['callable']) && is_array($settings['callable'])) {
-  			foreach ($settings['callable'] as $commandName => $namespace) {
-          $commandName = trim($commandName);
-          if (!$commandName || !$this->isValidNamespace($namespace)) {
-  					new ThrowError('ModulePackage', '3002', 'Cannot add ' . $method . ' to whitelist.');
-  				}
-          $this->callableList[$commandName] = $namespace;
-  			}
-  		}
-
-      if (CLI_MODE) {
-        // If cli option is exists and Razy is in CLI Mode
-    		if (isset($settings['cli']) && is_array($settings['cli'])) {
-          foreach ($settings['cli'] as $command => $cliSetting) {
-            $command = trim($command);
-            if ($command && isset($cliSetting['callback']) && $this->isValidNamespace($cliSetting['callback'])) {
-              // If the setting has valid callback namespace, register the CLI command
-              $this->cliCommandList[$command] = $cliSetting;
-            }
-          }
-        }
-      }
     }
 
     private function isValidNamespace($namespace)
@@ -85,11 +71,6 @@ namespace Core
         return true;
       }
       return false;
-    }
-
-    public function getCLICommand()
-    {
-      return $this->cliCommandList;
     }
 
   	public function getCode()
@@ -164,22 +145,24 @@ namespace Core
     {
   		if (isset($this->callableList[$mapping])) {
   			list($className, $method) = explode('.', $this->callableList[$mapping]);
-  			if (!($moduleController = $this->getController($className))) {
-  				// Error: Controller Not Found [Class]
-  				new ThrowError('ModulePackage', '4002', 'Controller Not Found [Class]');
-  			}
 
-        // Check the methed is callable or not, protected and private method is not executeable
-  			if (method_exists($moduleController, $method)) {
+        if (!($moduleController = $this->getController($className))) {
+          // Error: Controller Not Found
+          new ThrowError('ModulePackage', '4002', 'Controller Not Found');
+        }
+
+        // Check the methed is callable or not, protected and private method is not executable
+        if (method_exists($moduleController, $method)) {
           // Method Reflection, get the method type
-  				$reflection = new \ReflectionMethod($moduleController, $method);
-  		    if (!$reflection->isPublic()) {
-  					// Error: Controller function not callable
-  					new ThrowError('ModulePackage', '3002', 'Cannot execute the method, maybe it is not a public method');
-  		    }
-  			}
+          $reflection = new \ReflectionMethod($moduleController, $method);
+          if (!$reflection->isPublic()) {
+            // Error: Controller function not callable
+            new ThrowError('ModulePackage', '3002', 'Cannot execute the method, maybe it is not a public method');
+          }
+        }
+
         // Pass all arguments to routed method
-  			return call_user_func_array(array($moduleController, $method), $args);
+        return call_user_func_array(array($moduleController, $method), $args);
   		}
       return null;
   	}

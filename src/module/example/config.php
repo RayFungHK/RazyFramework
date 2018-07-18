@@ -13,16 +13,6 @@ return [
   'callable' => array(
     'method' => 'example.method',
     'onMessage' => 'example.onMessage'
-  ),
-  'cli' => array(
-    'example' => array(
-      'callback' => 'example.cli',
-      'description' => 'Just a command example description....',
-      'help' => array(
-        'v' => 'Return example CLI version',
-        'm' => 'Say Hello World'
-      )
-    )
   )
 ];
 ?>

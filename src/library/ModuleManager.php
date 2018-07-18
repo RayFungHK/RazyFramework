@@ -10,8 +10,9 @@ namespace Core
     private $remapMapping = array();
     private $moduleRegistered = array();
 
-    private $cliCommands = array();
-    private $cliParams = array();
+    private $scriptPath = '';
+    private $scriptRoute = '/';
+    private $scriptParams = array();
 
   	public static function GetInstance()
     {
@@ -28,6 +29,47 @@ namespace Core
   			// Error: Loaded Twice
   			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
   		}
+
+      if (CLI_MODE) {
+        // Cli Mode, get arguments and parameters
+        $argv = $_SERVER['argv'];
+        $this->scriptPath = array_shift($argv);
+        $paramName = '';
+
+        foreach ($argv as $key => $value) {
+          if (preg_match('/^(-){1,2}([^\s]+)$/', $value, $matches, PREG_OFFSET_CAPTURE)) {
+            $paramName = $matches[2][0];
+            $this->scriptParams[$paramName] = true;
+          } else {
+            if ($paramName) {
+              $this->scriptParams[$paramName] = $value;
+              $paramName = '';
+            } else {
+              if (count($this->scriptParams)) {
+                new ThrowError('ModuleManager', '3001', 'Invalid command syntax.');
+              }
+              $args[] = $value;
+            }
+          }
+        }
+
+        $this->scriptRoute = preg_replace('/\/+/', '/', '/' . implode('/', $args) . '/');
+      }
+    }
+
+    public function getScriptPath()
+    {
+      return $this->scriptPath;
+    }
+
+    public function getScriptRoute()
+    {
+      return $this->scriptRoute;
+    }
+
+    public function getScriptParameters()
+    {
+      return $this->scriptParams;
     }
 
     private function loadModule($moduleFolder)
@@ -58,64 +100,19 @@ namespace Core
   		}
     }
 
-    public function cli($command, $args)
-    {
-      if (isset($this->cliCommands[$command])) {
-        $this->cliParams = $args['params'];
-        list($moduleName, $mapping) = explode('.', $this->cliCommands[$command]['callback']);
-        if (isset($this->moduleRegistered[$moduleName])) {
-          $this->moduleRegistered[$moduleName]->execute($mapping, $args['args']);
-          return true;
-        }
-      }
-      return false;
-    }
-
-    public function showCommand()
-    {
-      echo "\nAvailable Command:\n";
-      foreach ($this->cliCommands as $commmand => $setting) {
-        echo "\n    [$commmand]";
-        if (isset($setting['description'])) {
-          echo "\n    " . trim($setting['description']);
-        }
-        if (isset($setting['help']) && is_array($setting['help']) && count($setting['help'])) {
-          foreach ($setting['help'] as $arg => $desc) {
-            echo "\n        -" . $arg . str_repeat(' ', 24 - strlen($arg)) . $desc;
-          }
-        }
-        echo "\n";
-      }
-    }
-
   	private function register($modulePackage)
     {
-  		if (get_class($modulePackage) == 'Core\\ModulePackage')   {
+  		if (get_class($modulePackage) == 'Core\ModulePackage')   {
   			if (!isset($this->moduleRegistered[$modulePackage->getCode()])) {
   				$this->moduleRegistered[$modulePackage->getCode()] = $modulePackage;
-          if (CLI_MODE) {
-            // CLI Mode, skip remap setting
-            $cliCommandList = $modulePackage->getCLICommand();
-            if (count($cliCommandList)) {
-              // Iterate command list and register to command list
-              foreach ($cliCommandList as $command => $setting) {
-                if (isset($this->cliCommands[$command])) {
-                  new ThrowError('ModuleManaer', '1006', 'Command [' . $command . '] was registered.');
-                }
-                $this->cliCommands[$command] = $setting;
-                $this->cliCommands[$command]['module'] = $modulePackage;
-              }
-            }
-          } else {
-    				if ($remapPath = $modulePackage->getRemapPath()) {
-    					if (isset($this->remapMapping[$remapPath])) {
-    						// Error: Remap path registered
-    						new ThrowError('ModuleManaer', '1003', 'Remap path [' . $remapPath . '] was registered.');
-    					} else {
-    						$this->remapMapping[$remapPath] = $modulePackage;
-    					}
-    				}
-          }
+  				if ($remapPath = $modulePackage->getRemapPath()) {
+  					if (isset($this->remapMapping[$remapPath])) {
+  						// Error: Remap path registered
+  						new ThrowError('ModuleManaer', '1003', 'Remap path [' . $remapPath . '] was registered.');
+  					} else {
+  						$this->remapMapping[$remapPath] = $modulePackage;
+  					}
+  				}
   			} else {
   				// Error: Duplicated Module
   				new ThrowError('ModuleManaer', '1004', 'Duplicated Module Code');
