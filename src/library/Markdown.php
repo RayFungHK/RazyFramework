@@ -8,13 +8,20 @@ namespace Core
     static private $modifierPattern = '';
     static private $paragraphs = array();
     static private $paragraphPattern = '';
-    private $markdownContent = '';
-    private $vaiables = array();
-    private $mdTable = null;
+
+    private $contents = array();
+    private $defined = array();
 
     public function __construct($text)
     {
-      $this->markdownContent = $this->convert(trim($text));
+      $lines = preg_split('/\n|\r\n?/', $text);
+      foreach ($lines as $content) {
+        if (preg_match('/^\s*\[([^]]+)\]:(.+)$/', $content, $matches)) {
+          $this->defined[$matches[1]] = trim($matches[2]);
+        } else {
+          $this->contents[] = $content;
+        }
+      }
     }
 
     static private function LoadPlugin()
@@ -63,7 +70,7 @@ namespace Core
         self::$modifierPattern = '/(' . $patternGroup . ')(.+?)(?:\1)/';
 
         // Group all paragraph pattern
-        self::$paragraphPattern = '/' . implode('|', $paragraphPattern) . '/';
+        self::$paragraphPattern = '/(' . implode('|', $paragraphPattern) . ')/';
       }
     }
 
@@ -103,25 +110,23 @@ namespace Core
       return $content;
     }
 
-    private function convert($text)
+    private function next()
     {
-      $result = '';
-      $lines = preg_split('/\n|\r\n?/', $text);
-      foreach ($lines as $content) {
-        if ($content) {
-          if (self::$paragraphPattern && preg_match(self::$paragraphPattern, $content, $matches)) {
-            print_r($matches);
-          } else {
-            $result .= '<p>' . $this->parseModifier($content) . '</p>';
-          }
-        }
+      if (key($this->contents) === null) {
+        return null;
       }
-      return $result;
+      $data = current($this->contents);
+      next($this->contents);
+      return $data;
     }
 
     public function result()
     {
-      return $this->markdownContent;
+      reset($this->contents);
+      $result = '';
+      while (($line = $this->next()) !== null) {
+
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 <?php
 return [
   'type' => 'modifier',
-  'tag' => '*',
+  'tag' => '##',
   'callback' => function($text) {
     return '<i>' . $this->parseModifier($text) . '</i>';
   }
