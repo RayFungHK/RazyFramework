@@ -1,9 +1,14 @@
 <?php
 return [
   'type' => 'paragraph',
-  'pattern' => '^ {4,}(.+)',
+  'pattern' => '/\B(?:(?:    |\t).+\n?)+/',
   'callback' => function($matches) {
-    return '<pre>' . $this->parseModifier($matches[1]) . '</pre>';
+    $result = '';
+    $contents = preg_split('/\r\n|\r|\n/', $matches[0]);
+    foreach ($contents as $content) {
+      $result .= preg_replace('/^    /', '', $content);
+    }
+    return '<pre>' . $result . '</pre>';
   }
 ];
 ?>

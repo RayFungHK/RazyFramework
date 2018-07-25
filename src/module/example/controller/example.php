@@ -11,9 +11,26 @@ namespace Module
           echo "\n$param:" . str_repeat(' ', 12 - strlen($param)) . $value;
         }
       } else {
+        $html = '<html><head><link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.10.0/github-markdown.css"></script><style>
+	.markdown-body {
+		box-sizing: border-box;
+		min-width: 200px;
+		max-width: 980px;
+		margin: 0 auto;
+		padding: 45px;
+	}
+
+	@media (max-width: 767px) {
+		.markdown-body {
+			padding: 15px;
+		}
+	}
+</style></head><body><article class="markdown-body">';
         $text = "# Dillinger
 
 [![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
+
+    Pre Sample
 
 Dillinger is a cloud-enabled, mobile-ready, offline-storage, AngularJS powered HTML5 Markdown editor.
 
@@ -190,9 +207,11 @@ MIT
    [PlOd]: <https://github.com/joemccann/dillinger/tree/master/plugins/onedrive/README.md>
    [PlMe]: <https://github.com/joemccann/dillinger/tree/master/plugins/medium/README.md>
    [PlGa]: <https://github.com/RahulHP/dillinger/blob/master/plugins/googleanalytics/README.md>";
+
         $md = new \Core\Markdown($text);
-        echo $md->result();
-        //$this->loadview('main', true);
+        $html .= $md->result();
+        $html .= '</article></body></html>';
+        echo $html;
       }
     }
 
