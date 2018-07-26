@@ -1,11 +1,10 @@
 <?php
 return [
-  'type' => 'paragraph',
-  'pattern' => '/(\B(?:\|[^\n]*)\|?\n?)+/',
+  'pattern' => '/(?:(?<=\n)\h*(?:\|[^\n]+)+\|\h*\R?)+/s',
   'callback' => function($matches) {
     $columnCount = 0;
     $result = '';
-    $contents = preg_split('/\r\n|\r|\n/', $matches[0]);
+    $contents = explode("\n", trim($matches[0]));
     $separater = false;
     $alignment = array();
 
@@ -24,7 +23,7 @@ return [
           $columnCount = count($column);
           $tableContent[] = $column;
         } else {
-          if (preg_match('/(?:\|[\t ]*:?-+:?[\t ]*)+\|?/', $content)) {
+          if (preg_match('/(?:\|\h*:?-+:?\h*)+\|?/', $content)) {
             if ($columnCount != count($column)) {
               // Not a valid table format, return the original content
               return $matches[0];
@@ -47,6 +46,10 @@ return [
       } else {
         $tableContent[] = $column;
       }
+    }
+
+    if (!$separater) {
+      return $matches[0];
     }
 
     foreach ($tableContent as $rIndex => $row) {

@@ -8,14 +8,14 @@ namespace Core
     static private $modifierPattern = '';
     static private $paragraphs = array();
 
-    private $content = '';
+    private $content = "\n";
     private $defined = array();
 
     public function __construct($text)
     {
-      $lines = preg_split('/\n|\r\n?/', $text);
+      $lines = preg_split('/\r\n?|\n/', $text);
       foreach ($lines as $content) {
-        if (preg_match('/^\s*\[([^]]+)\]:(.+)$/', $content, $matches)) {
+        if (preg_match('/^\h{0,3}\[([^]]+)\]:\h*(.+)$/', $content, $matches)) {
           $this->defined[$matches[1]] = trim($matches[2]);
         } else {
           $this->content .= $content . "\n";
@@ -34,13 +34,14 @@ namespace Core
     				continue;
     			}
 
-          if (preg_match('/md\.(.+)\.php/', $node, $matches)) {
+          if (preg_match('/md\.(paragraph|modifier)\.(.+)\.php/', $node, $matches)) {
             $config = (array) require($pluginFolder . $node);
-            if (isset($config['type']) && isset($config['callback']) && is_callable($config['callback'])) {
-              if ($config['type'] == 'modifier' && isset($config['tag'])) {
-                self::$modifiers[$config['tag']] = $config;
-              } elseif ($config['type'] == 'paragraph' && isset($config['pattern'])) {
-                self::$paragraphs[$config['pattern']] = $config;
+
+            if (isset($config['pattern']) && isset($config['callback']) && is_callable($config['callback'])) {
+              if ($matches[1] == 'modifier') {
+                self::$modifiers[$config['pattern']] = $config['callback'];
+              } elseif ($matches[1] == 'paragraph') {
+                self::$paragraphs[$config['pattern']] = $config['callback'];
               }
             }
           }
@@ -121,6 +122,9 @@ namespace Core
 
     private function parseModifier($content)
     {
+      if (!count(self::$modifiers)) {
+        return $content;
+      }
       // italic, bold, strike and underline
       $content = preg_replace_callback(
         self::$modifierPattern,
@@ -139,31 +143,36 @@ namespace Core
     {
       self::LoadPlugin();
 
-      $result = '';
       $content = $this->content;
 
-      foreach (self::$paragraphs as $config) {
+      // Modifier
+      //$content = $this->parseModifier($content);
+
+      // Paragraph
+      foreach (self::$paragraphs as $pattern => $callback) {
         $content = preg_replace_callback(
-          $config['pattern'],
-          function($matches) use ($config) {
-            return $config['callback']->bindTo($this)($matches) . "\n\n";
-          },
+          $pattern,
+          $callback->bindTo($this),
           $content
         );
       }
 
+      /*
       $content = $this->parseVariable($content);
+      */
+      $content = preg_replace('/(<([\w]+)[\w ="-]*>.*?<\/\2>)/s', '</p>\1<p>', $content);
+      $content = preg_replace('/\s*<p>\s*?<\/p>\s*/s', '', '<p>' . $content . '</p>');
 
-      $contents = preg_split('/\n{2,}/', trim($content));
-      foreach ($contents as $section) {
-        $section = trim($section);
-        if (!preg_match('/<pre.*?>.+<\/pre>/s', $section)) {
-          $section = '<p>' . nl2br(trim($section)) . '</p>';
-        }
-        $result .= $section;
-      }
+      // Parse Paragraph
+      $content = preg_replace_callback(
+        '/<p>(.+?)<\/p>/s',
+        function($matches) {
+          return preg_replace('/\R/', '<br />', '<p>' . trim(htmlspecialchars($matches[1])) . '</p>');
+        },
+        $content
+      );
 
-      return $result;
+      return $content;
     }
   }
 }

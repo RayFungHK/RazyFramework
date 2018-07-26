@@ -1,13 +1,13 @@
 <?php
 return [
-  'type' => 'paragraph',
-  'pattern' => '/(?:^[\t ]*|(?<=\n)[\t ]*)(?:([-+*])).*\n{0,2}(?:[\t ]*\1.*\n{0,2})*/',
+  'pattern' => '/(?<=\n)\h{0,3}([-*+])\h*(?:[^\n]+\n?)+((?<=\n)\h{0,3}(\1)\h*(?:[^\n]+\n?)+)*/s',
   'callback' => function($matches) {
     $content = $matches[0];
+    print_r($matches);
     $content = preg_replace_callback(
-      '/(?:\B[-+*])(.*\n{0,2})/',
+      '/(?<=\n)\h{0,3}([-*+])\h*([^\n]+\n?)+/',
       function ($matches) {
-        $text = $this->parseModifier($matches[1]);
+        $text = $this->parseModifier($matches[2]);
         // remove last \note
         $text = preg_replace('/\n$/', '', $text);
         return '<li>' . trim(preg_replace('/\n+/', '<br />', $text)) . '</li>';
