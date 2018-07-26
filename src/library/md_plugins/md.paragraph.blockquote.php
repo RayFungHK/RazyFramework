@@ -1,10 +1,9 @@
 <?php
 return [
-  'pattern' => '/(?<=\n)\h*(?:>[^\n]+\n{0,2})+/s',
+  'pattern' => '/(?<=\n)\h{0,3}>(?:[^\n]+\n?)+/s',
   'callback' => function($matches) {
-    $content = $matches[0];
-    $content = preg_replace('/\n*>\h*/', '', $content);
-    return '<blockquote>' . preg_replace('/\R/', '<br />', trim($content)) . '</blockquote>';
+    $content = preg_replace('/(?<=\n)|\B\h{0,3}>/', '', $matches[0]);
+    return '<blockquote>' . str_replace("\n", '<br />', trim($content)) . '</blockquote>';
   }
 ];
 ?>

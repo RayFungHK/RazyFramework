@@ -1,7 +1,6 @@
 <?php
 return [
-  'type' => 'modifier',
-  'tag' => '**',
+  'pattern' => '**',
   'callback' => function($text) {
     return '<strong>' . $this->parseModifier($text) . '</strong>';
   }

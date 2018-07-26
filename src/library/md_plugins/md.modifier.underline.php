@@ -1,7 +1,6 @@
 <?php
 return [
-  'type' => 'modifier',
-  'tag' => '__',
+  'pattern' => '__',
   'callback' => function($text) {
     return '<u>' . $this->parseModifier($text) . '</u>';
   }

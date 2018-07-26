@@ -1,20 +1,29 @@
 <?php
 return [
-  'pattern' => '/(?<=\n)\h{0,3}([-*+])\h*(?:[^\n]+\n?)+((?<=\n)\h{0,3}(\1)\h*(?:[^\n]+\n?)+)*/s',
+  'pattern' => '/(?:(?<=\n)\h{0,3}(?:[-*+])\h+(?:(?:[^\n]+)\n?)+)+/s',
   'callback' => function($matches) {
-    $content = $matches[0];
-    print_r($matches);
-    $content = preg_replace_callback(
-      '/(?<=\n)\h{0,3}([-*+])\h*([^\n]+\n?)+/',
-      function ($matches) {
-        $text = $this->parseModifier($matches[2]);
-        // remove last \note
-        $text = preg_replace('/\n$/', '', $text);
-        return '<li>' . trim(preg_replace('/\n+/', '<br />', $text)) . '</li>';
-      },
-      $content
-    );
-    return '<ul>' . $content . '</ul>';
+    $contents = explode("\n", $matches[0]);
+
+    $lastPointer = '';
+
+    $result = '<ul>';
+    foreach ($contents as $line) {
+      if (preg_match('/\h{0,3}([-*+])\h*(.+)/', $line, $matches)) {
+        if (!$lastPointer) {
+          $lastPointer = $matches[1];
+          $result .= '<li>' . $this->parseModifier($matches[2]);
+        } else {
+          if (!$matches[1]) {
+            $result .= '<br />' . $this->parseModifier($matches[2]);
+          } else {
+            $result .= ($lastPointer == $matches[1]) ? '</li><li>' . $this->parseModifier($matches[2]) : '</li></ul><li>' . $this->parseModifier($matches[2]);
+          }
+        }
+      }
+    }
+    $result .= '</ul>';
+
+    return $result;
   }
 ];
 ?>

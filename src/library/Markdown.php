@@ -65,7 +65,7 @@ namespace Core
           return preg_quote($value);
         }, $patternGroup));
 
-        self::$modifierPattern = '/(' . $patternGroup . ')(.+?)(?:\1)/';
+        self::$modifierPattern = '/(' . $patternGroup . ')([^\n]+)(?:\1)/';
       }
     }
 
@@ -125,12 +125,13 @@ namespace Core
       if (!count(self::$modifiers)) {
         return $content;
       }
-      // italic, bold, strike and underline
+
+      // Parse Markdown Modifier
       $content = preg_replace_callback(
         self::$modifierPattern,
         function($matches) {
           if (isset(self::$modifiers[$matches[1]])) {
-            return call_user_func(self::$modifiers[$matches[1]]['callback']->bindTo($this), $matches[2]);
+            return call_user_func(self::$modifiers[$matches[1]]->bindTo($this), $matches[2]);
           }
         },
         $content
@@ -145,10 +146,7 @@ namespace Core
 
       $content = $this->content;
 
-      // Modifier
-      //$content = $this->parseModifier($content);
-
-      // Paragraph
+      // Parse Markdown Paragraph
       foreach (self::$paragraphs as $pattern => $callback) {
         $content = preg_replace_callback(
           $pattern,
@@ -157,20 +155,21 @@ namespace Core
         );
       }
 
-      /*
-      $content = $this->parseVariable($content);
-      */
+      // Wrap the text with the <p> if it has not wrapped by any tags
       $content = preg_replace('/(<([\w]+)[\w ="-]*>.*?<\/\2>)/s', '</p>\1<p>', $content);
+
+      // Clear the empty <p> tags
       $content = preg_replace('/\s*<p>\s*?<\/p>\s*/s', '', '<p>' . $content . '</p>');
 
-      // Parse Paragraph
+      // Convert \n (newline) into line break <br /> in <p>
       $content = preg_replace_callback(
         '/<p>(.+?)<\/p>/s',
         function($matches) {
-          return preg_replace('/\R/', '<br />', '<p>' . trim(htmlspecialchars($matches[1])) . '</p>');
+          return str_replace("\n", '<br />', '<p>' . trim($this->parseModifier(htmlspecialchars($matches[1]))) . '</p>');
         },
         $content
       );
+      $content = $this->parseVariable($content);
 
       return $content;
     }
