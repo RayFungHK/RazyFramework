@@ -16,7 +16,10 @@ namespace Core
       $lines = preg_split('/\r\n?|\n/', $text);
       foreach ($lines as $content) {
         if (preg_match('/^\h{0,3}\[([^]]+)\]:\h*(.+)$/', $content, $matches)) {
-          $this->defined[$matches[1]] = trim($matches[2]);
+          $value = trim($matches[2]);
+          if (preg_match('/^[^\s]+$/', $value)) {
+            $this->defined[strtolower($matches[1])] = trim($matches[2]);
+          }
         } else {
           $this->content .= $content . "\n";
         }
@@ -69,31 +72,37 @@ namespace Core
       }
     }
 
-    private function parseVariable($content)
+    private function getVarible($variable, $returnEmpty = false)
+    {
+      if (isset($this->defined[strtolower($variable)])) {
+        return $this->defined[strtolower($variable)];
+      }
+      return ($returnEmpty) ? '' : $variable;
+    }
+
+    private function parseVariable($text, $context = false)
     {
       return preg_replace_callback(
-        '/(!?)\[([^\[\]]*+(?:(?R)[^\[\]]*+)*+)\](?:\(([^)]+)\)|\[([^]]+)\])?/',
-        function ($matches) {
-          // image
+        '/(!?)\[((?:[^\[\]]|(?R))+)(?<!\\\\)\](?:\((.+?)(?<!\\\\)\))?(?:\[(.+?)(?<!\\\\)\])?/',
+        function ($matches) use ($context) {
+          // Parse image tag
           if (isset($matches[1]) && $matches[1]) {
-            $altText = '';
-            $imageSrc = '';
-            $altText = (isset($this->defined[$matches[2]])) ? $this->defined[$matches[2]] : $matches[2];
-
-            if (isset($matches[3]) && $matches[3]) {
-              $imageSrc = $matches[3];
-            } elseif (isset($matches[4]) && isset($this->defined[$matches[4]])) {
-              $imageSrc = $this->defined[$matches[3]];
+            $altText = $this->getVarible($matches[2]);
+            // If the image src is not empty, create an image tag
+            if ($src = (isset($matches[3]) && $matches[3]) ? $matches[3] : $this->getVarible($matches[4])) {
+              return '<img src="' . $src . '"' . (($altText) ? ' alt="' . $altText . '"' : '') . ' />';
             }
 
-            if ($imageSrc) {
-              return '<img src="' . $imageSrc . '"' . (($altText) ? ' alt="' . $altText . '"' : '') . ' />';
-            }
             return $matches[0];
           }
 
-          $text = (isset($this->defined[$matches[2]])) ? $this->defined[$matches[2]] : $this->parseVariable($matches[2]);
+          // Parse herf tag
+          $text = $this->getVarible($matches[2]);
+          if (!$context) {
+            $text = $this->parseVariable($text, true);
+          }
 
+          // If no ('link') after the variable tag
           if (!isset($matches[3])) {
             if (preg_match('/<(.+)>/', $text, $lMatches)) {
               return '<a href="' . $lMatches[1] . '">' . $matches[2] . '</a>';
@@ -102,7 +111,7 @@ namespace Core
           }
 
           if (isset($matches[4])) {
-            $link = (isset($this->defined[$matches[4]])) ? $this->defined[$matches[4]] : $matches[4];
+            $link = (isset($this->defined[strtolower($matches[4])])) ? $this->defined[strtolower($matches[4])] : $matches[4];
           } elseif (isset($matches[3]) && $matches[3]) {
             $link = $matches[3];
           }
@@ -116,7 +125,7 @@ namespace Core
 
           return $matches[0];
         },
-        $content
+        $text
       );
     }
 

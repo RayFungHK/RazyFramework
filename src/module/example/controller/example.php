@@ -27,7 +27,7 @@ namespace Module
 	}
 </style></head><body><article class="markdown-body">';
         $text = "# Dillinger
-
+[[aaa](ssfsdf)aaa]
 Header1
 =
 
