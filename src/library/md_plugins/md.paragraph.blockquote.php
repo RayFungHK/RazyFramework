@@ -1,5 +1,6 @@
 <?php
 return [
+  'pattern' => 's<3 > **',
   'pattern' => '/(?<=\n)\h{0,3}>(?:[^\n]+\n?)+/s',
   'callback' => function($matches) {
     $content = preg_replace('/(?<=\n)|\B\h{0,3}>/', '', $matches[0]);
