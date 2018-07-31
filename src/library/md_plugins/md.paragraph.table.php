@@ -1,7 +1,6 @@
 <?php
 return [
-  'pattern' => 's<3 |...',
-  'pattern' => '/(?:(?<=\n)\h*(?:\|[^\n]+)+\|\h*\R?)+/s',
+  'pattern' => '(?:\h{0,3}(?:\|[^\n]+)+\|\h*\n?)+',
   'callback' => function($matches) {
     $columnCount = 0;
     $result = '';

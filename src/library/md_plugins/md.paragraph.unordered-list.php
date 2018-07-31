@@ -1,7 +1,6 @@
 <?php
 return [
-  'pattern' => 's<3 [-*+]=1 **',
-  'pattern' => '/(?:(?<=\n)\h{0,3}(?:[-*+])\h+(?:(?:[^\n]+)\n?)+)+/s',
+  'pattern' => '(?:\h{0,3}[-*+]\h+(?:[^\n]+\n?)+)+',
   'callback' => function($matches) {
     $contents = explode("\n", $matches[0]);
 

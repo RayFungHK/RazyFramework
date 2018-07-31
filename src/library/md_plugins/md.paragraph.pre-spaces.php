@@ -1,6 +1,6 @@
 <?php
 return [
-  'pattern' => '/(?:(?<=\n)(?:(?:    |\t)[^\n]+\n*))+/s',
+  'pattern' => '(?:(?>    |\t)[^\n]+\n*)+',
   'callback' => function($matches) {
     $content = $matches[0];
     $content = str_replace('/^\R+|\R+$/', '', $content);

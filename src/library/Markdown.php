@@ -44,6 +44,7 @@ namespace Core
               if ($matches[1] == 'modifier') {
                 self::$modifiers[$config['pattern']] = $config['callback'];
               } elseif ($matches[1] == 'paragraph') {
+                $config['pattern'] = '/(?<=\n|\A)' . $config['pattern'] . '/s';
                 self::$paragraphs[$config['pattern']] = $config['callback'];
               }
             }
