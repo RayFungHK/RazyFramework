@@ -54,7 +54,7 @@ namespace Core
     {
       if (!$this->__methodExists($method)) {
         // Error: ControllerClosure not found
-        new ThrowError('IController', '3001', 'ControllerClosure not found');
+        new ThrowError('IController', '3001', '[' . $method . '] ControllerClosure not found');
       }
       $closure = $this->methodList[$method];
 
@@ -62,7 +62,12 @@ namespace Core
       return call_user_func_array($closure, $arguments);
     }
 
-    public final function loadview($filepath, $moduleview = false)
+    protected final function getViewPath()
+    {
+      return $this->module->getModuleRoot() . 'view' . DIRECTORY_SEPARATOR;
+    }
+
+    protected final function loadview($filepath, $moduleview = false)
     {
       // If there is no extension provided, default as .tpl
       if (!preg_match('/\.[a-z]+$/', $filepath)) {

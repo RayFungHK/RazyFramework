@@ -128,7 +128,7 @@ namespace Core
       // Function Tag pettern: {func_name( parameter="value")*}
       // Assign Tag pettern: {$variable(|modifier(:"value")*)*}
 			return preg_replace_callback(
-        '/\{(?|(?:(\$?)(\w+)((?:\|\w+(?::(?:\w+|"(?:[^"\\\\]|\\\\.)*")?)*)*))|(?:()(\w+)((?:\s+\w+(?:=(?:\w+|"(?:[^"\\\\]|\\\\.)*"))*)*)))\}/i',
+        '/\{(?|(?:(\$?)(\w+)((?:\|\w+(?::(?:\w+|"(?:[^"\\\\]|\\\\.)*")?)*)*))|(?:()(\w+)((?:\s+\w+(?:=(?:\w+|"(?:[^"\\\\]|\\\\.)*"))*)*)))\}(?:(?>((?:.|(?R))+){\/\$\2}))?/si',
         function($matches) {
           if ($matches[1] == '$') {
             $tagname = $matches[2];
@@ -185,6 +185,12 @@ namespace Core
     							$value = $this->parseTag(self::CallModifier('modifier.' . $funcname, $parameters));
     						}
     					}
+            }
+
+            // Balanced assign tag found, if return value is not false or null
+            // Return the wrapped content
+            if (isset($matches[4])) {
+              return ($value) ? $this->parseTag($matches[4]) : '';
             }
 
             return $value;

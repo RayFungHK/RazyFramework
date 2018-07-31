@@ -8,11 +8,30 @@ namespace Core
     static private $modifierPattern = '';
     static private $paragraphs = array();
 
-    private $content = "\n";
+    private $content = '';
     private $defined = array();
 
-    public function __construct($text)
+    public function __construct($text = '')
     {
+      if (!$text) {
+        $this->loadContent($text);
+      }
+    }
+
+    public function loadFile($path)
+    {
+      if (!file_exists($path)) {
+        new ThrowError('Markdown', '1001', 'Cannot load content from file, file not found.');
+      } else {
+        $this->loadContent(file_get_contents($path));
+      }
+    }
+
+    private function loadContent($text)
+    {
+      $this->defined = array();
+      $this->content = '';
+
       $lines = preg_split('/\r\n?|\n/', $text);
       foreach ($lines as $content) {
         if (preg_match('/^\h{0,3}\[([^]]+)\]:\h*(.+)$/', $content, $matches)) {
@@ -162,7 +181,7 @@ namespace Core
       return $content;
     }
 
-    public function result()
+    public function parse()
     {
       self::LoadPlugin();
 
