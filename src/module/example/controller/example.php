@@ -28,30 +28,11 @@ namespace Module
 </style></head><body><article class="markdown-body">';
         $text = "# Dillinger
 [[aaa](ssfsdf)aaa]
+[aaa](ssfsdf)
 Header1
 =
 
-    asdsadsadsadsadasd
-    asasda
-
-
-
-
-
-    a
-
-
-
-
-
-sadsaghdsagjd
-    a
-
-
-
-
-asdsadsadsad
-
+<a href=\"#\">Test</a>
 [![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
 
     Pre Sample

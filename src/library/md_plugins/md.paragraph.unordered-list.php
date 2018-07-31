@@ -16,7 +16,7 @@ return [
           if (!$matches[1]) {
             $result .= '<br />' . $this->parseModifier($matches[2]);
           } else {
-            $result .= ($lastPointer == $matches[1]) ? '</li><li>' . $this->parseModifier($matches[2]) : '</li></ul><li>' . $this->parseModifier($matches[2]);
+            $result .= ($lastPointer == $matches[1]) ? '</li><li>' . $this->parseModifier($this->parseVariable($matches[2])) : '</li></ul><li>' . $this->parseModifier($this->parseVariable($matches[2]));
           }
         }
       }

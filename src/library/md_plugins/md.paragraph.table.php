@@ -10,10 +10,6 @@ return [
 
     foreach ($contents as $content) {
       $content = trim($content);
-      if (!$content) {
-        continue;
-      }
-
       $column = explode('|', $content);
       array_shift($column);
       array_pop($column);
@@ -41,15 +37,13 @@ return [
                 }
               }
             }
+          } else {
+            return $matches[0];
           }
         }
       } else {
         $tableContent[] = $column;
       }
-    }
-
-    if (!$separater) {
-      return $matches[0];
     }
 
     foreach ($tableContent as $rIndex => $row) {
@@ -62,7 +56,7 @@ return [
       } else {
         $result .= '<tr>';
         for ($cIndex = 0; $cIndex < $columnCount; $cIndex++) {
-          $result .= '<td align="' . $alignment[$cIndex] . '">' . ((isset($row[$cIndex])) ? $this->parseModifier($row[$cIndex]) : '') . '</td>';
+          $result .= '<td align="' . $alignment[$cIndex] . '">' . ((isset($row[$cIndex])) ? $this->parseModifier($this->parseVariable($row[$cIndex])) : '') . '</td>';
         }
         $result .= '</tr>';
       }

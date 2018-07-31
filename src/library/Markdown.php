@@ -72,58 +72,111 @@ namespace Core
       }
     }
 
-    private function getVarible($variable, $returnEmpty = false)
+    private function isDefined($variable)
     {
-      if (isset($this->defined[strtolower($variable)])) {
-        return $this->defined[strtolower($variable)];
-      }
-      return ($returnEmpty) ? '' : $variable;
+      return isset($this->defined[strtolower($variable)]);
+    }
+
+    private function getDefined($variable)
+    {
+      return trim(($this->isDefined($variable)) ? $this->defined[strtolower($variable)] : $variable);
+    }
+
+    private function parseURL($text)
+    {
+      $text = trim($text);
+      return (preg_match('/^<.+>$/', $text, $matches)) ? substr($text, 1, -1) : urlencode($text);
     }
 
     private function parseVariable($text, $context = false)
     {
+      $result = '';
+      $fragments = preg_split('/(!?\[(?:(?<=\\\\)[\[\]]|[^\[\]]|(?R))+?(?<!\\\\)\](?:\(.+?(?<!\\\\)\))?(?:\[.+?(?<!\\\\)\])?)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+      foreach ($fragments as $content) {
+        if (preg_match('/(!?)\[((?:(?<=\\\\)[\[\]]|[^\[\]]|(?R))+?)(?<!\\\\)\](?:\((.+?)(?<!\\\\)\))?(?:\[(.+?)(?<!\\\\)\])?/', $content, $matches)) {
+          // Parse image tag
+          if ($matches[1]) {
+            $altText = $this->getDefined($matches[2]);
+            // If the image src is not empty, create an image tag
+            if (!isset($matches[3]) && !isset($matches[4]) || (isset($matches[4]) && !$this->isDefined($matches[4]))) {
+              $result .= htmlspecialchars($matches[0]);
+            } else {
+              $src = (isset($matches[4])) ? $this->getDefined($matches[4]) : trim($matches[3]);
+              $result .= '<img src="' . $src . '"' . (($altText) ? ' alt="' . $altText . '"' : '') . ' />';
+            }
+          } else {
+            // Parse herf tag
+            $text = $this->parseVariable($matches[2]);
+
+            if (!isset($matches[3]) && !isset($matches[4])) {
+              if (!$this->isDefined($text)) {
+                // If no defined variable matched
+                // Return the parsed variable with wrapped []
+                $result .= '[' . $text . ']';
+              } else {
+                // Else return as a link
+                $result .= '<a href="' . $this->getDefined($text) . '">' . $text . '</a>';
+              }
+            } else {
+              // If the link is a defined value [variable]
+              if (isset($matches[4])) {
+                // If no defined variable matched, no modify applied.
+                if (!$this->isDefined($matches[4])) {
+                  $result .= htmlspecialchars($matches[0]);
+                } else {
+                  $result .= '<a href="' . $this->getDefined($matches[4]) . '">' . $text . '</a>';
+                }
+              } else {
+                // Assume (text) is a URL
+                $result .= '<a href="' . $this->parseURL($matches[3]) . '">' . $text . '</a>';
+              }
+            }
+          }
+        } else {
+          $result .= htmlspecialchars($content);
+        }
+      }
+
+      return $result;
+
       return preg_replace_callback(
-        '/(!?)\[((?:[^\[\]]|(?R))+)(?<!\\\\)\](?:\((.+?)(?<!\\\\)\))?(?:\[(.+?)(?<!\\\\)\])?/',
+        '/(!?)\[((?:(?<=\\\\)[\[\]]|[^\[\]]|(?R))+?)(?<!\\\\)\](?:\((.+?)(?<!\\\\)\))?(?:\[(.+?)(?<!\\\\)\])?/',
         function ($matches) use ($context) {
           // Parse image tag
-          if (isset($matches[1]) && $matches[1]) {
-            $altText = $this->getVarible($matches[2]);
+          if ($matches[1]) {
+            $altText = $this->getDefined($matches[2]);
             // If the image src is not empty, create an image tag
-            if ($src = (isset($matches[3]) && $matches[3]) ? $matches[3] : $this->getVarible($matches[4])) {
-              return '<img src="' . $src . '"' . (($altText) ? ' alt="' . $altText . '"' : '') . ' />';
+            if (!isset($matches[3]) && !isset($matches[4]) || (isset($matches[4]) && !$this->isDefined($matches[4]))) {
+              return $matches[0];
             }
 
-            return $matches[0];
+            $src = (isset($matches[4])) ? $this->getDefined($matches[4]) : trim($matches[3]);
+            return '<img src="' . $src . '"' . (($altText) ? ' alt="' . $altText . '"' : '') . ' />';
           }
 
           // Parse herf tag
-          $text = $this->getVarible($matches[2]);
-          if (!$context) {
-            $text = $this->parseVariable($text, true);
-          }
+          $text = $this->parseVariable($matches[2]);
 
-          // If no ('link') after the variable tag
-          if (!isset($matches[3])) {
-            if (preg_match('/<(.+)>/', $text, $lMatches)) {
-              return '<a href="' . $lMatches[1] . '">' . $matches[2] . '</a>';
+          if (!isset($matches[3]) && !isset($matches[4])) {
+            if (!$this->isDefined($text)) {
+              // If no defined variable matched
+              // Return the parsed variable with wrapped []
+              return '[' . $text . ']';
             }
-            return $text;
-          }
-
-          if (isset($matches[4])) {
-            $link = (isset($this->defined[strtolower($matches[4])])) ? $this->defined[strtolower($matches[4])] : $matches[4];
-          } elseif (isset($matches[3]) && $matches[3]) {
-            $link = $matches[3];
-          }
-
-          if ($link) {
-            if (preg_match('/<(.+)>/', $link, $lMatches)) {
-              return '<a href="' . $lMatches[1] . '">' . $text . '</a>';
+            // Else return as a link
+            return '<a href="' . $this->getDefined($text) . '">' . $text . '</a>';
+          } else {
+            // If the link is a defined value [variable]
+            if (isset($matches[4])) {
+              // If no defined variable matched, no modify applied.
+              if (!$this->isDefined($matches[4])) {
+                return $matches[0];
+              }
+              return '<a href="' . $this->getDefined($matches[4]) . '">' . $text . '</a>';
             }
-            return '<a href="' . $link . '">' . $text . '</a>';
+            // Assume (text) is a URL
+            return '<a href="' . $this->parseURL($matches[3]) . '">' . $text . '</a>';
           }
-
-          return $matches[0];
         },
         $text
       );
@@ -174,11 +227,10 @@ namespace Core
       $content = preg_replace_callback(
         '/<p>(.+?)<\/p>/s',
         function($matches) {
-          return str_replace("\n", '<br />', '<p>' . trim($this->parseModifier(htmlspecialchars($matches[1]))) . '</p>');
+          return str_replace("\n", '<br />', '<p>' . trim($this->parseModifier($this->parseVariable($matches[1]))) . '</p>');
         },
         $content
       );
-      $content = $this->parseVariable($content);
 
       return $content;
     }
