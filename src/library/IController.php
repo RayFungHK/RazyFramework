@@ -3,7 +3,7 @@ namespace Core
 {
   abstract class IController
   {
-    protected $calledClass = '';
+    protected $declaredClass = '';
     protected $module = null;
     protected $manager = null;
     protected $methodList = array();
@@ -12,11 +12,7 @@ namespace Core
     public final function __construct(ModulePackage $module)
     {
       $this->reflection = new \ReflectionClass($this);
-      if ($this->reflection->getNamespaceName() != 'Module') {
-        new ThrowError('IController', '1001', 'The module class was not in Module namespace');
-      }
-
-      $this->calledClass = $this->reflection->getShortName();
+      $this->declaredClass = $this->reflection->getShortName();
       $this->manager = ModuleManager::GetInstance();
       $this->module = $module;
     }
@@ -31,7 +27,7 @@ namespace Core
       if (!isset($this->methodList[$methodName])) {
         // Search method is exists in method list or not
         // Load method file if it is exists <Filename Pattern: classname.method>
-        $controllerPath = $this->module->getModuleRoot() . 'controller' . DIRECTORY_SEPARATOR . $this->calledClass . '.' . $methodName . '.php';
+        $controllerPath = $this->module->getModuleRoot() . 'controller' . DIRECTORY_SEPARATOR . $this->declaredClass . '.' . $methodName . '.php';
         if (file_exists($controllerPath)) {
           try {
             $closure = require $controllerPath;
@@ -62,19 +58,19 @@ namespace Core
       return call_user_func_array($closure, $arguments);
     }
 
-    protected final function getViewPath()
+    protected final function getViewPath($rootview = false)
     {
-      return $this->module->getModuleRoot() . 'view' . DIRECTORY_SEPARATOR;
+      return ($rootview) ? SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : $this->module->getModuleRoot() . 'view' . DIRECTORY_SEPARATOR;
     }
 
-    protected final function loadview($filepath, $moduleview = false)
+    protected final function loadview($filepath, $rootview = false)
     {
       // If there is no extension provided, default as .tpl
       if (!preg_match('/\.[a-z]+$/', $filepath)) {
         $filepath .= '.tpl';
       }
 
-      $root = (!$moduleview) ? SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : $this->module->getModuleRoot() . 'view' . DIRECTORY_SEPARATOR;
+      $root = $this->getViewPath($rootview);
       $tplManager = new TemplateManager($root . $filepath, $this->module->getCode());
       $tplManager->globalAssign(array(
         'view_path' => $root

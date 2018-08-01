@@ -179,11 +179,22 @@ namespace Core
   			if (file_exists($controllerPath . $className . '.php')) {
           // Load the class file, all module controller class MUST under 'Module' namespace
   				include($controllerPath . $className . '.php');
-          $classNameNS = 'Module\\' . $className;
 
-  				if (class_exists($classNameNS)) {
+          // Get the lasy declared class name, assume one file contain one class
+          $declaredClass = get_declared_classes();
+          $declaredClass = end($declaredClass);
+
+          // Get the class name without namespace
+          $_className = explode('\\', $declaredClass);
+          $_className = end($_className);
+
+          if ($_className != $className) {
+            new ThrowError('ModulePackage', '1003', 'Controller\'s class ' . $className . ' not found, or the declared class name not match as the file name.');
+          }
+
+  				if (class_exists($declaredClass)) {
             // Create controller object and put into controller list
-  					$this->controllerList[$className] = new $classNameNS($this);
+  					$this->controllerList[$className] = new $declaredClass($this);
 
             // Check the controller class has inherit IController class or not
   					if (!is_subclass_of($this->controllerList[$className], 'Core\\IController')) {

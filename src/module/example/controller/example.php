@@ -1,7 +1,7 @@
 <?php
-namespace Module
+namespace Core
 {
-  class example extends \Core\IController
+  class example extends IController
   {
     public function main()
     {
@@ -11,8 +11,9 @@ namespace Module
           echo "\n$param:" . str_repeat(' ', 12 - strlen($param)) . $value;
         }
       } else {
-        $tplmanager = $this->loadview('main', true);
-        $md = new \Core\Markdown();
+        $tplmanager = $this->loadview('main');
+
+        $md = new Markdown();
         $md->loadFile($this->getViewPath() . 'markdown-sample.txt');
 
         $tplmanager->getRootBlock()->assign(array(
