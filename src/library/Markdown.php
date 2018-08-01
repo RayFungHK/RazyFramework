@@ -105,7 +105,7 @@ namespace Core
     private function parseURL($text)
     {
       $text = trim($text);
-      return (preg_match('/^<(.+)>$/', $text, $matches)) ? $matches[1] : urlencode($text);
+      return (preg_match('/^<(.+)>$/', $text, $matches)) ? $matches[1] : $text;
     }
 
     private function parseVariable($text, $context = false)
