@@ -10,7 +10,7 @@ namespace Core
     private $currentBlock = null;
     private $assignList = array();
 
-    static private $enviornmentAssignList = array();
+    static private $environmentAssignList = array();
     static private $outputQueue = array();
 
     public function __construct($tplPath, $tplName = '')
@@ -136,20 +136,20 @@ namespace Core
   				self::EnvironmentAssign($tagName, $value);
   			}
   		} else {
-  			self::$enviornmentAssignList[$variable] = $value;
+  			self::$environmentAssignList[$variable] = $value;
   		}
     }
 
-    static public function HasEnviornmentAssign($variable)
+    static public function HasEnvironmentAssign($variable)
     {
       $variable = trim($variable);
-      return array_key_exists($variable, self::$enviornmentAssignList);
+      return array_key_exists($variable, self::$environmentAssignList);
     }
 
-    static public function GetEnviornmentAssign($variable)
+    static public function GetEnvironmentAssign($variable)
     {
       $variable = trim($variable);
-      return (array_key_exists($variable, self::$enviornmentAssignList)) ? self::$enviornmentAssignList[$variable] : null;
+      return (array_key_exists($variable, self::$environmentAssignList)) ? self::$environmentAssignList[$variable] : null;
     }
 
     static public function OutputQueued()

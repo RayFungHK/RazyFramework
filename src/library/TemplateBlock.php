@@ -144,9 +144,9 @@ namespace Core
     				} elseif ($this->structure->getManager()->hasGlobalAssign($tagname)) {
     					// Global level assign
     					$value = $this->structure->getManager()->getGlobalAssign($tagname);
-    				} elseif (TemplateManager::HasEnviornmentAssign($tagname)) {
+    				} elseif (TemplateManager::HasEnvironmentAssign($tagname)) {
     					// Global level assign
-    					$value = TemplateManager::GetEnviornmentAssign($tagname);
+    					$value = TemplateManager::GetEnvironmentAssign($tagname);
     				} elseif ($clipsCount == 0) {
     					return $matches[0];
     				}

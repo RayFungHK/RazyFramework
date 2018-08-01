@@ -63,6 +63,11 @@ namespace Core
       return ($rootview) ? SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : $this->module->getModuleRoot() . 'view' . DIRECTORY_SEPARATOR;
     }
 
+    protected final function getRelatedViewPath($rootview = false)
+    {
+      return ($rootview) ? URL_BASE . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : URL_BASE . $this->module->getModuleRoot(true) . 'view' . DIRECTORY_SEPARATOR;
+    }
+
     protected final function loadview($filepath, $rootview = false)
     {
       // If there is no extension provided, default as .tpl
@@ -75,7 +80,7 @@ namespace Core
       $tplManager->globalAssign(array(
         'view_path' => $root
       ));
-      $tplManager->addToQueue($this->module->getCode());
+      $tplManager->addToQueue();
 
       return $tplManager;
     }
