@@ -9,11 +9,12 @@
 - Pluggable controller, better coding management
 # Task List
 - New CLI Mode (Done)
+- Markdown library, Class (Done)
 - FTP library, Class
 - HTTP library, Class
 - Image Manipulation Library, Class
 - Mail library, Class
-- Loggin library, Tarit
+- Logging library, Tarit
 # Razy Files Structure
 ```
 - .
@@ -61,32 +62,29 @@ Every module must contain **one** class in **controller** folder, which is named
 ```
 /module/example/controller/user.php
 ```
-The file must contain a class and the class name same as the file name, under **Module** namespace, and extends **IController** class:
+The file must contain only one class and the class name should be same as the file name, also it must extends the **IController** class:
 ```
 <?php
-namespace Module
+class user extends IController
 {
-  class user extends \Core\IController
+  public function main()
   {
-    public function main()
-    {
-      $this->loadview('main', true);
-    }
+    $this->loadview('main');
+  }
 
-    public function reroute()
-    {
-      echo 'Re-Route';
-    }
+  public function reroute()
+  {
+    echo 'Re-Route';
+  }
 
-    public function onMessage()
-    {
-      echo 'onMessage Event';
-    }
+  public function onMessage()
+  {
+    echo 'onMessage Event';
+  }
 
-    public function method()
-    {
-      return 'Callable Method';
-    }
+  public function method()
+  {
+    return 'Callable Method';
   }
 }
 ?>
@@ -118,7 +116,7 @@ public function main()
       echo "\n$param:" . str_repeat(' ', 12 - strlen($param)) . $value;
     }
   } else {
-    $this->loadview('main', true);
+    $this->loadview('main');
   }
 }
 ```
