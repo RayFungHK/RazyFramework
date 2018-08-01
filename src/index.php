@@ -2,7 +2,11 @@
 namespace Core
 {
   define('SYSTEM_ROOT', dirname(__FILE__));
+<<<<<<< HEAD
   require './system/core.inc.php';
+=======
+  require . './system/core.inc.php';
+>>>>>>> ba86e7dc3ca6ab821a273a0f47d2e9fb59cc6691
 
   // Load module
   $moduleManager = new ModuleManager();
