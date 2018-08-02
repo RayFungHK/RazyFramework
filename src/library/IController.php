@@ -63,7 +63,7 @@ namespace Core
       return ($rootview) ? SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : $this->module->getModuleRoot() . 'view' . DIRECTORY_SEPARATOR;
     }
 
-    protected final function getRelatedViewPath($rootview = false)
+    protected final function getViewURL($rootview = false)
     {
       return ($rootview) ? URL_BASE . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : URL_BASE . $this->module->getModuleRoot(true) . 'view' . DIRECTORY_SEPARATOR;
     }
