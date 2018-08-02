@@ -128,7 +128,7 @@ namespace Core
       // Function Tag pettern: {func_name( parameter="value")*}
       // Assign Tag pettern: {$variable(|modifier(:"value")*)*}
 			return preg_replace_callback(
-        '/\{(?|(?:(\$?)(\w+)((?:\|\w+(?::(?:\w+|"(?:[^"\\\\]|\\\\.)*")?)*)*))|(?:()(\w+)((?:\s+\w+(?:=(?:\w+|"(?:[^"\\\\]|\\\\.)*"))*)*)))\}(?:(?>((?:.|(?R))+){\/\$\2}))?/si',
+        '/\{(?|(?:(\$?)(\w+)((?:\|\w+(?::(?>\w+|"(?:[^"\\\\]|\\\\.)*")?)*)*))|(?:()(\w+)((?:\h+\w+(?:=(?>\w+|"(?>[^"\\\\]|\\\\.)*"))*)*)))\}(?>((?>.|(?R))+){\/\$\2})?/si',
         function($matches) {
           if ($matches[1] == '$') {
             $tagname = $matches[2];
