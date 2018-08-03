@@ -10,12 +10,37 @@ namespace Core
 
     private $content = '';
     private $defined = array();
+    private $allowStripTags = false;
+    private $allowableTags = '';
 
     public function __construct($text = '')
     {
       if (!$text) {
         $this->loadContent($text);
       }
+    }
+
+    public function allowStripTags($enable = false)
+    {
+      $this->allowStripTags = !!$enable;
+      return $this;
+    }
+
+    public function setAllowableTags($taglist)
+    {
+      if (is_string($taglist)) {
+        $taglist = explode(',', $taglist);
+        $allowableTags = array();
+
+        $this->allowableTags = '';
+        foreach ($taglist as $tag) {
+          if (preg_match('/^\w++$/', $tag)) {
+            $allowableTags[$tag] = $tag;
+          }
+        }
+        $this->allowableTags = implode('|', $allowableTags);
+      }
+      return $this;
     }
 
     public function loadFile($path)
@@ -88,7 +113,7 @@ namespace Core
           return preg_quote($value);
         }, $patternGroup));
 
-        self::$modifierPattern = '/(' . $patternGroup . ')([^\n]+)(?:\1)/';
+        self::$modifierPattern = '/(' . $patternGroup . ')([^\n]+?)(?:\1)/';
       }
     }
 
@@ -157,7 +182,16 @@ namespace Core
         $text
       );
 
-      $text = htmlspecialchars($text);
+      if ($this->allowStripTags) {
+        $text = preg_replace_callback(
+          '/<\h*(?!\/?(' . $this->allowableTags . ')(?=\b)).*?(?<!\\\\)>/s',
+          function ($matches) {
+            return htmlspecialchars($matches[0]);
+          },
+          $text
+        );
+      }
+
       return (count($parsedVariable)) ? str_replace(array_keys($parsedVariable), array_values($parsedVariable), $text) : $text;
     }
 
@@ -174,6 +208,7 @@ namespace Core
           if (isset(self::$modifiers[$matches[1]])) {
             return call_user_func(self::$modifiers[$matches[1]]->bindTo($this), $matches[2]);
           }
+          return $matches[0];
         },
         $content
       );
@@ -191,13 +226,12 @@ namespace Core
       foreach (self::$paragraphs as $pattern => $callback) {
         $content = preg_replace_callback(
           $pattern,
-          $callback->bindTo($this),
+          function ($matches) use ($callback) {
+            return  '</p>' . $callback->bindTo($this)($matches) . '<p>';
+          },
           $content
         );
       }
-
-      // Wrap the text with the <p> if it has not wrapped by any tags
-      $content = preg_replace('/(<([\w]+)[\w ="-]*>.*?<\/\2>)/s', '</p>\1<p>', $content);
 
       // Clear the empty <p> tags
       $content = preg_replace('/\s*<p>\s*?<\/p>\s*/s', '', '<p>' . $content . '</p>');
@@ -206,7 +240,17 @@ namespace Core
       $content = preg_replace_callback(
         '/<p>(.+?)<\/p>/s',
         function($matches) {
-          return str_replace("\n", '<br />', '<p>' . trim($this->parseModifier($this->parseVariable($matches[1]))) . '</p>');
+          return str_replace(
+            // Convert the newline to break line
+            "\n",
+            '<br />',
+            // Split the paragraph if it has over two newline
+            preg_replace(
+              '/\n{2,}/s',
+              '</p><p>',
+              '<p>' . trim($this->parseModifier($this->parseVariable($matches[1]))) . '</p>'
+            )
+          );
         },
         $content
       );
