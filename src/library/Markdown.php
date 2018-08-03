@@ -11,7 +11,7 @@ namespace Core
     private $content = '';
     private $defined = array();
     private $allowStripTags = false;
-    private $allowableTags = '';
+    private $allowableTags = 'a|b|strong|strike|u|i|table|th|tr|td|thead|tfoot|tbody|pre|code|p|ol|ul|li|br|hr|h1|h2|h3|h4|h5|h6';
 
     public function __construct($text = '')
     {
