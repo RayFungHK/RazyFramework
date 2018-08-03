@@ -50,6 +50,7 @@ namespace Core
       } else {
         $this->loadContent(file_get_contents($path));
       }
+      return $this;
     }
 
     private function loadContent($text)
