@@ -7,6 +7,7 @@
 - Easy routing
 - Supports CLI mode
 - Pluggable controller, better coding management
+
 # Task List
 - New CLI Mode (Done)
 - Markdown library, Class (Done)
@@ -15,6 +16,10 @@
 - Image Manipulation Library, Class
 - Mail library, Class
 - Logging library, Tarit
+
+# Resource
+[Razy User Guide](http://rayfung.hk/Razy)
+
 # Razy Files Structure
 ```
 - .
