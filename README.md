@@ -35,7 +35,7 @@
  - material/
 ```
 # Configuration File
-Razy will deep scan the module folder for a flie called **config.php**, Razy will assume it is a module. **config.php** is an array-return file, example:
+Razy will deep scan the module folder for a file called **config.php**, Razy will assume it is a module. **config.php** is an array-return file, example:
 ```
 <?php
 return [
@@ -49,7 +49,7 @@ return [
   'remap' => '/admin/$1', // Put $1 as a module_code
   // Route setting, for example `reroute` is mapped to method `reroute` under class `example`
   'route' => array(
-    // (:any)	 Pass all arguments to 'any' route if there is no route matched
+    // (:any)  Pass all arguments to 'any' route if there is no route matched
     '(:any)' => 'example.main',
     'reroute' => 'example.reroute',
     'custom' => 'example.custom'
@@ -111,7 +111,7 @@ Razy supports CLI, and it can be executed via Windows or Linux command line. Raz
 ```
 $this->manager->getScriptParameters()
 ```
-Razy defines **CLI_MODE** to allow the developer to identify command line calls to the script or or to open by the browser. So we can modify above module sample method **main** to separate CLI Mode and Browser Mode:
+Razy defines **CLI_MODE** to allow the developer to identify command line calls to the script or to open by the browser. So we can modify above module sample method **main** to separate CLI Mode and Browser Mode:
 ```
 public function main()
 {
@@ -129,7 +129,7 @@ Now, let's call the script via command line like:
 ```
 php index.php admin example -v 1.0.0 --message "Hello World"
 ```
-Then, it results:
+Then, it should result in:
 ```
 Welcome to CLI mode
 v:           1.0.0
@@ -139,7 +139,7 @@ message:     Hello World
   'remap' => '/admin/$1', // Put $1 as a module_code
   // Route setting, for example `reroute` is mapped to method `reroute` under class `example`
   'route' => array(
-    // (:any)	 Pass all arguments to 'any' route if there is no route was matched
+    // (:any)  Pass all arguments to 'any' route if there is no route was matched
     '(:any)' => 'example.main',
     'reroute' => 'example.reroute',
     'custom' => 'example.custom'
@@ -184,7 +184,7 @@ class user extends IController
 }
 ?>
 ```
-Also, you can separate any method into another file. Such as there is a **getName** in **user** class, you can create a function-return file named:
+Also, you can separate any method into another file. For example, if there is a function **getName** in **user** class, you can create a function-return file named:
 ```
 /module/example/controller/user.getName.php
 ```
@@ -197,7 +197,7 @@ return function($argA) {
 ?>
 ```
 # CLI Mode
-Razy supports CLI, and it can execute via Windows or Linux command line. Razy assume script arguments as a routing path, and you can get the script parameters by:
+Razy supports CLI, and it can execute via Windows or Linux command line. Razy assumes script arguments as a routing path, and you can get the script parameters by:
 ```
 $this->manager->getScriptParameters()
 ```
@@ -219,7 +219,7 @@ Now, let's call the script via command line like:
 ```
 php index.php admin example -v 1.0.0 --message "Hello World"
 ```
-Then, it results:
+Then, it should result in:
 ```
 Welcome to CLI mode
 v:           1.0.0
