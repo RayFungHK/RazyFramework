@@ -12,6 +12,7 @@ namespace Core
   	private $routeMapping = array();
   	private $callableList = array();
     private $controllerList = array();
+  	private $eventListner = array();
 
   	public function __construct($modulePath, $settings)
     {
@@ -37,6 +38,17 @@ namespace Core
   					new ThrowError('ModulePackage', '3002', 'Cannot add ' . $method . ' to whitelist.');
   				}
           $this->callableList[$commandName] = $namespace;
+  			}
+  		}
+
+      // Add event listener
+  		if (isset($settings['event']) && is_array($settings['event'])) {
+  			foreach ($settings['event'] as $eventName => $namespace) {
+          $eventName = trim($eventName);
+          if (!$eventName || !$this->isValidNamespace($namespace)) {
+  					new ThrowError('ModulePackage', '3003', 'Cannot add ' . $method . ' event listener.');
+  				}
+          $this->eventListner[$eventName] = $namespace;
   			}
   		}
 
@@ -94,9 +106,6 @@ namespace Core
 
   	public function route($args)
     {
-  		$moduleController = null;
-  		$routeName = (count($args)) ? $args[0] : '(:any)';
-
       // If method route mapping matched, return the contoller
 			if (isset($this->routeMapping[$routeName])) {
 				$method = array_shift($args);
@@ -131,7 +140,10 @@ namespace Core
       $this->routeName = $routeName;
 
       // Pass all arguments to routed method
-			call_user_func_array(array($moduleController, $method), $args);
+			$result = call_user_func_array(array($moduleController, $method), $args);
+      if ($result === false) {
+        return false;
+      }
 
 			return true;
   	}
@@ -140,6 +152,32 @@ namespace Core
     {
       return $this->routeName;
     }
+
+  	public function trigger($mapping, $args)
+    {
+  		if (isset($this->eventListner[$mapping])) {
+  			list($className, $method) = explode('.', $this->eventListner[$mapping]);
+
+        if (!($moduleController = $this->getController($className))) {
+          // Error: Controller Not Found
+          new ThrowError('ModulePackage', '4004', 'Controller Not Found');
+        }
+
+        // Check the methed is callable or not, protected and private method is not executable
+        if (method_exists($moduleController, $method)) {
+          // Method Reflection, get the method type
+          $reflection = new \ReflectionMethod($moduleController, $method);
+          if (!$reflection->isPublic()) {
+            // Error: Controller function not callable
+            new ThrowError('ModulePackage', '4005', 'Cannot trigger the event, maybe it is not a public method');
+          }
+        }
+
+        call_user_func_array(array($moduleController, $method), $args);
+  		}
+
+      return $this;
+  	}
 
   	public function execute($mapping, $args)
     {
@@ -157,7 +195,7 @@ namespace Core
           $reflection = new \ReflectionMethod($moduleController, $method);
           if (!$reflection->isPublic()) {
             // Error: Controller function not callable
-            new ThrowError('ModulePackage', '3002', 'Cannot execute the method, maybe it is not a public method');
+            new ThrowError('ModulePackage', '4003', 'Cannot execute the method, maybe it is not a public method');
           }
         }
 

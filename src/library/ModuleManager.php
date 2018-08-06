@@ -13,6 +13,7 @@ namespace Core
     private $scriptPath = '';
     private $scriptRoute = '/';
     private $scriptParams = array();
+    private $target = null;
 
   	public static function GetInstance()
     {
@@ -131,6 +132,8 @@ namespace Core
 
       if ($moduleName && $mapping) {
         if (isset($this->moduleRegistered[$moduleName])) {
+          $this->target = $this->moduleRegistered[$moduleName];
+
           return $this->moduleRegistered[$moduleName]->execute($mapping, $args);
         }
       }
@@ -145,11 +148,16 @@ namespace Core
   		$event = trim($event);
 
   		foreach ($this->moduleRegistered as $moduleCode => $module) {
-  			$module->execute($event, $args);
+  			$module->trigger($event, $args);
   		}
 
       return $this;
   	}
+
+    public function getTarget()
+    {
+      return $this->target;
+    }
 
     public function getRouteArguments()
     {
@@ -189,6 +197,9 @@ namespace Core
               // Save the current route module and arguments for internal use
     					$this->routeArguments = $args;
     					$this->routeModule = $module;
+
+              // Save the current module for event
+              $this->target = $module;
 
               // Execute and pass the arguments to module
     					if ($module->route($args)) {
