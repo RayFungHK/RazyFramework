@@ -1,165 +1,208 @@
 <?php
 namespace Core
 {
-  class TemplateManager
+  class ModuleManager
   {
-    private $baseStructure = null;
-    private $currentStructure = null;
-    private $blockTree = array();
-    private $blockPointer = null;
-    private $currentBlock = null;
-    private $assignList = array();
+  	static private $instance = NULL;
+    private $remapSorted = array();
+    private $routeModule = null;
+    private $routeArguments = array();
+    private $remapMapping = array();
+    private $moduleRegistered = array();
 
-    static private $environmentAssignList = array();
-    static private $outputQueue = array();
+    private $scriptPath = '';
+    private $scriptRoute = '/';
+    private $scriptParams = array();
 
-    public function __construct($tplPath, $tplName = '')
+  	public static function GetInstance()
     {
-      // Read file content
-      if (!file_exists($tplPath)) {
-        new ThrowError('TemplateManager', '1001', 'Template file not exists');
-      }
+  		return self::$instance;
+  	}
 
-      $tplContent = file($tplPath);
-      if ($tplName) {
-        $this->tplName = $tplName;
-      } else {
-        if (($pos = strrpos('/', $tplPath)) !== FALSE) {
-          $this->tplName = substr($tplPath, $pos + 1);
-        } else {
-          $this->tplName = $tplPath;
+    public function __construct()
+    {
+  		if (self::$instance === NULL) {
+  			self::$instance = $this;
+        $moduleFolder = SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'module' . DIRECTORY_SEPARATOR;
+  			$this->loadModule($moduleFolder);
+  		} else {
+  			// Error: Loaded Twice
+  			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
+  		}
+
+      if (CLI_MODE) {
+        // Cli Mode, get arguments and parameters
+        $argv = $_SERVER['argv'];
+        $this->scriptPath = array_shift($argv);
+        $paramName = '';
+
+        foreach ($argv as $key => $value) {
+          if (preg_match('/^(-){1,2}([^\s]+)$/', $value, $matches, PREG_OFFSET_CAPTURE)) {
+            $paramName = $matches[2][0];
+            $this->scriptParams[$paramName] = true;
+          } else {
+            if ($paramName) {
+              $this->scriptParams[$paramName] = $value;
+              $paramName = '';
+            } else {
+              if (count($this->scriptParams)) {
+                new ThrowError('ModuleManager', '3001', 'Invalid command syntax.');
+              }
+              $args[] = $value;
+            }
+          }
         }
+
+        $this->scriptRoute = preg_replace('/\/+/', '/', '/' . implode('/', $args) . '/');
       }
-
-  		// Convert File Content to TemplateStructure
-  		$this->templateStructure = new TemplateStructure($this, '_ROOT', $tplContent);
-
-  		// Create a new queue in Root block
-      $rootBlock = new TemplateBlock($this->templateStructure, '_ROOT');
-  		$this->blockTree = $rootBlock;
-
-  		// Setup the template structure pointer
-  		$this->currentBlock = $this->blockPointer = $rootBlock;
-
-  		// Add current template to loaded template pool
-  		//self::$LoadedExTemplate[$this->tplName] = $this;
     }
 
-    public function gotoBlock($blockName)
+    public function getScriptPath()
     {
-      $blockName = preg_replace('/\/+/', '/', trim($blockName));
-      if ($blockName) {
-        if ($blockName[0] == '/') {
-          $this->currentBlock = $this->blockPointer = $this->blockTree;
-          $blockName = substr($blockName, 1);
-        }
-
-        if ($this->blockPointer->hasBlock($blockName)) {
-          $this->blockPointer->setPointer($blockName);
-          $this->currentBlock = $this->blockPointer;
-          return $this;
-        }
-      } else {
-        new ThrowError('TemplateManager', '2001', 'Block Name cannot be empty.');
-      }
-
-      new ThrowError('TemplateManager', '2002', 'Block [' . $blockName . '] not found.');
+      return $this->scriptPath;
     }
 
-    public function getRootBlock() {
-      return $this->blockTree;
+    public function getScriptRoute()
+    {
+      return $this->scriptRoute;
     }
 
-    public function globalAssign($variable, $value = null)
+    public function getScriptParameters()
     {
-  		if (is_array($variable)) {
-  			foreach ($variable as $tagName => $value) {
-  				$this->globalAssign($tagName, $value);
+      return $this->scriptParams;
+    }
+
+    private function loadModule($moduleFolder)
+    {
+  		$contents = array();
+  		foreach (scandir($moduleFolder) as $node) {
+  			if ($node == '.' || $node == '..') {
+  				continue;
+  			}
+
+        // Get the module path
+        $subModuleFolder = $moduleFolder . $node . DIRECTORY_SEPARATOR;
+  			if (is_dir($subModuleFolder)) {
+          // Search the setting file
+  				if (file_exists($subModuleFolder . 'config.php')) {
+            try {
+              // Create Module Package and load the setting
+              $modulePackage = new ModulePackage($subModuleFolder, require $subModuleFolder . 'config.php');
+              $this->register($modulePackage);
+            } catch (Exception $e) {
+  						// Error: Fail to load module file
+  						new ThrowError('ModuleManager', '2001', 'Fail to load module, maybe the setting file was corrupted');
+            }
+  				} else {
+  					$this->loadModule($subModuleFolder);
+  				}
+  			}
+  		}
+    }
+
+  	private function register($modulePackage)
+    {
+  		if (get_class($modulePackage) == 'Core\ModulePackage')   {
+  			if (!isset($this->moduleRegistered[$modulePackage->getCode()])) {
+  				$this->moduleRegistered[$modulePackage->getCode()] = $modulePackage;
+  				if ($remapPath = $modulePackage->getRemapPath()) {
+  					if (isset($this->remapMapping[$remapPath])) {
+  						// Error: Remap path registered
+  						new ThrowError('ModuleManaer', '1003', 'Remap path [' . $remapPath . '] was registered.');
+  					} else {
+  						$this->remapMapping[$remapPath] = $modulePackage;
+  					}
+  				}
+  			} else {
+  				// Error: Duplicated Module
+  				new ThrowError('ModuleManaer', '1004', 'Duplicated Module Code');
   			}
   		} else {
-  			$this->assignList[$variable] = $value;
+  			// Error: Invalid Class
+  			new ThrowError('ModuleManaer', '1005', 'Invalid Module File');
   		}
-  		return $this;
-    }
+  	}
 
-    public function hasGlobalAssign($variable)
+    public function execute()
     {
-      $variable = trim($variable);
-      return array_key_exists($variable, $this->assignList);
-    }
+      $args = func_get_args();
+      $command = trim(array_shift($args));
+      list($moduleName, $mapping) = explode('.', $command);
 
-    public function getGlobalAssign($variable)
-    {
-      $variable = trim($variable);
-      return (array_key_exists($variable, $this->assignList)) ? $this->assignList[$variable] : null;
-    }
-
-    public function output($returnAsValue = false)
-    {
-      if ($returnAsValue) {
-        return $this->blockTree->output();
+      if ($moduleName && $mapping) {
+        if (isset($this->moduleRegistered[$moduleName])) {
+          return $this->moduleRegistered[$moduleName]->execute($mapping, $args);
+        }
       }
-      echo $this->blockTree->output();
+
+      return false;
     }
 
-    public function addToQueue($templateName = '')
+  	public function trigger()
     {
-      $templateName = trim($templateName);
-      if (!$templateName) {
-        $templateName = sprintf('%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff));
-      }
-      self::$outputQueue[$templateName] = $this;
+  		$args = func_get_args();
+  		$event = array_shift($args);
+  		$event = trim($event);
+
+      $this->target = $event;
+
+  		foreach ($this->moduleRegistered as $moduleCode => $module) {
+  			$module->trigger($event, $args);
+  		}
+
       return $this;
-    }
+  	}
 
-    public function __invoke($selector)
+    public function getRouteArguments()
     {
-      // Remove repeatly slash
-      $selector = trim(preg_replace('/\/+/', '/', $selector));
-      if (!$selector) {
-        new ThrowError('TemplateManager', '3001', 'Selector cannot not be empty');
-      }
-
-      $blockSet = new TemplateBlockSet($this->blockTree);
-      // If selector only have a slash, return the root block
-      if ($selector == '/') {
-        return $blockSet;
-      } elseif ($selector[0] == '/') {
-        $selector = substr($selector, 1);
-      }
-      return $blockSet->find($selector);
+      return $this->routeArguments;
     }
 
-    static public function EnvironmentAssign($variable, $value = null) {
-  		if (is_array($variable)) {
-  			foreach ($variable as $tagName => $value) {
-  				self::EnvironmentAssign($tagName, $value);
+  	public function route($path)
+    {
+      $path = preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
+  		if (count($this->remapMapping)) {
+        // Sort the remap path list, the deepest route first
+  			if (!$this->remapSorted) {
+  				uksort($this->remapMapping, function($path_a, $path_b) {
+  					$count_a = substr_count($path_a, '/');
+  					$count_b = substr_count($path_b, '/');
+  			    if ($count_a == $count_b) {
+              return 0;
+  			    }
+  			    return ($count_a < $count_b) ? 1 : -1;
+    			});
+
+  				$this->remapSorted = true;
   			}
-  		} else {
-  			self::$environmentAssignList[$variable] = $value;
+
+  			foreach ($this->remapMapping as $remap => $module) {
+  				if (strpos($path, $remap) === 0) {
+            // Get the relative path and remove the last slash
+  					$argsString = preg_replace('/\/*$/', '', substr($path, strlen($remap)));
+
+            // Extract the path into an arguments array
+  					$args = ($argsString) ? explode('/', $argsString) : array();
+
+            if ($this->routeModule) {
+              // If Razy has routed already, redirect it
+              header('location: ' . URL_BASE . $path);
+            } else {
+              // Save the current route module and arguments for internal use
+    					$this->routeArguments = $args;
+    					$this->routeModule = $module;
+
+              // Execute and pass the arguments to module
+    					if ($module->route($args)) {
+    						return true;
+    					}
+            }
+  				}
+  			}
   		}
-    }
 
-    static public function HasEnvironmentAssign($variable)
-    {
-      $variable = trim($variable);
-      return array_key_exists($variable, self::$environmentAssignList);
-    }
-
-    static public function GetEnvironmentAssign($variable)
-    {
-      $variable = trim($variable);
-      return (array_key_exists($variable, self::$environmentAssignList)) ? self::$environmentAssignList[$variable] : null;
-    }
-
-    static public function OutputQueued()
-    {
-      if (count(self::$outputQueue)) {
-        foreach (self::$outputQueue as $block) {
-          $block->output();
-        }
-      }
-    }
+  		return false;
+  	}
   }
 }
 ?>
