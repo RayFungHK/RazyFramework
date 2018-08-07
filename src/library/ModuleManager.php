@@ -60,12 +60,12 @@ namespace RazyFramework
 
     public function loadLibrary($class)
     {
-      $class_path = str_replace('\\', DIRECTORY_SEPARATOR, $class);
+      $classPath = str_replace('\\', DIRECTORY_SEPARATOR, $class);
       foreach ($this->moduleRegistered as $module_code => $module) {
-        $library_path = $module->getModuleRoot() . 'library' . DIRECTORY_SEPARATOR . $class_path . '.php';
+        $libraryPath = $module->getModuleRoot() . 'library' . DIRECTORY_SEPARATOR . $classPath . '.php';
 
-        if (file_exists($library_path)) {
-  				include $library_path;
+        if (file_exists($libraryPath)) {
+  				include $libraryPath;
           return class_exists($class);
         }
       }

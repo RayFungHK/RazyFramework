@@ -31,9 +31,9 @@ namespace RazyFramework
 		if ($package == 'RazyFramework') {
 			$path = implode(DIRECTORY_SEPARATOR, $classes);
 
-			$library_path = SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'library' . DIRECTORY_SEPARATOR . $path . '.php';
-			if (file_exists($library_path)) {
-				include $library_path;
+			$libraryPath = SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'library' . DIRECTORY_SEPARATOR . $path . '.php';
+			if (file_exists($libraryPath)) {
+				include $libraryPath;
 				return class_exists($class);
 			}
 			return false;
