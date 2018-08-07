@@ -1,5 +1,5 @@
 <?php
-namespace Core
+namespace RazyFramework
 {
   define('SYSTEM_ROOT', dirname(__FILE__));
   require './system/core.inc.php';

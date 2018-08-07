@@ -1,5 +1,5 @@
 <?php
-namespace Core
+namespace RazyFramework
 {
   class ModuleManager
   {
@@ -58,6 +58,20 @@ namespace Core
       }
     }
 
+    public function loadLibrary($class)
+    {
+      $class_path = str_replace('\\', DIRECTORY_SEPARATOR, $class);
+      foreach ($this->moduleRegistered as $module_code => $module) {
+        $library_path = $module->getModuleRoot() . 'library' . DIRECTORY_SEPARATOR . $class_path . '.php';
+
+        if (file_exists($library_path)) {
+  				include $library_path;
+          return class_exists($class);
+        }
+      }
+      return false;
+    }
+
     public function getScriptPath()
     {
       return $this->scriptPath;
@@ -103,7 +117,7 @@ namespace Core
 
   	private function register($modulePackage)
     {
-  		if (get_class($modulePackage) == 'Core\ModulePackage')   {
+  		if (get_class($modulePackage) == 'RazyFramework\ModulePackage')   {
   			if (!isset($this->moduleRegistered[$modulePackage->getCode()])) {
   				$this->moduleRegistered[$modulePackage->getCode()] = $modulePackage;
   				if ($remapPath = $modulePackage->getRemapPath()) {

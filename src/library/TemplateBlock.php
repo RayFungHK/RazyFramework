@@ -1,5 +1,5 @@
 <?php
-namespace Core
+namespace RazyFramework
 {
   class TemplateBlock
   {
@@ -12,7 +12,7 @@ namespace Core
     public function __construct($structure, $tagName)
     {
       $this->tagName = $tagName;
-      if (get_class($structure) != 'Core\\TemplateStructure') {
+      if (get_class($structure) != 'RazyFramework\\TemplateStructure') {
         new ThrowError('TemplateBlock', '1001', 'Invalid TemplateStructure object.');
       }
       $this->structure = $structure;

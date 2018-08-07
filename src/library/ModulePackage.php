@@ -1,5 +1,5 @@
 <?php
-namespace Core
+namespace RazyFramework
 {
   class ModulePackage
   {
@@ -106,6 +106,7 @@ namespace Core
 
   	public function route($args)
     {
+      $routeName = array_shift($args);
       // If method route mapping matched, return the contoller
 			if (isset($this->routeMapping[$routeName])) {
 				$method = array_shift($args);
@@ -235,7 +236,7 @@ namespace Core
   					$this->controllerList[$className] = new $declaredClass($this);
 
             // Check the controller class has inherit IController class or not
-  					if (!is_subclass_of($this->controllerList[$className], 'Core\\IController')) {
+  					if (!is_subclass_of($this->controllerList[$className], 'RazyFramework\\IController')) {
   						// Error: Controller's class should inherit IController
   						new ThrowError('ModulePackage', '1002', 'Controller\'s class should inherit IController');
   					}

@@ -1,5 +1,5 @@
 <?php
-namespace Core
+namespace RazyFramework
 {
   class WebSocketIO
   {

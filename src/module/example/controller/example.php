@@ -1,5 +1,5 @@
 <?php
-namespace Core
+namespace RazyFramework
 {
   class example extends IController
   {
@@ -11,6 +11,9 @@ namespace Core
           echo "\n$param:" . str_repeat(' ', 12 - strlen($param)) . $value;
         }
       } else {
+        $sampleClass = new \sampleClass();
+        $sampleClassNS = new \Custom\objectClass();
+
         $tplmanager = $this->loadview('main');
 
         $md = new Markdown();
