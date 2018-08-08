@@ -8,9 +8,9 @@ namespace RazyFramework
     private $blockTree = array();
     private $blockPointer = null;
     private $currentBlock = null;
-    private $assignList = array();
+    private $variableList = array();
 
-    static private $environmentAssignList = array();
+    static private $environmentVariableList = array();
     static private $outputQueue = array();
 
     public function __construct($tplPath, $tplName = '')
@@ -77,21 +77,21 @@ namespace RazyFramework
   				$this->globalAssign($tagName, $value);
   			}
   		} else {
-  			$this->assignList[$variable] = $value;
+  			$this->variableList[$variable] = $value;
   		}
   		return $this;
     }
 
-    public function hasGlobalAssign($variable)
+    public function hasGlobalVariable($variable)
     {
       $variable = trim($variable);
-      return array_key_exists($variable, $this->assignList);
+      return array_key_exists($variable, $this->variableList);
     }
 
-    public function getGlobalAssign($variable)
+    public function getGlobalVariable($variable)
     {
       $variable = trim($variable);
-      return (array_key_exists($variable, $this->assignList)) ? $this->assignList[$variable] : null;
+      return (array_key_exists($variable, $this->variableList)) ? $this->variableList[$variable] : null;
     }
 
     public function output($returnAsValue = false)
@@ -136,20 +136,20 @@ namespace RazyFramework
   				self::EnvironmentAssign($tagName, $value);
   			}
   		} else {
-  			self::$environmentAssignList[$variable] = $value;
+  			self::$environmentVariableList[$variable] = $value;
   		}
     }
 
     static public function HasEnvironmentAssign($variable)
     {
       $variable = trim($variable);
-      return array_key_exists($variable, self::$environmentAssignList);
+      return array_key_exists($variable, self::$environmentVariableList);
     }
 
     static public function GetEnvironmentAssign($variable)
     {
       $variable = trim($variable);
-      return (array_key_exists($variable, self::$environmentAssignList)) ? self::$environmentAssignList[$variable] : null;
+      return (array_key_exists($variable, self::$environmentVariableList)) ? self::$environmentVariableList[$variable] : null;
     }
 
     static public function OutputQueued()

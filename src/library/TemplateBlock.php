@@ -4,7 +4,7 @@ namespace RazyFramework
   class TemplateBlock
   {
     private $tagName = '';
-    private $assignList = array();
+    private $variableList = array();
     private $structure = null;
     private $blockList = array();
     static private $modifierMapping = array();
@@ -68,7 +68,7 @@ namespace RazyFramework
   				$this->assign($tagName, $value);
   			}
   		} else {
-  			$this->assignList[$variable] = $value;
+  			$this->variableList[$variable] = $value;
   		}
   		return $this;
     }
@@ -103,7 +103,7 @@ namespace RazyFramework
         }
       }
 
-			// Search variable assign tag, pettern: {$assign_tag(|modifier(:parameter)*)*}
+			// Search variable tag, pettern: {$variable_tag(|modifier(:parameter)*)*}
 			$outputContent = $this->parseTag($outputContent);
 
       // Put back sub structure into output content
@@ -116,17 +116,17 @@ namespace RazyFramework
 
     public function getValue($tagname)
     {
-      if (array_key_exists($tagname, $this->assignList)) {
-        return $this->assignList[$tagname];
+      if (array_key_exists($tagname, $this->variableList)) {
+        return $this->variableList[$tagname];
       }
       return '';
     }
 
   	private function parseTag($outputContent)
     {
-      // Search assign tag
+      // Search variable tag
       // Function Tag pettern: {func_name( parameter="value")*}
-      // Assign Tag pettern: {$variable(|modifier(:"value")*)*}
+      // Variable Tag pettern: {$variable(|modifier(:"value")*)*}
 			return preg_replace_callback(
         '/\{(?|(?:(\$?)(\w+)((?:\|\w+(?::(?>\w+|"(?:[^"\\\\]|\\\\.)*")?)*)*))|(?:()(\w+)((?:\h+\w+(?:=(?>\w+|"(?>[^"\\\\]|\\\\.)*"))*)*)))\}(?>((?>.|(?R))+){\/\$\2})?/si',
         function($matches) {
@@ -138,20 +138,20 @@ namespace RazyFramework
             $clipsCount = preg_match_all('/\|(\w+)((?::(?|(?:\w+)|"(?:[^"\\\\]|\\\\.)*")?)*)/i', $matches[3], $clips, PREG_SET_ORDER);
 
             // Find assigned value
-    				if (array_key_exists($tagname, $this->assignList)) {
-    					// Block level assign
-    					$value = $this->assignList[$tagname];
-    				} elseif ($this->structure->getManager()->hasGlobalAssign($tagname)) {
-    					// Global level assign
-    					$value = $this->structure->getManager()->getGlobalAssign($tagname);
-    				} elseif (TemplateManager::HasEnvironmentAssign($tagname)) {
-    					// Global level assign
-    					$value = TemplateManager::GetEnvironmentAssign($tagname);
+    				if (array_key_exists($tagname, $this->variableList)) {
+    					// Block level variable tag
+    					$value = $this->variableList[$tagname];
+    				} elseif ($this->structure->getManager()->hasGlobalVariable($tagname)) {
+    					// Global level variable tag
+    					$value = $this->structure->getManager()->getGlobalVariable($tagname);
+    				} elseif (TemplateManager::HasEnvironmentVariable($tagname)) {
+    					// Global level variable tag
+    					$value = TemplateManager::GetEnvironmentVariable($tagname);
     				} elseif ($clipsCount == 0) {
     					return $matches[0];
     				}
 
-    				// If assign tag includes modifier clips, start extract the modifier
+    				// If variable tag includes modifier clips, start extract the modifier
     				if ($clipsCount) {
     					foreach ($clips as $clip) {
     						// Get the function name and parameters string
@@ -181,13 +181,13 @@ namespace RazyFramework
     							}
 
     							array_unshift($parameters, $value);
-    							// Execute the assign tag function
+    							// Execute the variable tag function
     							$value = $this->parseTag(self::CallModifier('modifier.' . $funcname, $parameters));
     						}
     					}
             }
 
-            // Balanced assign tag found, if return value is not false or null
+            // Balanced variable tag found, if return value is not false or null
             // Return the wrapped content
             if (isset($matches[4])) {
               return ($value) ? $this->parseTag($matches[4]) : '';
@@ -210,7 +210,7 @@ namespace RazyFramework
   							}
   						}
 
-  						// Execute the assign tag function
+  						// Execute the variable tag function
   						return self::CallModifier('func.' . $funcname, [$parameters]);
             }
             return '';
@@ -221,16 +221,16 @@ namespace RazyFramework
       );
   	}
 
-    public function hasAssign($variable)
+    public function hasVariable($variable)
     {
       $variable = trim($variable);
-      return array_key_exists($variable, $this->assignList);
+      return array_key_exists($variable, $this->variableList);
     }
 
-    public function getAssign($variable)
+    public function getVariable($variable)
     {
       $variable = trim($variable);
-      return (array_key_exists($variable, $this->assignList)) ? $this->assignList[$variable] : null;
+      return (array_key_exists($variable, $this->variableList)) ? $this->variableList[$variable] : null;
     }
 
     static private function ModifierExists($modifier)

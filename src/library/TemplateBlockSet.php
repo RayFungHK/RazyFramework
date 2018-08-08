@@ -28,7 +28,7 @@ namespace RazyFramework
             // Extract condition and filter function tag
             $pathCount = preg_match('/([\w-]+)((?:\[(?|!\w+|\w+(?:(?|(?:!?=)|(?:=[\^*$|]))(?|\w+|(?:"(?:[^"\\\\]|\\\\.)*"))?))\])*)((?::[\w-]+(?:\((?|\w+|(?:"(?:[^"\\\\]|\\\\.)*"))\))?)?)/i', $path, $clip);
             $blockName = $clip[1];
-            $assignFilter = array();
+            $variableFilter = array();
             $functionFilter = null;
             $blocks = array();
 
@@ -36,7 +36,7 @@ namespace RazyFramework
             if (isset($clip[2])) {
               preg_match_all('/\[(?|(?:(!)(\w+))|(?:()(\w+)(?:(?|(!?=)|(=[\^*$|]))(?|(\w+)|(?:"((?:[^"\\\\]|\\\\.)*)")))?))\]/i', $clip[2], $matches, PREG_SET_ORDER);
               foreach ($matches as $match) {
-                $assignFilter[] = $match;
+                $variableFilter[] = $match;
               }
             }
 
@@ -84,15 +84,15 @@ namespace RazyFramework
               }
             }
 
-            if (count($nextBlockList) && count($assignFilter)) {
+            if (count($nextBlockList) && count($variableFilter)) {
               foreach ($nextBlockList as $index => $block) {
-                foreach ($assignFilter as $filter) {
+                foreach ($variableFilter as $filter) {
                   $negative = ($filter[1] == '!') ? true : false;
                   $tagName = $filter[2];
 
                   $valueDefined = false;
                   // Check the value is defined & not empty
-                  if ($block->hasAssign($tagName) && $block->getAssign($tagName)) {
+                  if ($block->hasVariable($tagName) && $block->getVariable($tagName)) {
                     $valueDefined = true;
                   }
 
@@ -109,7 +109,7 @@ namespace RazyFramework
                   if (isset($filter[3])) {
                     $operator = $filter[3];
                     $comparison = ($filter[5] == '"') ? stripcslashes($filter[4]) : $filter[4];
-                    $value = $block->getAssign($tagName);
+                    $value = $block->getVariable($tagName);
                     if (
                       (is_string($value) && (
                         // Equal
@@ -164,11 +164,11 @@ namespace RazyFramework
       return $this;
     }
 
-    public function assign($variable, $value = null)
+    public function variable($variable, $value = null)
     {
       if (count($this)) {
         foreach ($this as $block) {
-          $block->assign($variable, $value);
+          $block->variable($variable, $value);
         }
       }
       return $this;
