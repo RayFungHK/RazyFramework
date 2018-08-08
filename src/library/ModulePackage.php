@@ -106,7 +106,7 @@ namespace RazyFramework
 
   	public function route($args)
     {
-      $routeName = array_shift($args);
+      $routeName = $args[0];
       // If method route mapping matched, return the contoller
 			if (isset($this->routeMapping[$routeName])) {
 				$method = array_shift($args);

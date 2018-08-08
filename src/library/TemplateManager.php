@@ -140,13 +140,13 @@ namespace RazyFramework
   		}
     }
 
-    static public function HasEnvironmentAssign($variable)
+    static public function HasEnvironmentVariable($variable)
     {
       $variable = trim($variable);
       return array_key_exists($variable, self::$environmentVariableList);
     }
 
-    static public function GetEnvironmentAssign($variable)
+    static public function GetEnvironmentVariable($variable)
     {
       $variable = trim($variable);
       return (array_key_exists($variable, self::$environmentVariableList)) ? self::$environmentVariableList[$variable] : null;
