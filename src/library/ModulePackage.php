@@ -106,7 +106,9 @@ namespace RazyFramework
 
   	public function route($args)
     {
-      $routeName = $args[0];
+      $moduleController = null;
+  		$routeName = (count($args)) ? $args[0] : '(:any)';
+  
       // If method route mapping matched, return the contoller
 			if (isset($this->routeMapping[$routeName])) {
 				$method = array_shift($args);

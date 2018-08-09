@@ -128,7 +128,7 @@ namespace RazyFramework
       // Function Tag pettern: {func_name( parameter="value")*}
       // Variable Tag pettern: {$variable(|modifier(:"value")*)*}
 			return preg_replace_callback(
-        '/\{(?|(?:(\$?)(\w+)((?:\|\w+(?::(?>\w+|"(?:[^"\\\\]|\\\\.)*")?)*)*))|(?:()(\w+)((?:\h+\w+(?:=(?>\w+|"(?>[^"\\\\]|\\\\.)*"))*)*)))\}(?>((?>.|(?R))+){\/\$\2})?/si',
+        '/\{(?|(?:(\$?)(\w+)((?:\|\w+(?::(?>\w+|"(?:[^"\\\\]|\\\\.)*")?)*)*))|(?:()(\w+)((?:\h+\w+(?:=(?>\w+|"(?>[^"\\\\]|\\\\.)*"))*)*)))\}(?>((?>.|(?R))+){\/\1\2})?/si',
         function($matches) {
           if ($matches[1] == '$') {
             $tagname = $matches[2];
@@ -151,6 +151,8 @@ namespace RazyFramework
     					return $matches[0];
     				}
 
+            $bindObject = new \stdClass();
+
     				// If variable tag includes modifier clips, start extract the modifier
     				if ($clipsCount) {
     					foreach ($clips as $clip) {
@@ -159,30 +161,30 @@ namespace RazyFramework
 
     						// Check the plugin is exists or not
     						if (self::ModifierExists('modifier.' . $funcname)) {
-    							$parameters = array();
+    							$bindObject->arguments = array();
     							// Extract the parameters
     							if (isset($clip[2])) {
     								$clipsCount = preg_match_all('/:(?|(\w+)()|(?:"((?:[^"\\\\]|\\\\.)*)(")))?/', $clip[2], $params, PREG_SET_ORDER);
     								foreach ($params as $match) {
                       if (isset($match[1])) {
     										if ($match[1] == 'true') {
-    											$parameters[] = true;
+    											$bindObject->arguments[] = true;
     										} elseif ($match[1] == 'false') {
-    											$parameters[] = false;
+    											$bindObject->arguments[] = false;
     										} else {
     											// If the parameter quoted by double quote, the string with backslashes
     											// that recognized by C-like \n, \r ..., octal and hexadecimal representation will be stripped off
-    											$parameters[] = ($match[2] == '"') ? stripcslashes($match[1]) : stripslashes($match[1]);
+    											$bindObject->arguments[] = ($match[2] == '"') ? stripcslashes($match[1]) : stripslashes($match[1]);
     										}
                       } else {
-                        $parameters[] = '';
+                        $bindObject->arguments[] = '';
                       }
     								}
     							}
 
     							array_unshift($parameters, $value);
     							// Execute the variable tag function
-    							$value = $this->parseTag(self::CallModifier('modifier', $funcname, $parameters));
+    							$value = $this->parseTag(self::CallModifier('modifier', $funcname, $bindObject));
     						}
     					}
             }
@@ -198,6 +200,10 @@ namespace RazyFramework
             $funcname = $matches[2];
   					$clipsCount = preg_match_all('/\s+(\w+)(?:=(?|(\w+)()|"((?:[^"\\\\]|\\\\.)*)(")))?/', $matches[3], $clips, PREG_SET_ORDER);
 
+            $bindObject = new \stdClass();
+            $bindObject->parameters = array();
+            $bindObject->content = null;
+
   					if (self::ModifierExists('func.' . $funcname)) {
   						$parameters = array();
   						if (count($clips)) {
@@ -206,12 +212,17 @@ namespace RazyFramework
   								if (array_key_exists(2, $clip)) {
   									$value = ($clip[3] == '"') ? stripcslashes($clip[2]) : $clip[2];
   								}
-  								$parameters[$clip[1]] = $value;
+  								$bindObject->parameters[$clip[1]] = $value;
   							}
   						}
 
-  						// Execute the variable tag function
-  						return self::CallModifier('func', $funcname, $parameters);
+              if (isset($matches[4])) {
+                $bindObject->content = $this->parseTag($matches[4]);
+              }
+
+              // Execute the variable tag function
+              $result = self::CallModifier('func', $funcname, $bindObject);
+              return ($result === false) ? $matches[0] : $result;
             }
             return '';
           }
@@ -249,23 +260,17 @@ namespace RazyFramework
       return isset(self::$modifierMapping[$modifier]);
     }
 
-    static private function CallModifier($type, $modifier, $args)
+    static private function CallModifier($type, $modifier, object $bindObject)
     {
       $modifierName = $type . '.' . $modifier;
       if (!self::ModifierExists($modifierName)) {
         new ThrowError('TemplateBlock', '3001', 'Cannot load [' . $modifierName . '] modifier function.');
       }
 
-      $bindObject = new \stdClass();
-      if ($type == 'func') {
-        $bindObject->parameters = $args;
-        $bindObject->content = '';
-        $args = array();
-      } else {
-        $bindObject->arguments = $args;
-      }
-
-      return call_user_func_array(\Closure::bind(self::$modifierMapping[$modifierName], $bindObject), $args);
+      return call_user_func_array(
+        \Closure::bind(self::$modifierMapping[$modifierName], $bindObject),
+        (property_exists($bindObject, 'arguments')) ? $bindObject->arguments : array()
+      );
     }
   }
 }

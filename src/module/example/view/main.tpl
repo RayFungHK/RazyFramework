@@ -18,8 +18,16 @@
   </style>
 </head>
 <body>
-  This Razy Framework is developed by {$showname}Ray Fung{/$showname}
   <article class="markdown-body">
+    <p>
+      {repeat count="10"}
+      Hello!
+      {/repeat}
+    </p>
+    <p>
+      This Razy Framework is developed by {$showname}Ray Fung{/$showname}
+    </p>
+
     {$markdown}
   </article>
 </body>
