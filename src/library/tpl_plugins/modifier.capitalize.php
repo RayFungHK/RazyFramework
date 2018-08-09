@@ -1,5 +1,5 @@
 <?php
 return function($value) {
-  return trim($value);
+  return ucwords(strtolower($value));
 };
 ?>
