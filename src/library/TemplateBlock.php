@@ -182,7 +182,7 @@ namespace RazyFramework
 
     							array_unshift($parameters, $value);
     							// Execute the variable tag function
-    							$value = $this->parseTag(self::CallModifier('modifier.' . $funcname, $parameters));
+    							$value = $this->parseTag(self::CallModifier('modifier', $funcname, $parameters));
     						}
     					}
             }
@@ -211,7 +211,7 @@ namespace RazyFramework
   						}
 
   						// Execute the variable tag function
-  						return self::CallModifier('func.' . $funcname, [$parameters]);
+  						return self::CallModifier('func', $funcname, $parameters);
             }
             return '';
           }
@@ -249,12 +249,23 @@ namespace RazyFramework
       return isset(self::$modifierMapping[$modifier]);
     }
 
-    static private function CallModifier($modifier, $args)
+    static private function CallModifier($type, $modifier, $args)
     {
-      if (!self::ModifierExists($modifier)) {
-        new ThrowError('TemplateBlock', '3001', 'Cannot load [' . $modifier . '] modifier function.');
+      $modifierName = $type . '.' . $modifier;
+      if (!self::ModifierExists($modifierName)) {
+        new ThrowError('TemplateBlock', '3001', 'Cannot load [' . $modifierName . '] modifier function.');
       }
-      return call_user_func_array(self::$modifierMapping[$modifier], $args);
+
+      $bindObject = new \stdClass();
+      if ($type == 'func') {
+        $bindObject->parameters = $args;
+        $bindObject->content = '';
+        $args = array();
+      } else {
+        $bindObject->arguments = $args;
+      }
+
+      return call_user_func_array(\Closure::bind(self::$modifierMapping[$modifierName], $bindObject), $args);
     }
   }
 }
