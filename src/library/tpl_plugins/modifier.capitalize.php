@@ -1,5 +1,5 @@
 <?php
-return function($value) {
-  return ucwords(strtolower($value));
+return function() {
+  return ucwords(strtolower($this->value));
 };
 ?>

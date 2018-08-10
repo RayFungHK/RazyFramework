@@ -7,7 +7,8 @@ namespace RazyFramework
     private $variableList = array();
     private $structure = null;
     private $blockList = array();
-    static private $modifierMapping = array();
+    static private $modifiers = array();
+    static private $dynamicModifiers = array();
 
     public function __construct($structure, $tagName)
     {
@@ -160,7 +161,7 @@ namespace RazyFramework
     						$funcname = $clip[1];
 
     						// Check the plugin is exists or not
-    						if (self::ModifierExists('modifier.' . $funcname)) {
+    						if (self::GetModifier('modifier.' . $funcname)) {
     							$bindObject->arguments = array();
     							// Extract the parameters
     							if (isset($clip[2])) {
@@ -204,7 +205,7 @@ namespace RazyFramework
             $bindObject->parameters = array();
             $bindObject->content = null;
 
-  					if (self::ModifierExists('func.' . $funcname)) {
+  					if (self::GetModifier('func.' . $funcname)) {
   						$parameters = array();
   						if (count($clips)) {
   							foreach ($clips as $clip) {
@@ -244,31 +245,65 @@ namespace RazyFramework
       return (array_key_exists($variable, $this->variableList)) ? $this->variableList[$variable] : null;
     }
 
-    static private function ModifierExists($modifier)
+    static public function CreateModifier(string $name, callable $callback)
     {
-      if (!array_key_exists($modifier, self::$modifierMapping)) {
-        self::$modifierMapping[$modifier] = null;
+      $name = trim($name);
+      if (preg_match('/^[\w-]+$/', $name)) {
+        $modifier = 'modifier.' . $name;
+        if (!isset(self::$modifiers[$modifier])) {
+          self::$dynamicModifiers[$modifier] = null;
+        }
+
+        if (is_callable($callback)) {
+          self::$dynamicModifiers[$modifier] = $callback;
+        }
+      }
+    }
+
+    static public function CreateFunctionTag(string $name, callable $callback)
+    {
+      $name = trim($name);
+      if (preg_match('/^[\w-]+$/', $name)) {
+        $modifier = 'func.' . $name;
+        if (!isset(self::$modifiers[$modifier])) {
+          self::$dynamicModifiers[$modifier] = null;
+        }
+
+        if (is_callable($callback)) {
+          self::$dynamicModifiers[$modifier] = $callback;
+        }
+      }
+    }
+
+    static private function GetModifier($modifier)
+    {
+      if (!array_key_exists($modifier, self::$modifiers)) {
+        self::$modifiers[$modifier] = null;
         $pluginFile = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl_plugins' . DIRECTORY_SEPARATOR . $modifier . '.php';
         if (file_exists($pluginFile)) {
           $callback = require $pluginFile;
           if (is_callable($callback)) {
-            self::$modifierMapping[$modifier] = $callback;
+            self::$modifiers[$modifier] = $callback;
+            return $callback;
           }
         }
       }
 
-      return isset(self::$modifierMapping[$modifier]);
+      if (array_key_exists($modifier, self::$dynamicModifiers)) {
+        return self::$dynamicModifiers[$modifier];
+      }
+      return self::$modifiers[$modifier];
     }
 
     static private function CallModifier($type, $modifier, object $bindObject)
     {
       $modifierName = $type . '.' . $modifier;
-      if (!self::ModifierExists($modifierName)) {
+      if (!($modifier = self::GetModifier($modifierName))) {
         new ThrowError('TemplateBlock', '3001', 'Cannot load [' . $modifierName . '] modifier function.');
       }
 
       return call_user_func_array(
-        \Closure::bind(self::$modifierMapping[$modifierName], $bindObject),
+        \Closure::bind($modifier, $bindObject),
         (property_exists($bindObject, 'arguments')) ? $bindObject->arguments : array()
       );
     }
