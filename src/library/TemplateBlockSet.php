@@ -14,7 +14,7 @@ namespace RazyFramework
     {
       // Trim selector, remove repeatly slash
       $selector = trim(preg_replace('/\/+/', '/', $selector . '/'));
-      if (preg_match('/^(?:(?:[\w-]+)(?:\[(?|!\w+|\w+(?:(?|(?:!?=)|(?:=[\^*$|]))(?|\w+|(?:"(?:[^"\\\\]|\\\\.)*"))?))\])*(:[\w-]+(?:\((?|\w+|(?:"(?:[^"\\\\]|\\\\.)*"))\))?)*\/)+$/', $selector)) {
+      if (preg_match('/^(?:\w+(?:\[\w+(?:=[\^*$|]?(?:\w+|"(?:[^"\\\\]+|(?:\\\\{2})+|\\\\")+"))?\])*(?::[\w-]+(?:\([^()]+\))?)*\/)+$/', $selector)) {
         // Get the current level block list
         $blockList = $this->getArrayCopy();
 
@@ -26,7 +26,7 @@ namespace RazyFramework
         if (count($pathClips)) {
           foreach ($pathClips as $path) {
             // Extract condition and filter function tag
-            $pathCount = preg_match('/([\w-]+)((?:\[(?|!\w+|\w+(?:(?|(?:!?=)|(?:=[\^*$|]))(?|\w+|(?:"(?:[^"\\\\]|\\\\.)*"))?))\])*)((?::[\w-]+(?:\((?|\w+|(?:"(?:[^"\\\\]|\\\\.)*"))\))?)?)/i', $path, $clip);
+            $pathCount = preg_match('/(\w+)((?:\[\w+(?:(?|!=|=[\^*$|]?)(?:\w+|"(?:[^"\\\\]+|(?:\\\\{2})+|\\\\")+"))?\])*)((?::[\w-]+(?:\([^()]+\))?)*)/', $path, $clip);
             $blockName = $clip[1];
             $variableFilter = array();
             $functionFilter = null;
@@ -34,7 +34,7 @@ namespace RazyFramework
 
             // Extract condition tag
             if (isset($clip[2])) {
-              preg_match_all('/\[(?|(?:(!)(\w+))|(?:()(\w+)(?:(?|(!?=)|(=[\^*$|]))(?|(\w+)|(?:"((?:[^"\\\\]|\\\\.)*)")))?))\]/i', $clip[2], $matches, PREG_SET_ORDER);
+              preg_match_all('/\[(\w+)(?:(?|(!=)|(=[\^*$|]?))(?|(\w+)|"(?:[^"\\\\]+|(?:\\\\{2})+|\\\\")+"))?\]/', $clip[2], $matches, PREG_SET_ORDER);
               foreach ($matches as $match) {
                 $variableFilter[] = $match;
               }
@@ -42,8 +42,10 @@ namespace RazyFramework
 
             // Extract filter function tag
             if (isset($clip[3])) {
-              if (preg_match_all('/^:([\w-]+)(?:\((?|([\w+-]*)()|(?:"((?:[^"\\\\]|\\\\.)*)(")))\))?$/i', $clip[3], $matches, PREG_SET_ORDER)) {
-                $functionFilter = $matches[0];
+              if (preg_match_all('/:([\w-]+)(?:\(([^()]+)\))?/i', $clip[3], $matches, PREG_SET_ORDER)) {
+                foreach ($matches as $match) {
+                  $functionFilter[] = $match;
+                }
               }
             }
 
@@ -87,29 +89,19 @@ namespace RazyFramework
             if (count($nextBlockList) && count($variableFilter)) {
               foreach ($nextBlockList as $index => $block) {
                 foreach ($variableFilter as $filter) {
-                  $negative = ($filter[1] == '!') ? true : false;
-                  $tagName = $filter[2];
+                  $tagName = $filter[1];
 
-                  $valueDefined = false;
                   // Check the value is defined & not empty
                   if ($block->hasVariable($tagName) && $block->getVariable($tagName)) {
                     $valueDefined = true;
                   }
 
-                  if (!$negative) {
-                    $valueDefined = !$valueDefined;
-                  }
-
-                  if (!$valueDefined) {
-                    unset($nextBlockList[$index]);
-                    break;
-                  }
-
                   // If operator exists, start condition filter
                   if (isset($filter[3])) {
-                    $operator = $filter[3];
-                    $comparison = ($filter[5] == '"') ? stripcslashes($filter[4]) : $filter[4];
+                    $operator = $filter[2];
+                    $comparison = stripcslashes($filter[3]);
                     $value = $block->getVariable($tagName);
+
                     if (
                       (is_string($value) && (
                         // Equal

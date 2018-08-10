@@ -138,7 +138,7 @@ namespace RazyFramework
     {
       $parsedVariable = array();
       $text = preg_replace_callback(
-        '/(!?)\[((?:(?<=\\\\)[\[\]]|[^\[\]]|(?R))+?)(?<!\\\\)\](?:\((.+?)(?<!\\\\)\))?(?:\[(.+?)(?<!\\\\)\])?/',
+        '/(!?)\[((?:[^\[\]\\\\]+|(?:\\\\{2})+|\\\\[\[\]]|(?R))*)\](?:\(((?:[^()\\\\]+|(?:\\\\{2})+|\\\\[()])*)\))?(?:\[((?:[^\[\]\\\\]+|(?:\\\\{2})+|\\\\[\[\]])*)\])?/',
         function ($matches) use ($context, &$parsedVariable) {
           $guid = '[{#' . sprintf('%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535)) . '}]';
           $parsedVariable[$guid] = $matches[0];
