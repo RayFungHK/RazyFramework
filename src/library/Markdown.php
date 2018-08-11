@@ -138,7 +138,7 @@ namespace RazyFramework
     {
       $parsedVariable = array();
       $text = preg_replace_callback(
-        '/(!?)\[((?:[^\[\]\\\\]+|(?:\\\\{2})+|\\\\[\[\]]|(?R))*)\](?:\(((?:[^()\\\\]+|(?:\\\\{2})+|\\\\[()])*)\))?(?:\[((?:[^\[\]\\\\]+|(?:\\\\{2})+|\\\\[\[\]])*)\])?/',
+        '/(!?)\[((?>[^\[\]\\\\]+|\\\\[\[\]]|(?R))*)\](?:\(((?>[^()\[\]\\\\]+|\\\\[()\[\]])*)\))?(?:\[((?>[^\[\]\\\\]+|\\\\[\[\]])*)\])?/',
         function ($matches) use ($context, &$parsedVariable) {
           $guid = '[{#' . sprintf('%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535)) . '}]';
           $parsedVariable[$guid] = $matches[0];
@@ -185,7 +185,7 @@ namespace RazyFramework
 
       if ($this->allowStripTags) {
         $text = preg_replace_callback(
-          '/<\h*(?!\/?(' . $this->allowableTags . ')(?=\b)).*?(?<!\\\\)>/s',
+          '/<\h*(?!\/?(' . $this->allowableTags . ')(?=\b))(?>[^<>\\\\]+|\\\\.)*>/s',
           function ($matches) {
             return htmlspecialchars($matches[0]);
           },

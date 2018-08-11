@@ -19,11 +19,14 @@
 </head>
 <body>
   <article class="markdown-body">
+    {repeat count="2"}
     <p>
+      Repeat:
       {repeat count="10"}
       Hello!
       {/repeat}
     </p>
+    {/repeat}
     <p>
       This Razy Framework is developed by {$showname}Ray Fung{/$showname}
     </p>
