@@ -1,9 +1,19 @@
 <?php
+
+/*
+ * This file is part of RazyFramwork.
+ *
+ * (c) Ray Fung <hello@rayfung.hk>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace RazyFramework
 {
 	session_start();
 
-	if (php_sapi_name() == 'cli' OR defined('STDIN')) {
+	if (\PHP_SAPI === 'cli' || defined('STDIN')) {
 		define('CLI_MODE', true);
 	} else {
 		define('CLI_MODE', false);
@@ -17,32 +27,34 @@ namespace RazyFramework
 		define('PORT', $_SERVER['SERVER_PORT']);
 
 		// Generate the URL path
-		define('URL_BASE', (((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || PORT == '443') ? 'https://' : 'http://') . HTTP_PATH_ROOT . ((PORT != '80' && PORT != '443') ? ':' . PORT : '') . URL_ROOT);
+		define('URL_BASE', (((isset($_SERVER['HTTPS']) && 'on' === $_SERVER['HTTPS']) || PORT === '443') ? 'https://' : 'http://') . HTTP_PATH_ROOT . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT);
 	}
 
-	define('MATERIAL_PATH', SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'material' . DIRECTORY_SEPARATOR);
+	define('MATERIAL_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'material' . \DIRECTORY_SEPARATOR);
 
 	// Register Autoloader
-	spl_autoload_register(function($class) {
+	spl_autoload_register(function ($class) {
 		$classes = explode('\\', $class);
 		$package = (count($classes) > 1) ? array_shift($classes) : '';
 
 		// Load Razy core library from root library folder
-		if ($package == 'RazyFramework') {
-			$path = implode(DIRECTORY_SEPARATOR, $classes);
+		if ('RazyFramework' === $package) {
+			$path = implode(\DIRECTORY_SEPARATOR, $classes);
 
-			$libraryPath = SYSTEM_ROOT . DIRECTORY_SEPARATOR . 'library' . DIRECTORY_SEPARATOR . $path . '.php';
+			$libraryPath = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'library' . \DIRECTORY_SEPARATOR . $path . '.php';
 			if (file_exists($libraryPath)) {
 				include $libraryPath;
+
 				return class_exists($class);
 			}
+
 			return false;
-		} else {
-			// If the autoload class is not in RazyFramework namespace, load external library from module folder
-			$manager = ModuleManager::GetInstance();
-			return $manager->loadLibrary($class);
 		}
+		// If the autoload class is not in RazyFramework namespace, load external library from module folder
+		$manager = ModuleManager::GetInstance();
+
+		return $manager->loadLibrary($class);
+
 		return false;
 	});
 }
-?>

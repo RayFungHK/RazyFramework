@@ -1,5 +1,5 @@
 <?php
-return function($index, $block, $elements, $arg = null) {
-	return ($index == 0);
+return function() {
+	return $this->index == 0;
 }
 ?>

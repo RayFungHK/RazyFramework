@@ -31,6 +31,13 @@
       This Razy Framework is developed by {$showname}Ray Fung{/$showname}
     </p>
 
+    <h1>Template Block Operation & Selector</h1>
+    <!-- START BLOCK: levelA -->
+    <p>
+      index: {$index}, name: {$name}
+    </p>
+    <!-- END BLOCK: levelA -->
+
     {$markdown}
   </article>
 </body>

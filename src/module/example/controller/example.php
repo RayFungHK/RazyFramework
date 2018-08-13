@@ -23,6 +23,20 @@ namespace RazyFramework
           'markdown' => $md->parse(),
           'showname' => true
         ));
+
+        // Block selector
+        $root = $tplmanager->getRootBlock();
+        $index = 0;
+        foreach (['Peter', 'May', 'John', 'Sally', 'Karn'] as $name) {
+          $root->newBlock('levelA')->assign(array(
+            'index' => ++$index,
+            'name' => $name
+          ));
+        }
+
+        $tplmanager('levelA[name=$"y"]')->assign('name', function($value) {
+          return $value . ' (Found)';
+        });
       }
     }
 
