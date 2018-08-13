@@ -14,15 +14,15 @@ namespace RazyFramework
   class ModuleManager
   {
   	private static $instance = null;
-  	private $remapSorted     = [];
+
   	private $routeModule;
+  	private $remapSorted      = [];
   	private $routeArguments   = [];
   	private $remapMapping     = [];
   	private $moduleRegistered = [];
-
-  	private $scriptPath   = '';
-  	private $scriptRoute  = '/';
-  	private $scriptParams = [];
+  	private $scriptPath       = '';
+  	private $scriptRoute      = '/';
+  	private $scriptParams     = [];
   	private $target;
 
   	public function __construct()
@@ -31,6 +31,11 @@ namespace RazyFramework
   			self::$instance = $this;
   			$moduleFolder   = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
   			$this->loadModule($moduleFolder);
+
+        // Load event: __onReady
+        foreach ($this->moduleRegistered as $module) {
+          $module->ready();
+        }
   		} else {
   			// Error: Loaded Twice
   			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
@@ -191,7 +196,6 @@ namespace RazyFramework
 
   	private function loadModule($moduleFolder)
   	{
-  		$contents = [];
   		foreach (scandir($moduleFolder) as $node) {
   			if ('.' === $node || '..' === $node) {
   				continue;

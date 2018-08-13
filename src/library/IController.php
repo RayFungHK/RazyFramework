@@ -25,6 +25,9 @@ namespace RazyFramework
   		$this->declaredClass = $this->reflection->getShortName();
   		$this->manager       = ModuleManager::GetInstance();
   		$this->module        = $module;
+
+      // Load Preload Event
+      $this->__onModuleLoaded();
   	}
 
   	private function __methodExists($methodName)
@@ -65,6 +68,16 @@ namespace RazyFramework
   		return call_user_func_array($closure, $arguments);
   	}
 
+    protected function __onModuleLoaded()
+    {
+      return $this;
+    }
+
+    public function __onReady()
+    {
+      return $this;
+    }
+
   	final public function getReflection()
   	{
   		return $this->reflection;
@@ -83,7 +96,7 @@ namespace RazyFramework
   	final protected function loadview($filepath, $rootview = false)
   	{
   		// If there is no extension provided, default as .tpl
-  		if (!preg_match('/\.[a-z]+$/', $filepath)) {
+  		if (!preg_match('/\.[a-z]+$/i', $filepath)) {
   			$filepath .= '.tpl';
   		}
 

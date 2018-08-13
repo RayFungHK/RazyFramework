@@ -14,10 +14,11 @@ namespace RazyFramework
   define('SYSTEM_ROOT', __DIR__);
   require './system/core.inc.php';
 
-  // Load module
-  $moduleManager = new ModuleManager();
-
   if (CLI_MODE) {
+    define('REQUEST_ROUT', null);
+
+    // Load module
+    $moduleManager = new ModuleManager();
   	$path = $moduleManager->getScriptRoute();
 
   	if (!$moduleManager->route($path)) {
@@ -29,6 +30,10 @@ namespace RazyFramework
   	$urlQuery         = parse_url($urlQuery);
   	$urlQuery['path'] = rtrim($urlQuery['path'], '/') . '/';
 
+    define('REQUEST_ROUT', $urlQuery['path']);
+
+    // Load module
+    $moduleManager = new ModuleManager();
   	if (!$moduleManager->route($urlQuery['path'])) {
   		header('HTTP/1.0 404 Not Found');
   		die();

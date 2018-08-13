@@ -22,7 +22,9 @@ namespace RazyFramework
   	private $routeMapping   = [];
   	private $callableList   = [];
   	private $controllerList = [];
+  	private $coreController = [];
   	private $eventListner   = [];
+    private $moduleReady = false;
 
   	public function __construct($modulePath, $settings)
   	{
@@ -84,7 +86,19 @@ namespace RazyFramework
   				$this->remapPath = '/' . $this->moduleCode . '/';
   			}
   		}
+
+      // Preload module core controller
+      $this->coreController = $this->getController($settings['module_code']);
   	}
+
+    public function ready()
+    {
+      if (!$this->moduleReady) {
+        $this->coreController->__onReady();
+        $this->moduleReady = true;
+      }
+      return $this;
+    }
 
   	public function getCode()
   	{
