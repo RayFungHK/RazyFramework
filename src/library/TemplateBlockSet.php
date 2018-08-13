@@ -78,12 +78,13 @@ namespace RazyFramework
 
   						foreach ($blockCollection as $index => $block) {
   							// Declare the object
-  							$bindObject                  = new \stdClass();
-  							$bindObject->index           = $index;
-  							$bindObject->block           = $block;
-  							$bindObject->blockCollection = $source;
-  							$bindObject->length          = count($source);
-  							$bindObject->parameter       = null;
+  							$bindObject = (object) [
+  								'index'           => $index,
+  								'block'           => $block,
+  								'blockCollection' => $source,
+  								'length'          => $count($source),
+  								'parameter'       => null,
+  							];
 
   							foreach ($filters as $filter) {
   								if (self::GetFilter('filter.' . $filter[1])) {
@@ -120,25 +121,24 @@ namespace RazyFramework
   									$comparison = stripcslashes($selector[3]);
   									$value      = $block->getVariable($tagName);
 
-  									if (
-          					  (is_string($value) && (
-          						// Equal
-          						('=' === $operator && $comparison !== $value) ||
-          						// Not Equal
-          						('!=' === $operator && $comparison === $value) ||
-          						// Contain
-          						('=*' === $operator && false === strpos($value, $comparison)) ||
-          						// Start With
-          						('=^' === $operator && substr($value, 0, strlen($comparison)) !== $comparison) ||
-          						// End With
-          						('=$' === $operator && substr($value, -strlen($comparison)) !== $comparison)
-          					  )) ||
-          					  (
-          						  is_array($value) &&
-          						// Element in List
-          						('=|' === $operator && !in_array($comparison, $value, true))
-          					  )
-          					) {
+  									if ((
+                      is_string($value) && (
+      								  // Equal
+      								  ('=' === $operator && $comparison !== $value) ||
+      								  // Not Equal
+      								  ('!=' === $operator && $comparison === $value) ||
+      								  // Contain
+      								  ('=*' === $operator && false === strpos($value, $comparison)) ||
+      								  // Start With
+      								  ('=^' === $operator && substr($value, 0, strlen($comparison)) !== $comparison) ||
+      								  // End With
+      								  ('=$' === $operator && substr($value, -strlen($comparison)) !== $comparison)
+      								)
+                    ) || (
+    									is_array($value) &&
+    								  // Element in List
+    								  ('=|' === $operator && !in_array($comparison, $value, true))
+    								)) {
   										unset($blockCollection[$index]);
 
   										break;
@@ -209,7 +209,8 @@ namespace RazyFramework
   	{
   		if (!array_key_exists($filter, self::$filters)) {
   			self::$filters[$filter] = null;
-  			$pluginFile             = __DIR__ . \DIRECTORY_SEPARATOR . 'tpl_plugins' . \DIRECTORY_SEPARATOR . $filter . '.php';
+
+  			$pluginFile = __DIR__ . \DIRECTORY_SEPARATOR . 'tpl_plugins' . \DIRECTORY_SEPARATOR . $filter . '.php';
   			if (file_exists($pluginFile)) {
   				$callback = require $pluginFile;
   				if (is_callable($callback)) {
@@ -230,9 +231,9 @@ namespace RazyFramework
   		}
 
   		return call_user_func(
-    		\Closure::bind($filter, $bindObject),
-    		$bindObject->parameter
-    	);
+  			\Closure::bind($filter, $bindObject),
+  			$bindObject->parameter
+  		);
   	}
   }
 }

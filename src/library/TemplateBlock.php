@@ -194,8 +194,6 @@ namespace RazyFramework
   				return $matches[0][0];
   			}
 
-  			$bindObject = new \stdClass();
-
   			// If variable tag includes modifier clips, start extract the modifier
   			if ($clipsCount) {
   				foreach ($clips as $clip) {
@@ -204,7 +202,11 @@ namespace RazyFramework
 
   					// Check the plugin is exists or not
   					if (self::GetModifier('modifier.' . $funcname)) {
-  						$bindObject->arguments = [];
+  						$bindObject = (object) [
+  							'arguments' => [],
+  							'value'     => $value,
+  						];
+
   						// Extract the parameters
   						if (isset($clip[2])) {
   							$clipsCount = preg_match_all('/:(?|(\w+)|(?:"((?>[^"\\\\]+|\\\\.)*)"))?/', $clip[2], $params, PREG_SET_ORDER);
@@ -225,8 +227,6 @@ namespace RazyFramework
   							}
   						}
 
-  						$bindObject->value = $value;
-
   						// Execute the variable tag function
   						$value = $this->parseTag(self::CallModifier('modifier', $funcname, $bindObject));
   					}
@@ -244,9 +244,10 @@ namespace RazyFramework
   		$funcname   = $matches[2][0];
   		$clipsCount = preg_match_all('/\h+(\w+)(?:=(?|(\w+)|"((?>[^"\\\\]+|\\\\.)*)"))?/', $matches[3][0], $clips, PREG_SET_ORDER);
 
-  		$bindObject             = new \stdClass();
-  		$bindObject->parameters = [];
-  		$bindObject->content    = null;
+  		$bindObject = (object) [
+  			'parameters' => [],
+  			'content'    => null,
+  		];
 
   		if (self::GetModifier('func.' . $funcname)) {
   			$parameters = [];
@@ -343,7 +344,9 @@ namespace RazyFramework
   	{
   		if (!array_key_exists($modifier, self::$modifiers)) {
   			self::$modifiers[$modifier] = null;
-  			$pluginFile                 = __DIR__ . \DIRECTORY_SEPARATOR . 'tpl_plugins' . \DIRECTORY_SEPARATOR . $modifier . '.php';
+
+  			$pluginFile = __DIR__ . \DIRECTORY_SEPARATOR . 'tpl_plugins' . \DIRECTORY_SEPARATOR . $modifier . '.php';
+
   			if (file_exists($pluginFile)) {
   				$callback = require $pluginFile;
   				if (is_callable($callback)) {
@@ -369,9 +372,9 @@ namespace RazyFramework
   		}
 
   		return call_user_func_array(
-    		\Closure::bind($modifier, $bindObject),
-    		(property_exists($bindObject, 'arguments')) ? $bindObject->arguments : []
-  	  );
+			\Closure::bind($modifier, $bindObject),
+			(property_exists($bindObject, 'arguments')) ? $bindObject->arguments : []
+	  );
   	}
   }
 }
