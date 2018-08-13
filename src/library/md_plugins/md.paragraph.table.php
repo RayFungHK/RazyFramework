@@ -23,11 +23,7 @@ return [
 							return $matches[0];
 						}
 						$separater = true;
-<<<<<<< HEAD
-						foreach ($column[1] as $align) {
-=======
-						foreach ($column as $align) {
->>>>>>> f74138a27f2b15ced960c70bd3cceeba3ee2af01
+            foreach ($column[1] as $align) {
 							if (preg_match('/(:)?-+(:)?/', $align, $aMatches)) {
 								if (isset($aMatches[1], $aMatches[2])) {
 									$alignment[] = 'center';
