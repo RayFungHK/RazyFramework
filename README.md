@@ -9,6 +9,7 @@
 - Pluggable controller, better coding management
 
 # Task List
+- Preload and Ready event (Drafted)
 - New CLI Mode (Done)
 - Markdown library, Class (Done)
 - FTP library, Class
