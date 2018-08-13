@@ -1,8 +1,9 @@
 <?php
 return function($toarray = false) {
+  $this->chainable = true;
   if ($this->dataType == 'string') {
-    $this->value = json_decode($this->value, !!$toarray);
+    return json_decode($this->value, !!$toarray);
   }
-  return ($toarray) ? [] : (object) [];
+  return $this->value;
 }
 ?>

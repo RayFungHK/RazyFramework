@@ -247,7 +247,7 @@ namespace RazyFramework
   	private static function CallFilter($filterName, $bindObject)
   	{
   		if (!($filter = self::GetFilter($filterName))) {
-  			new ThrowError('TemplateBlockSet', '3001', 'Cannot load [' . $filter . '] filter function.');
+  			new ThrowError('TemplateBlockSet', '3001', 'Cannot load [' . $filterName . '] filter function.');
   		}
 
   		return call_user_func(

@@ -1,5 +1,6 @@
 <?php
 return function() {
+  $this->chainable = true;
   if (!function_exists('deeprun')) {
     function deeprun($data) {
       if (!is_array($data)) {
@@ -16,8 +17,7 @@ return function() {
       return $data;
     }
   }
-  
-  $this->value = json_encode(deeprun($this->value));
-  return $this->value;
+
+  return json_encode(deeprun($this->value));
 }
 ?>

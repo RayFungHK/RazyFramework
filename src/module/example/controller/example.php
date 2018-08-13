@@ -19,9 +19,22 @@ namespace RazyFramework
         $md = new Markdown();
         $md->loadFile($this->getViewPath() . 'markdown-sample.txt');
 
+        DataConvertor::CreateConvertor('appendBold', function() {
+          $this->chainable = true;
+          return '<b>' . $this->value . '</b>';
+        });
+
+        $df = new DataFactory([
+          'name' => ' Ray Fung ',
+          'gender' => 'male'
+        ]);
+
+        $df('name')->upper()->appendBold();
+
         $tplmanager->getRootBlock()->assign(array(
           'markdown' => $md->parse(),
-          'showname' => true
+          'showname' => true,
+          'authur' => $df['name']
         ));
 
         TemplateBlockSet::CreateFilter('odd-filter', function() {

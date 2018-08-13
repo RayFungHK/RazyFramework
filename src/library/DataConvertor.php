@@ -13,36 +13,64 @@ namespace RazyFramework
 {
   class DataConvertor
   {
-  	protected $object               = '';
-  	protected $reflection           = '';
-  	private static $functionMapping = [];
+  	protected $object                      = '';
+  	protected $reflection                  = '';
+  	private static $functions        = [];
+  	private static $dynamicFunctions = [];
 
   	public function __call($funcName, $args)
   	{
   		$funcName = trim($funcName);
-  		if (!array_key_exists($funcName, self::$functionMapping)) {
-  			$functionMapping[$funcName] = null;
-  			$pluginFile                 = __DIR__ . \DIRECTORY_SEPARATOR . 'df_plugins' . \DIRECTORY_SEPARATOR . 'conv.' . $funcName . '.php';
+      $closureFunction = null;
+
+  		if (!array_key_exists($funcName, self::$functions)) {
+  			self::$functions[$funcName] = null;
+
+  			$pluginFile  = __DIR__ . \DIRECTORY_SEPARATOR . 'df_plugins' . \DIRECTORY_SEPARATOR . 'conv.' . $funcName . '.php';
   			if (file_exists($pluginFile)) {
   				$callback = require $pluginFile;
   				if (is_callable($callback)) {
-  					$functionMapping[$funcName] = $callback;
+  					self::$functions[$funcName] = $callback;
+            $closureFunction = $callback;
   				}
   			}
-  		}
+  		} else {
+        $closureFunction = self::$functions[$funcName];
+      }
 
-  		if (!isset($functionMapping[$funcName])) {
-  			new ThrowError('DataFactory', '1001', 'Cannot load [' . $funcName . '] convertor function.');
+  		if (!$closureFunction) {
+        if (isset(self::$dynamicFunctions[$funcName])) {
+          $closureFunction = self::$dynamicFunctions[$funcName];
+        } else {
+          new ThrowError('DataFactory', '1001', 'Cannot load [' . $funcName . '] convertor function.');
+        }
   		}
 
   		// Bind convertor object to closure function
-  		$result = call_user_func_array($functionMapping[$funcName]->bindTo($this->object), $args);
+  		$result = call_user_func_array($closureFunction->bindTo($this->object), $args);
+
+      // Update the value for chainable
+      $this->object->value = $result;
 
   		// Call DataFactory reflection function to change the value
-  		$dd = call_user_func($this->reflection, $this->object->value);
+  		call_user_func($this->reflection, $result);
 
-  		return $result;
+  		return (!$this->object->chainable) ? $result : $this;
   	}
+
+    static function CreateConvertor(string $name, callable $callback)
+    {
+  		$name = trim($name);
+  		if (preg_match('/^[\w-]+$/', $name)) {
+  			if (!isset(self::$filters[$name])) {
+  				self::$dynamicFunctions[$name] = null;
+  			}
+
+  			if (is_callable($callback)) {
+  				self::$dynamicFunctions[$name] = $callback;
+  			}
+  		}
+    }
 
   	public function setPointer($value, $reflection)
   	{
@@ -50,6 +78,7 @@ namespace RazyFramework
   		$this->object = (object) [
   			'value'    => $value,
   			'dataType' => strtolower(gettype($value)),
+        'chainable' => false
   		];
 
   		$this->reflection = $reflection;

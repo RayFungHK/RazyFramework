@@ -1,7 +1,8 @@
 <?php
 return function() {
+  $this->chainable = true;
   if ($this->dataType == 'string') {
-    $this->value = strtoupper($this->value);
+    return strtoupper($this->value);
   }
   return $this->value;
 }

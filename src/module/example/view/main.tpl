@@ -28,7 +28,7 @@
     </p>
     {/repeat}
     <p>
-      This Razy Framework is developed by {$showname}Ray Fung{/$showname}
+      This Razy Framework is developed by {$showname}{$authur}{/$showname}
     </p>
 
     <h1>Template Block Operation & Selector</h1>

@@ -1,6 +1,6 @@
 <?php
 return function() {
-	$this->value = floatval($this->value);
-	return $this->value;
+	$this->chainable = true;
+	return floatval($this->value);
 }
 ?>
