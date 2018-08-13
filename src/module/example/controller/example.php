@@ -24,6 +24,10 @@ namespace RazyFramework
           'showname' => true
         ));
 
+        TemplateBlockSet::CreateFilter('odd-filter', function() {
+          return ($this->index % 2 == 0);
+        });
+
         // Block selector
         $root = $tplmanager->getRootBlock();
         $index = 0;
@@ -34,7 +38,7 @@ namespace RazyFramework
           ));
         }
 
-        $tplmanager('levelA[name=$"y"]')->assign('name', function($value) {
+        $tplmanager('levelA:odd-filter')->assign('name', function($value) {
           return $value . ' (Found)';
         });
       }

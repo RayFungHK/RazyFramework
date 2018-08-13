@@ -13,7 +13,8 @@ namespace RazyFramework
 {
   class TemplateBlockSet extends \ArrayObject
   {
-  	private static $filters = [];
+  	private static $dynamicFilters = [];
+  	private static $filters        = [];
 
   	public function __construct($blockList)
   	{
@@ -82,7 +83,7 @@ namespace RazyFramework
   								'index'           => $index,
   								'block'           => $block,
   								'blockCollection' => $source,
-  								'length'          => $count($source),
+  								'length'          => count($source),
   								'parameter'       => null,
   							];
 
@@ -122,23 +123,23 @@ namespace RazyFramework
   									$value      = $block->getVariable($tagName);
 
   									if ((
-                      is_string($value) && (
-      								  // Equal
-      								  ('=' === $operator && $comparison !== $value) ||
-      								  // Not Equal
-      								  ('!=' === $operator && $comparison === $value) ||
-      								  // Contain
-      								  ('=*' === $operator && false === strpos($value, $comparison)) ||
-      								  // Start With
-      								  ('=^' === $operator && substr($value, 0, strlen($comparison)) !== $comparison) ||
-      								  // End With
-      								  ('=$' === $operator && substr($value, -strlen($comparison)) !== $comparison)
-      								)
-                    ) || (
-    									is_array($value) &&
-    								  // Element in List
-    								  ('=|' === $operator && !in_array($comparison, $value, true))
-    								)) {
+					  is_string($value) && (
+										// Equal
+										('=' === $operator && $comparison !== $value) ||
+										// Not Equal
+										('!=' === $operator && $comparison === $value) ||
+										// Contain
+										('=*' === $operator && false === strpos($value, $comparison)) ||
+										// Start With
+										('=^' === $operator && substr($value, 0, strlen($comparison)) !== $comparison) ||
+										// End With
+										('=$' === $operator && substr($value, -strlen($comparison)) !== $comparison)
+									  )
+					) || (
+										is_array($value) &&
+									  // Element in List
+									  ('=|' === $operator && !in_array($comparison, $value, true))
+									)) {
   										unset($blockCollection[$index]);
 
   										break;
@@ -205,6 +206,21 @@ namespace RazyFramework
   		return $this;
   	}
 
+  	public static function CreateFilter(string $name, callable $callback)
+  	{
+  		$name = trim($name);
+  		if (preg_match('/^[\w-]+$/', $name)) {
+  			$filter = 'filter.' . $name;
+  			if (!isset(self::$filters[$filter])) {
+  				self::$dynamicFilters[$filter] = null;
+  			}
+
+  			if (is_callable($callback)) {
+  				self::$dynamicFilters[$filter] = $callback;
+  			}
+  		}
+  	}
+
   	private static function GetFilter($filter)
   	{
   		if (!array_key_exists($filter, self::$filters)) {
@@ -219,6 +235,10 @@ namespace RazyFramework
   					return $callback;
   				}
   			}
+  		}
+
+  		if (array_key_exists($filter, self::$dynamicFilters)) {
+  			return self::$dynamicFilters[$filter];
   		}
 
   		return self::$filters[$filter];
