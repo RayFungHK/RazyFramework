@@ -13,103 +13,133 @@ namespace RazyFramework
 {
   class ModulePackage
   {
-    const MODULE_STATUS_PENDING = 0;
-    const MODULE_STATUS_LOADED = 1;
-    const MODULE_STATUS_READY = 2;
-    const MODULE_STATUS_UNLOADED = -1;
+  	const MODULE_STATUS_UNLOADED = -1;
+  	const MODULE_STATUS_PENDING  = 0;
+  	const MODULE_STATUS_LOADED   = 1;
+  	const MODULE_STATUS_READY    = 2;
 
-  	private $moduleRoot     = '';
-  	private $moduleCode     = '';
-  	private $author         = '';
-  	private $version        = '';
-  	private $remapPath      = '';
-  	private $routeName      = '';
-  	private $routeMapping   = [];
-  	private $callableList   = [];
-  	private $controllerList = [];
-  	private $coreController = [];
-  	private $eventListner   = [];
-  	private $preloadStatus   = self::MODULE_STATUS_PENDING;
+  	private $moduleRoot        = '';
+  	private $moduleCode        = '';
+  	private $author            = '';
+  	private $version           = '';
+  	private $remapPath         = '';
+  	private $routeName         = '';
+  	private $routeMapping      = [];
+  	private $callableList      = [];
+  	private $controllerList    = [];
+  	private $coreController    = [];
+  	private $eventListner      = [];
+  	private $additionalSetting = [];
+  	private $preloadStatus     = self::MODULE_STATUS_PENDING;
 
-  	public function __construct($modulePath, $settings)
+  	public function __construct(string $modulePath, array $settings)
   	{
   		$this->moduleRoot = $modulePath;
 
-  		if (isset($settings['module_code']) && trim($settings['module_code'])) {
-  			$this->moduleCode = $settings['module_code'];
+  		if (array_key_exists('module_code', $settings)) {
+  			$this->moduleCode = trim($settings['module_code']);
+  			unset($settings['module_code']);
   		}
 
-  		if (isset($settings['author']) && trim($settings['author'])) {
-  			$this->authur = $settings['author'];
+  		if (!$this->moduleCode) {
+  			new ThrowError('ModulePackage', '3001', 'Module code is required.');
   		}
 
-  		if (isset($settings['version']) && trim($settings['version'])) {
-  			$this->version = $settings['version'];
+  		if (array_key_exists('author', $settings)) {
+  			$this->authur = trim($settings['author']);
+  			unset($settings['author']);
+  		}
+
+  		if (array_key_exists('version', $settings)) {
+  			$this->version = trim($settings['version']);
+  			unset($settings['version']);
   		}
 
   		// Add callable method into whitelist
-  		if (isset($settings['callable']) && is_array($settings['callable'])) {
-  			foreach ($settings['callable'] as $commandName => $namespace) {
-  				$commandName = trim($commandName);
-  				if (!$commandName || !$this->isValidNamespace($namespace)) {
-  					new ThrowError('ModulePackage', '3002', 'Cannot add ' . $method . ' to whitelist.');
+  		if (array_key_exists('callable', $settings)) {
+  			if (is_array($settings['callable'])) {
+  				foreach ($settings['callable'] as $commandName => $namespace) {
+  					$commandName = trim($commandName);
+  					if (!$commandName || !$this->isValidNamespace($namespace)) {
+  						new ThrowError('ModulePackage', '3002', 'Cannot add ' . $method . ' to whitelist.');
+  					}
+  					$this->callableList[$commandName] = $namespace;
   				}
-  				$this->callableList[$commandName] = $namespace;
   			}
+  			unset($settings['callable']);
   		}
 
   		// Add event listener
-  		if (isset($settings['event']) && is_array($settings['event'])) {
-  			foreach ($settings['event'] as $eventName => $namespace) {
-  				$eventName = trim($eventName);
-  				if (!$eventName || !$this->isValidNamespace($namespace)) {
-  					new ThrowError('ModulePackage', '3003', 'Cannot add ' . $method . ' event listener.');
+  		if (array_key_exists('event', $settings)) {
+  			if (is_array($settings['event'])) {
+  				foreach ($settings['event'] as $eventName => $namespace) {
+  					$eventName = trim($eventName);
+  					if (!$eventName || !$this->isValidNamespace($namespace)) {
+  						new ThrowError('ModulePackage', '3003', 'Cannot add ' . $method . ' event listener.');
+  					}
+  					$this->eventListner[$eventName] = $namespace;
   				}
-  				$this->eventListner[$eventName] = $namespace;
   			}
+  			unset($settings['event']);
   		}
 
-  		if (isset($settings['remap']) && trim($settings['remap'])) {
-  			$this->remapPath = preg_replace('/[\/\\\\]+/', '/', '/' . $settings['remap'] . '/');
-  			// Replace $1 as module code
-  			$this->remapPath = str_replace('$1', $this->moduleCode, $this->remapPath);
+  		if (array_key_exists('remap', $settings)) {
+  			if (trim($settings['remap'])) {
+  				$this->remapPath = preg_replace('/[\/\\\\]+/', '/', '/' . $settings['remap'] . '/');
+  				// Replace $1 as module code
+  				$this->remapPath = str_replace('$1', $this->moduleCode, $this->remapPath);
+  			}
+  			unset($settings['remap']);
   		} else {
   			$this->remapPath = '/' . $this->moduleCode . '/';
   		}
 
-  		if (isset($settings['route']) && is_array($settings['route'])) {
-  			foreach ($settings['route'] as $routeName => $namespace) {
-  				$routeName = trim($routeName);
-  				if (!$routeName || !$this->isValidNamespace($namespace)) {
-  					new ThrowError('ModulePackage', '3001', 'Invalid route\'s class mapping format');
+  		if (array_key_exists('route', $settings)) {
+  			if (is_array($settings['route'])) {
+  				foreach ($settings['route'] as $routeName => $namespace) {
+  					$routeName = trim($routeName);
+  					if (!$routeName || !$this->isValidNamespace($namespace)) {
+  						new ThrowError('ModulePackage', '3004', 'Invalid route\'s class mapping format');
+  					}
+  					$this->routeMapping[$routeName] = $namespace;
   				}
-  				$this->routeMapping[$routeName] = $namespace;
-  			}
 
-  			// If the remap parameter is not set, set the remap path by module code
-  			if (!$this->remapPath) {
-  				$this->remapPath = '/' . $this->moduleCode . '/';
+  				// If the remap parameter is not set, set the remap path by module code
+  				if (!$this->remapPath) {
+  					$this->remapPath = '/' . $this->moduleCode . '/';
+  				}
   			}
+  			unset($settings['remap']);
   		}
 
+  		$this->additionalSetting = $settings;
+
   		// Preload module core controller
-  		$this->coreController = $this->getController($settings['module_code']);
-  		$this->preloadStatus   = 'loaded';
+  		$this->coreController  = $this->getController($this->moduleCode);
+  		$this->preloadStatus   = ($this->coreController->isLoaded()) ? self::MODULE_STATUS_LOADED : self::MODULE_STATUS_UNLOADED;
   	}
 
   	public function ready()
   	{
   		if (self::MODULE_STATUS_LOADED === $this->preloadStatus) {
-  			$this->coreController->__onReady();
-  			$this->preloadStatus = 'ready';
+  			if ($this->coreController->__onReady()) {
+  				$this->preloadStatus = self::MODULE_STATUS_READY;
+  			} else {
+  				$this->preloadStatus = self::MODULE_STATUS_UNLOADED;
+  			}
   		}
 
-  		return $this;
+  		return $this->preloadStatus;
   	}
 
-  	public function getPreloadStage()
+    public function getPreloadStatus()
+    {
+      return $this->preloadStatus;
+    }
+
+  	public function getSetting(string $variable)
   	{
-  		return $this->preloadStatus;
+  		return (isset($this->additionalSetting[$variable])) ? $this->additionalSetting[$variable] : null;
   	}
 
   	public function getCode()
@@ -133,7 +163,7 @@ namespace RazyFramework
 
   	public function route($args)
   	{
-  		if ($this->preloadStatus >= 1) {
+  		if ($this->preloadStatus <= 1) {
   			new ThrowError('ModulePackage', '2003', 'System is not ready, you cannot route in preload stage.');
   		}
 
@@ -189,7 +219,7 @@ namespace RazyFramework
 
   	public function trigger($mapping, $args)
   	{
-  		if ($this->preloadStatus >= 1) {
+  		if ($this->preloadStatus <= 1) {
   			new ThrowError('ModulePackage', '4006', 'System is not ready, you cannot trigger in preload stage.');
   		}
 
@@ -219,7 +249,7 @@ namespace RazyFramework
 
   	public function execute($mapping, $args)
   	{
-  		if ($this->preloadStatus >= 1) {
+  		if ($this->preloadStatus <= 1) {
   			new ThrowError('ModulePackage', '4007', 'System is not ready, you cannot execute in preload stage.');
   		}
 

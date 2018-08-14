@@ -32,10 +32,22 @@ namespace RazyFramework
   			$moduleFolder   = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
   			$this->loadModule($moduleFolder);
 
-        // Load event: __onReady
-        foreach ($this->moduleRegistered as $module) {
-          $module->ready();
-        }
+  			// Load event: __onReady
+  			foreach ($this->moduleRegistered as $moduleCode => $module) {
+  				if (ModulePackage::MODULE_STATUS_UNLOADED === $module->ready()) {
+  					// Unload the module if the status is unloaded
+  					unset($this->moduleRegistered[$moduleCode]);
+  				} elseif (ModulePackage::MODULE_STATUS_READY === $module->ready()) {
+  					// If Module is ready, setup remap path
+  					if ($remapPath = $module->getRemapPath()) {
+  						if (isset($this->remapMapping[$remapPath])) {
+  							// Error: Remap path registered
+  							new ThrowError('ModuleManager', '1003', 'Remap path [' . $remapPath . '] was registered.');
+  						}
+  						$this->remapMapping[$remapPath] = $module;
+  					}
+  				}
+  			}
   		} else {
   			// Error: Loaded Twice
   			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
@@ -209,7 +221,20 @@ namespace RazyFramework
   					try {
   						// Create Module Package and load the setting
   						$modulePackage = new ModulePackage($subModuleFolder, require $subModuleFolder . 'config.php');
-  						$this->register($modulePackage);
+  						if (ModulePackage::MODULE_STATUS_LOADED === $modulePackage->getPreloadStatus()) {
+  							// Register the module if the module is loaded
+            		if ('RazyFramework\ModulePackage' === get_class($modulePackage)) {
+            			if (!isset($this->moduleRegistered[$modulePackage->getCode()])) {
+            				$this->moduleRegistered[$modulePackage->getCode()] = $modulePackage;
+            			} else {
+            				// Error: Duplicated Module
+            				new ThrowError('ModuleManaer', '1004', 'Duplicated Module Code');
+            			}
+            		} else {
+            			// Error: Invalid Class
+            			new ThrowError('ModuleManaer', '1005', 'Invalid Module File');
+            		}
+  						}
   					} catch (Exception $e) {
   						// Error: Fail to load module file
   						new ThrowError('ModuleManager', '2001', 'Fail to load module, maybe the setting file was corrupted');
@@ -218,29 +243,6 @@ namespace RazyFramework
   					$this->loadModule($subModuleFolder);
   				}
   			}
-  		}
-  	}
-
-  	private function register($modulePackage)
-  	{
-  		if ('RazyFramework\ModulePackage' === get_class($modulePackage)) {
-  			if (!isset($this->moduleRegistered[$modulePackage->getCode()])) {
-  				$this->moduleRegistered[$modulePackage->getCode()] = $modulePackage;
-  				if ($remapPath = $modulePackage->getRemapPath()) {
-  					if (isset($this->remapMapping[$remapPath])) {
-  						// Error: Remap path registered
-  						new ThrowError('ModuleManaer', '1003', 'Remap path [' . $remapPath . '] was registered.');
-  					} else {
-  						$this->remapMapping[$remapPath] = $modulePackage;
-  					}
-  				}
-  			} else {
-  				// Error: Duplicated Module
-  				new ThrowError('ModuleManaer', '1004', 'Duplicated Module Code');
-  			}
-  		} else {
-  			// Error: Invalid Class
-  			new ThrowError('ModuleManaer', '1005', 'Invalid Module File');
   		}
   	}
   }

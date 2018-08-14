@@ -60,6 +60,11 @@ namespace RazyFramework
 
     protected function __onModuleLoaded()
     {
+      return true;
+    }
+
+    public function __onReady()
+    {
       DataConvertor::CreateConvertor('appendBold', function () {
         $this->chainable = true;
 
@@ -69,11 +74,8 @@ namespace RazyFramework
       TemplateBlockSet::CreateFilter('odd-filter', function () {
         return 0 === $this->index % 2;
       });
-    }
 
-    public function __onReady()
-    {
-      
+      return true;
     }
 
   	public function reroute()

@@ -16,8 +16,10 @@ namespace RazyFramework
   	protected $declaredClass = '';
   	protected $module;
   	protected $manager;
-  	protected $methodList = [];
   	protected $reflection;
+
+  	protected $methodList = [];
+    protected $isLoaded = false;
 
   	final public function __construct(ModulePackage $module)
   	{
@@ -27,8 +29,13 @@ namespace RazyFramework
   		$this->module        = $module;
 
       // Load Preload Event
-      $this->__onModuleLoaded();
+      $this->isLoaded = ($this->__onModuleLoaded()) ? true : false;
   	}
+
+    final public function isLoaded()
+    {
+      return $this->isLoaded;
+    }
 
   	private function __methodExists($methodName)
   	{
@@ -70,12 +77,16 @@ namespace RazyFramework
 
     protected function __onModuleLoaded()
     {
-      return $this;
+      // true:    Module is loaded
+      // false:   Module false to loaded
+      return true;
     }
 
     public function __onReady()
     {
-      return $this;
+      // true:    Module is ready
+      // false:   Module is not ready and unloaded
+      return true;
     }
 
   	final public function getReflection()
