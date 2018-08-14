@@ -132,10 +132,10 @@ namespace RazyFramework
   		return $this->preloadStatus;
   	}
 
-    public function getPreloadStatus()
-    {
-      return $this->preloadStatus;
-    }
+  	public function getPreloadStatus()
+  	{
+  		return $this->preloadStatus;
+  	}
 
   	public function getSetting(string $variable)
   	{
@@ -163,7 +163,7 @@ namespace RazyFramework
 
   	public function route($args)
   	{
-  		if ($this->preloadStatus <= 1) {
+  		if (self::MODULE_STATUS_READY !== $this->preloadStatus) {
   			new ThrowError('ModulePackage', '2003', 'System is not ready, you cannot route in preload stage.');
   		}
 
