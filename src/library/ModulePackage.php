@@ -13,6 +13,11 @@ namespace RazyFramework
 {
   class ModulePackage
   {
+    const MODULE_STATUS_PENDING = 0;
+    const MODULE_STATUS_LOADED = 1;
+    const MODULE_STATUS_READY = 2;
+    const MODULE_STATUS_UNLOADED = -1;
+
   	private $moduleRoot     = '';
   	private $moduleCode     = '';
   	private $author         = '';
@@ -24,7 +29,7 @@ namespace RazyFramework
   	private $controllerList = [];
   	private $coreController = [];
   	private $eventListner   = [];
-    private $moduleReady = false;
+  	private $preloadStatus   = self::MODULE_STATUS_PENDING;
 
   	public function __construct($modulePath, $settings)
   	{
@@ -87,18 +92,25 @@ namespace RazyFramework
   			}
   		}
 
-      // Preload module core controller
-      $this->coreController = $this->getController($settings['module_code']);
+  		// Preload module core controller
+  		$this->coreController = $this->getController($settings['module_code']);
+  		$this->preloadStatus   = 'loaded';
   	}
 
-    public function ready()
-    {
-      if (!$this->moduleReady) {
-        $this->coreController->__onReady();
-        $this->moduleReady = true;
-      }
-      return $this;
-    }
+  	public function ready()
+  	{
+  		if (self::MODULE_STATUS_LOADED === $this->preloadStatus) {
+  			$this->coreController->__onReady();
+  			$this->preloadStatus = 'ready';
+  		}
+
+  		return $this;
+  	}
+
+  	public function getPreloadStage()
+  	{
+  		return $this->preloadStatus;
+  	}
 
   	public function getCode()
   	{
@@ -121,6 +133,10 @@ namespace RazyFramework
 
   	public function route($args)
   	{
+  		if ($this->preloadStatus >= 1) {
+  			new ThrowError('ModulePackage', '2003', 'System is not ready, you cannot route in preload stage.');
+  		}
+
   		$moduleController = null;
   		$routeName        = (count($args)) ? $args[0] : '(:any)';
 
@@ -173,6 +189,10 @@ namespace RazyFramework
 
   	public function trigger($mapping, $args)
   	{
+  		if ($this->preloadStatus >= 1) {
+  			new ThrowError('ModulePackage', '4006', 'System is not ready, you cannot trigger in preload stage.');
+  		}
+
   		if (isset($this->eventListner[$mapping])) {
   			list($className, $method) = explode('.', $this->eventListner[$mapping]);
 
@@ -199,6 +219,10 @@ namespace RazyFramework
 
   	public function execute($mapping, $args)
   	{
+  		if ($this->preloadStatus >= 1) {
+  			new ThrowError('ModulePackage', '4007', 'System is not ready, you cannot execute in preload stage.');
+  		}
+
   		if (isset($this->callableList[$mapping])) {
   			list($className, $method) = explode('.', $this->callableList[$mapping]);
 
