@@ -38,7 +38,7 @@ namespace RazyFramework
   		return call_user_func_array($this->cached[$method], $arguments);
   	}
 
-  	public static function CreateLoader(string $name, callable $callback)
+  	public static function CreateMethod(string $name, callable $callback)
   	{
   		$manager = ModuleManager::GetInstance();
   		if (ModuleManager::STATUS_PRELOAD_STAGE !== $manager->getStage()) {
