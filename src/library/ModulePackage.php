@@ -34,7 +34,9 @@ namespace RazyFramework
 
   	public function __construct(string $modulePath, array $settings)
   	{
-  		$this->moduleRoot = $modulePath;
+  		// Get the module path from SYSTEM_ROOT
+  		preg_match('/^' . preg_quote(SYSTEM_ROOT, '/') . '(.+)/', $modulePath, $matches);
+  		$this->moduleRoot = $matches[1];
 
   		if (array_key_exists('module_code', $settings)) {
   			$this->moduleCode = trim($settings['module_code']);
@@ -147,13 +149,19 @@ namespace RazyFramework
   		return $this->moduleCode;
   	}
 
-  	public function getModuleRoot($relativePath = false)
+  	public function getModuleRoot()
   	{
-  		if ($relativePath) {
-  			return preg_replace('/^' . preg_quote(SYSTEM_ROOT, '/') . '/', '', $this->moduleRoot);
-  		}
+  		return SYSTEM_ROOT . $this->moduleRoot;
+  	}
 
-  		return $this->moduleRoot;
+  	public function getViewPath()
+  	{
+  		return $this->getModuleRoot() . 'view';
+  	}
+
+  	public function getViewPathURL()
+  	{
+  		return URL_BASE . preg_replace('/\\+/', '/', $this->moduleRoot) . 'view';
   	}
 
   	public function getRemapPath()
@@ -294,7 +302,7 @@ namespace RazyFramework
   		if (isset($this->controllerList[$className])) {
   			return $this->controllerList[$className];
   		}
-  		$controllerPath = $this->moduleRoot . 'controller' . \DIRECTORY_SEPARATOR;
+  		$controllerPath = $this->getModuleRoot() . 'controller' . \DIRECTORY_SEPARATOR;
 
   		// Check the class file is exists or not
   		if (file_exists($controllerPath . $className . '.php')) {

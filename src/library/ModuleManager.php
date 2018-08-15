@@ -14,6 +14,7 @@ namespace RazyFramework
   class ModuleManager
   {
   	private static $instance = null;
+    private static $moduleFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
 
   	private $routeModule;
   	private $remapSorted      = [];
@@ -29,8 +30,7 @@ namespace RazyFramework
   	{
   		if (null === self::$instance) {
   			self::$instance = $this;
-  			$moduleFolder   = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
-  			$this->loadModule($moduleFolder);
+  			$this->loadModule(self::$moduleFolder);
 
   			// Load event: __onReady
   			foreach ($this->moduleRegistered as $moduleCode => $module) {
@@ -208,6 +208,10 @@ namespace RazyFramework
 
   	private function loadModule($moduleFolder)
   	{
+      if (!file_exists($moduleFolder) || !is_dir($moduleFolder)) {
+        return false;
+      }
+
   		foreach (scandir($moduleFolder) as $node) {
   			if ('.' === $node || '..' === $node) {
   				continue;
@@ -245,5 +249,15 @@ namespace RazyFramework
   			}
   		}
   	}
+
+    static public function SetModuleFolder(string $path)
+    {
+      $modulePath = trim($path);
+      $modulePath = realpath(preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $modulePath));
+      if (!file_exists($modulePath) || !is_dir($modulePath)) {
+        new ThrowError('ModuleManager', '4001', $path . ' does not exist or not a directory.');
+      }
+      self::$moduleFolder = $modulePath . \DIRECTORY_SEPARATOR;
+    }
   }
 }

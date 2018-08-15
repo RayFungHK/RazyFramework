@@ -12,7 +12,12 @@
 namespace RazyFramework
 {
   define('SYSTEM_ROOT', __DIR__);
-  require './system/core.inc.php';
+  require SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'system' . \DIRECTORY_SEPARATOR . 'core.inc.php';
+
+	// Setup the module path from global config
+	if (isset($configuration['module_path']) && trim($configuration['module_path'])) {
+		ModuleManager::SetModuleFolder($configuration['module_path']);
+	}
 
   if (CLI_MODE) {
     define('REQUEST_ROUT', null);

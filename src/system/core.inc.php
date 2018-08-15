@@ -13,27 +13,59 @@ namespace RazyFramework
 {
 	session_start();
 
+  // Load global config
+  $configuration = [];
+  if (file_exists(SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'configuration' . \DIRECTORY_SEPARATOR . 'global.php')) {
+  	try {
+  		$configuration = require SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'configuration' . \DIRECTORY_SEPARATOR . 'global.php';
+  	} catch (\Exception $e) {
+  		header('HTTP/1.0 500 Internal Server Error');
+  		die();
+  	}
+  }
+
 	if (\PHP_SAPI === 'cli' || defined('STDIN')) {
 		define('CLI_MODE', true);
 	} else {
 		define('CLI_MODE', false);
-		// Get the System path
+
+		// Declare `URL_ROOT`
+		// The absolute path, if your Razy locate in http://yoursite.com/Razy/Framework, the URL_ROOT will declare as /Razy/Framework
 		define('URL_ROOT', preg_replace('/\\\\+/', '/', substr(SYSTEM_ROOT, strpos(SYSTEM_ROOT, $_SERVER['DOCUMENT_ROOT']) + strlen($_SERVER['DOCUMENT_ROOT']))));
 
-		// Get the hostname or domain name
+		// Declare `HTTP_PATH_ROOT`
+		// The hostname, if the REQUEST PATH is http://yoursite.com:8080/Razy, the HTTP_PATH_ROOT will declare as yoursite.com:8080
 		define('HTTP_PATH_ROOT', (isset($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : ((isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : 'UNKNOWN'));
 
-		// Get the server port
+		// Declare `PORT`
+		// The protocal, if the REQUEST PATH is http://yoursite.com:8080/Razy, the PORT will declare as 8080
 		define('PORT', $_SERVER['SERVER_PORT']);
 
-		// Generate the URL path
-		define('URL_BASE', (((isset($_SERVER['HTTPS']) && 'on' === $_SERVER['HTTPS']) || PORT === '443') ? 'https://' : 'http://') . HTTP_PATH_ROOT . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT);
+		// Declare `HTTPS`
+		// Determine of HTTPS protocol
+		if (isset($configuration['identify_ssl']) && is_callable($configuration['identify_ssl'])) {
+			define('HTTPS', $configuration['identify_ssl']());
+		} else {
+			define('HTTPS', (isset($_SERVER['HTTPS']) && 'on' === $_SERVER['HTTPS']) || PORT === '443');
+		}
+
+		// Declare `URL_BASE`
+		// The full URL path of Razy Framework, combined with http/https protocal, HTTP_PATH_ROOT and URL_ROOT
+		define('URL_BASE', ((HTTPS) ? 'https://' : 'http://') . HTTP_PATH_ROOT . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT);
+
+		// Force using HTTPS if global config declared parameter `force_ssl` as true
+		if (isset($configuration['force_ssl']) && $configuration['force_ssl']) {
+			if (!HTTPS) {
+				header('location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+			}
+		}
 	}
 
-	define('MATERIAL_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'material' . \DIRECTORY_SEPARATOR);
+	define('VIEW_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view');
+	define('MATERIAL_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'material');
 
 	// Register Autoloader
-	spl_autoload_register(function ($class) {
+	spl_autoload_register(function ($class) use ($configuration) {
 		$classes = explode('\\', $class);
 		$package = (count($classes) > 1) ? array_shift($classes) : '';
 
@@ -41,7 +73,22 @@ namespace RazyFramework
 		if ('RazyFramework' === $package) {
 			$path = implode(\DIRECTORY_SEPARATOR, $classes);
 
-			$libraryPath = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'library' . \DIRECTORY_SEPARATOR . $path . '.php';
+			// Setup the library path
+			if (isset($configuration['library_path']) && trim($configuration['library_path'])) {
+				$libraryFolder = trim($configuration['library_path']);
+				$libraryFolder = realpath(preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $libraryFolder . \DIRECTORY_SEPARATOR));
+
+				if ($libraryFolder === false || !is_dir($libraryFolder)) {
+					// If the library folder does not exists or not a directory
+					header('HTTP/1.0 500 Internal Server Error');
+					die();
+				}
+			} else {
+				$libraryFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'library';
+			}
+
+			$libraryPath = $libraryFolder . \DIRECTORY_SEPARATOR . $path . '.php';
+
 			if (file_exists($libraryPath)) {
 				include $libraryPath;
 
@@ -50,6 +97,7 @@ namespace RazyFramework
 
 			return false;
 		}
+
 		// If the autoload class is not in RazyFramework namespace, load external library from module folder
 		$manager = ModuleManager::GetInstance();
 

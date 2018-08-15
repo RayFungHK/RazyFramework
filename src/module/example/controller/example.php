@@ -15,6 +15,7 @@ namespace RazyFramework
   {
   	public function main()
   	{
+      $config = new Configuration($this->module);
   		if (CLI_MODE) {
   			echo 'Welcome to CLI mode';
   			foreach ($this->manager->getScriptParameters() as $param => $value) {
@@ -27,7 +28,7 @@ namespace RazyFramework
   			$tplmanager = $this->loadview('main');
 
   			$md = new Markdown();
-  			$md->loadFile($this->getViewPath() . 'markdown-sample.txt');
+  			$md->loadFile($this->module->getViewPath() . \DIRECTORY_SEPARATOR . 'markdown-sample.txt');
 
   			$df = new DataFactory([
   				'name'   => ' Ray Fung ',

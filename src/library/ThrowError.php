@@ -19,7 +19,7 @@ namespace RazyFramework
   			die('[' . $errorModule . '] #' . $errorCode . ': ' . $message);
   		}
   		ob_clean();
-  		$errorPageOutput = file_get_contents(MATERIAL_PATH . 'errorthrow.html');
+  		$errorPageOutput = file_get_contents(MATERIAL_PATH . \DIRECTORY_SEPARATOR . 'errorthrow.html');
 
   		echo sprintf($errorPageOutput, $errorModule, $errorCode, $message);
   		die();

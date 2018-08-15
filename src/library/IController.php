@@ -14,12 +14,12 @@ namespace RazyFramework
   abstract class IController
   {
   	protected $declaredClass = '';
+  	protected $methodList    = [];
+  	protected $isLoaded      = false;
+
   	protected $module;
   	protected $manager;
   	protected $reflection;
-
-  	protected $methodList = [];
-    protected $isLoaded = false;
 
   	final public function __construct(ModulePackage $module)
   	{
@@ -28,14 +28,9 @@ namespace RazyFramework
   		$this->manager       = ModuleManager::GetInstance();
   		$this->module        = $module;
 
-      // Load Preload Event
-      $this->isLoaded = ($this->__onModuleLoaded()) ? true : false;
+  		// Load Preload Event
+  		$this->isLoaded = ($this->__onModuleLoaded()) ? true : false;
   	}
-
-    final public function isLoaded()
-    {
-      return $this->isLoaded;
-    }
 
   	private function __methodExists($methodName)
   	{
@@ -75,33 +70,23 @@ namespace RazyFramework
   		return call_user_func_array($closure, $arguments);
   	}
 
-    protected function __onModuleLoaded()
-    {
-      // true:    Module is loaded
-      // false:   Module false to loaded
-      return true;
-    }
-
-    public function __onReady()
-    {
-      // true:    Module is ready
-      // false:   Module is not ready and unloaded
-      return true;
-    }
-
-  	final public function getReflection()
+  	protected function __onModuleLoaded()
   	{
-  		return $this->reflection;
+  		// true:    Module is loaded
+  		// false:   Module false to loaded
+  		return true;
   	}
 
-  	final protected function getViewPath($rootview = false)
+  	public function __onReady()
   	{
-  		return ($rootview) ? SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view' . \DIRECTORY_SEPARATOR : $this->module->getModuleRoot() . 'view' . \DIRECTORY_SEPARATOR;
+  		// true:    Module is ready
+  		// false:   Module is not ready and unloaded
+  		return true;
   	}
 
-  	final protected function getViewURL($rootview = false)
+  	final public function isLoaded()
   	{
-  		return ($rootview) ? URL_BASE . \DIRECTORY_SEPARATOR . 'view' . \DIRECTORY_SEPARATOR : URL_BASE . $this->module->getModuleRoot(true) . 'view' . \DIRECTORY_SEPARATOR;
+  		return $this->isLoaded;
   	}
 
   	final protected function loadview($filepath, $rootview = false)
@@ -111,7 +96,7 @@ namespace RazyFramework
   			$filepath .= '.tpl';
   		}
 
-  		$root       = $this->getViewPath($rootview);
+  		$root       = (($rootview) ? VIEW_PATH : $this->module->getViewPath()) . \DIRECTORY_SEPARATOR;
   		$tplManager = new TemplateManager($root . $filepath, $this->module->getCode());
   		$tplManager->globalAssign([
   			'view_path' => $root,
