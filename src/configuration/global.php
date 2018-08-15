@@ -1,19 +1,19 @@
 <?php
 return [
-  // Namespace \RazyFramework class autoload folder, assign empty string to use default path '/library'
+  // Custom ``library`` path, set '' or false to use default path
   'library_path' => '',
 
-  // Module folder, assign empty string to use default path '/module'
+  // Custom ``mopdule`` path, set '' or false to use default path
   'module_path' => '',
 
-  // A callback function to identify the SSL protocal. Like cloudflare, it will using proxy
-  // to get the conten via port 80 and transfer to visitor via port 443 in `Flexible SSL` mode,
-  // but the $_SERVER['PORT'] still declared as 80 and $_SERVER['HTTPS'] is off.
-  // In this case, you can check 'HTTP_X_FORWARDED_PROTO' or 'HTTP_CF_VISITOR' for cloudflare `Flexible SSL` mode.
-  // Return true to set the system in 'HTTPS' mode
+  // A callback function to identify the SSL protocol. Like Cloudflare,
+  // it using a proxy to get the content via port 80 and transfer to the
+  // end user via port 443 in `Flexible SSL` mode. Unfortunately, the $_SERVER['PORT']
+  // still return 80 and $_SERVER['HTTPS'] return off so that you can't determine
+  // the protocol is using HTTPS correctly.
   'identify_ssl' => null,
 
-  // Force Razy using https protocal, it will redirect http to https
+  // Force Razy Frameworks use https protocal, and it will force redirect to https
   'force_ssl' => false
 ];
 ?>
