@@ -28,10 +28,12 @@ namespace RazyFramework
   		$this->declaredClass = $this->reflection->getShortName();
   		$this->manager       = ModuleManager::GetInstance();
   		$this->module        = $module;
-  		$this->load          = new Loader($module);
 
   		// Load Preload Event
   		$this->moduleLoaded = ($this->__onModuleLoaded()) ? true : false;
+
+      // Setup Loader
+  		$this->load          = new Loader($module);
   	}
 
   	private function __methodExists($methodName)

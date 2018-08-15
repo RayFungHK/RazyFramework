@@ -15,7 +15,7 @@ namespace RazyFramework
   {
   	public function __construct($errorModule, $errorCode, $message)
   	{
-  		if (defined('CLI_MODE')) {
+  		if (CLI_MODE) {
   			die('[' . $errorModule . '] #' . $errorCode . ': ' . $message);
   		}
   		ob_clean();

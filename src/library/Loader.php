@@ -40,9 +40,14 @@ namespace RazyFramework
 
   	public static function CreateLoader(string $name, callable $callback)
   	{
+  		$manager = ModuleManager::GetInstance();
+  		if (ModuleManager::STATUS_PRELOAD_STAGE !== $manager->getStage()) {
+  			new ThrowError('1001', 'Loader', 'You can only allow creating loader method in preload stage.');
+  		}
+
   		$name = trim($name);
   		if (!preg_match('/^(?![0-9]+)[\w]+$/', $name)) {
-  			new ThrowError('1001', 'Loader', 'Invalid loader name, it allows a-z, A-Z and _ (underscore) only, also the name cannot start from digit.');
+  			new ThrowError('1002', 'Loader', 'Invalid loader name, it allows a-z, A-Z and _ (underscore) only, also the name cannot start from digit.');
   		}
 
   		self::$loaders[$name] = $callback;

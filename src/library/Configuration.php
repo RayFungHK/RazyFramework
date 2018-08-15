@@ -33,15 +33,12 @@ namespace RazyFramework
 
   		$this->configFilePath = $configFolder . $filename . '.php';
 
-  		if (!file_exists($this->configFilePath)) {
-  			// If the config file does not exist, create a empty config file
-  			$this->commit();
-  		} else {
+  		if (file_exists($this->configFilePath)) {
   			// If the config file path is a directory, throw an error
   			if (is_dir($this->configFilePath)) {
   				new ThrowError('1002', 'Configuration', $this->configFilePath . ' is not a valid config file.');
   			}
-        
+
   			$this->config = require $this->configFilePath;
   		}
   	}

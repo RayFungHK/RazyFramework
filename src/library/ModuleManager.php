@@ -13,6 +13,10 @@ namespace RazyFramework
 {
   class ModuleManager
   {
+  	const STATUS_PRELOAD_STAGE = 1;
+  	const STATUS_READY_STAGE   = 2;
+  	const STATUS_ROUTING_STAGE = 3;
+
   	private static $instance     = null;
   	private static $moduleFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
 
@@ -24,32 +28,17 @@ namespace RazyFramework
   	private $scriptPath       = '';
   	private $scriptRoute      = '/';
   	private $scriptParams     = [];
+  	private $stage            = '';
   	private $target;
 
   	public function __construct()
   	{
   		if (null === self::$instance) {
   			self::$instance = $this;
-  			$this->loadModule(self::$moduleFolder);
 
-  			// Load event: __onReady
-  			foreach ($this->moduleRegistered as $moduleCode => $module) {
-  				if (ModulePackage::MODULE_STATUS_UNLOADED === $module->ready()) {
-  					// Unload the module if the status is unloaded
-  					unset($this->moduleRegistered[$moduleCode]);
-  				} elseif (ModulePackage::MODULE_STATUS_READY === $module->ready()) {
-  					// If Module is ready, setup remap path
-  					if ($remapPath = $module->getRemapPath()) {
-  						if (isset($this->remapMapping[$remapPath])) {
-  							// Error: Remap path registered
-  							new ThrowError('ModuleManager', '1003', 'Remap path [' . $remapPath . '] was registered.');
-  						}
-  						$this->remapMapping[$remapPath] = $module;
-  					}
-  				}
-  			}
+  			$this->stage = self::STATUS_PRELOAD_STAGE;
 
-  			// If all module is ready, setup loader
+  			// Creating Loader method in preload stage
   			// Loader: view
   			Loader::CreateLoader('view', function ($filepath, $rootview = false) {
   				// If there is no extension provided, default as .tpl
@@ -71,10 +60,32 @@ namespace RazyFramework
   			Loader::CreateLoader('config', function ($filename) {
   				return new Configuration($this, $filename);
   			});
+
+  			$this->loadModule(self::$moduleFolder);
+
+  			// Load event: __onReady
+  			foreach ($this->moduleRegistered as $moduleCode => $module) {
+  				if (ModulePackage::MODULE_STATUS_UNLOADED === $module->ready()) {
+  					// Unload the module if the status is unloaded
+  					unset($this->moduleRegistered[$moduleCode]);
+  				} elseif (ModulePackage::MODULE_STATUS_READY === $module->ready()) {
+  					// If Module is ready, setup remap path
+  					if ($remapPath = $module->getRemapPath()) {
+  						if (isset($this->remapMapping[$remapPath])) {
+  							// Error: Remap path registered
+  							new ThrowError('ModuleManager', '1003', 'Remap path [' . $remapPath . '] was registered.');
+  						}
+  						$this->remapMapping[$remapPath] = $module;
+  					}
+  				}
+  			}
   		} else {
   			// Error: Loaded Twice
   			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
   		}
+
+  		// If all module ready, change to ready stage
+  		$this->stage = self::STATUS_READY_STAGE;
 
   		if (CLI_MODE) {
   			// Cli Mode, get arguments and parameters
@@ -106,6 +117,11 @@ namespace RazyFramework
   	public static function GetInstance()
   	{
   		return self::$instance;
+  	}
+
+  	public function getStage()
+  	{
+  		return $this->stage;
   	}
 
   	public function loadLibrary($class)
