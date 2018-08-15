@@ -33,9 +33,9 @@ namespace RazyFramework
 		// The absolute path, if your Razy locate in http://yoursite.com/Razy/Framework, the URL_ROOT will declare as /Razy/Framework
 		define('URL_ROOT', preg_replace('/\\\\+/', '/', substr(SYSTEM_ROOT, strpos(SYSTEM_ROOT, $_SERVER['DOCUMENT_ROOT']) + strlen($_SERVER['DOCUMENT_ROOT']))));
 
-		// Declare `HTTP_PATH_ROOT`
-		// The hostname, if the REQUEST PATH is http://yoursite.com:8080/Razy, the HTTP_PATH_ROOT will declare as yoursite.com:8080
-		define('HTTP_PATH_ROOT', (isset($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : ((isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : 'UNKNOWN'));
+		// Declare `HOSTNAME`
+		// The hostname, if the REQUEST PATH is http://yoursite.com:8080/Razy, the HOSTNAME will declare as yoursite.com:8080
+		define('HOSTNAME', (isset($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : ((isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : 'UNKNOWN'));
 
 		// Declare `PORT`
 		// The protocal, if the REQUEST PATH is http://yoursite.com:8080/Razy, the PORT will declare as 8080
@@ -50,8 +50,8 @@ namespace RazyFramework
 		}
 
 		// Declare `URL_BASE`
-		// The full URL path of Razy Framework, combined with http/https protocal, HTTP_PATH_ROOT and URL_ROOT
-		define('URL_BASE', ((HTTPS) ? 'https://' : 'http://') . HTTP_PATH_ROOT . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT);
+		// The full URL path of Razy Framework, combined with http/https protocal, HOSTNAME and URL_ROOT
+		define('URL_BASE', ((HTTPS) ? 'https://' : 'http://') . HOSTNAME . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT);
 
 		// Force using HTTPS if global config declared parameter `force_ssl` as true
 		if (isset($configuration['force_ssl']) && $configuration['force_ssl']) {
