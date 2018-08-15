@@ -13,9 +13,10 @@ namespace RazyFramework
 {
   abstract class IController
   {
-  	protected $declaredClass = '';
-  	protected $methodList    = [];
-  	protected $isLoaded      = false;
+  	public $moduleLoaded      = false;
+  	protected $declaredClass  = '';
+  	protected $methodList     = [];
+  	protected $load;
 
   	protected $module;
   	protected $manager;
@@ -27,9 +28,10 @@ namespace RazyFramework
   		$this->declaredClass = $this->reflection->getShortName();
   		$this->manager       = ModuleManager::GetInstance();
   		$this->module        = $module;
+  		$this->load          = new Loader($module);
 
   		// Load Preload Event
-  		$this->isLoaded = ($this->__onModuleLoaded()) ? true : false;
+  		$this->moduleLoaded = ($this->__onModuleLoaded()) ? true : false;
   	}
 
   	private function __methodExists($methodName)
@@ -82,28 +84,6 @@ namespace RazyFramework
   		// true:    Module is ready
   		// false:   Module is not ready and unloaded
   		return true;
-  	}
-
-  	final public function isLoaded()
-  	{
-  		return $this->isLoaded;
-  	}
-
-  	final protected function loadview($filepath, $rootview = false)
-  	{
-  		// If there is no extension provided, default as .tpl
-  		if (!preg_match('/\.[a-z]+$/i', $filepath)) {
-  			$filepath .= '.tpl';
-  		}
-
-  		$root       = (($rootview) ? VIEW_PATH : $this->module->getViewPath()) . \DIRECTORY_SEPARATOR;
-  		$tplManager = new TemplateManager($root . $filepath, $this->module->getCode());
-  		$tplManager->globalAssign([
-  			'view_path' => $root,
-  		]);
-  		$tplManager->addToQueue();
-
-  		return $tplManager;
   	}
   }
 }

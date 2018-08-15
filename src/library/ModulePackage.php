@@ -118,7 +118,7 @@ namespace RazyFramework
 
   		// Preload module core controller
   		$this->coreController  = $this->getController($this->moduleCode);
-  		$this->preloadStatus   = ($this->coreController->isLoaded()) ? self::MODULE_STATUS_LOADED : self::MODULE_STATUS_UNLOADED;
+  		$this->preloadStatus   = ($this->coreController->moduleLoaded) ? self::MODULE_STATUS_LOADED : self::MODULE_STATUS_UNLOADED;
   	}
 
   	public function ready()

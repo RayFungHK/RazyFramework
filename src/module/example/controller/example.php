@@ -13,20 +13,43 @@ namespace RazyFramework
 {
   class example extends IController
   {
+  	protected function __onModuleLoaded()
+  	{
+  		return true;
+  	}
+
+  	public function __onReady()
+  	{
+  		DataConvertor::CreateConvertor('appendBold', function () {
+  			$this->chainable = true;
+
+  			return '<b>' . $this->value . '</b>';
+  		});
+
+  		TemplateBlockSet::CreateFilter('odd-filter', function () {
+  			return 0 === $this->index % 2;
+  		});
+
+  		return true;
+  	}
+
   	public function main()
   	{
-      $config = new Configuration($this->module);
   		if (CLI_MODE) {
   			echo 'Welcome to CLI mode';
   			foreach ($this->manager->getScriptParameters() as $param => $value) {
   				echo "\n${param}:" . str_repeat(' ', 12 - strlen($param)) . $value;
   			}
   		} else {
+        // Autoloader, load the class file from module folder
   			$sampleClass   = new \sampleClass();
   			$sampleClassNS = new \Custom\objectClass();
 
-  			$tplmanager = $this->loadview('main');
+        // loader, a bundle of preset function
+  			$config     = $this->load->config('general');
+  			$tplmanager = $this->load->view('main');
 
+        // Markdown library
   			$md = new Markdown();
   			$md->loadFile($this->module->getViewPath() . \DIRECTORY_SEPARATOR . 'markdown-sample.txt');
 
@@ -58,26 +81,6 @@ namespace RazyFramework
   			});
   		}
   	}
-
-    protected function __onModuleLoaded()
-    {
-      return true;
-    }
-
-    public function __onReady()
-    {
-      DataConvertor::CreateConvertor('appendBold', function () {
-        $this->chainable = true;
-
-        return '<b>' . $this->value . '</b>';
-      });
-
-      TemplateBlockSet::CreateFilter('odd-filter', function () {
-        return 0 === $this->index % 2;
-      });
-
-      return true;
-    }
 
   	public function reroute()
   	{

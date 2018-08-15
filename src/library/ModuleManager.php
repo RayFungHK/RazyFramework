@@ -13,8 +13,8 @@ namespace RazyFramework
 {
   class ModuleManager
   {
-  	private static $instance = null;
-    private static $moduleFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
+  	private static $instance     = null;
+  	private static $moduleFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
 
   	private $routeModule;
   	private $remapSorted      = [];
@@ -48,6 +48,29 @@ namespace RazyFramework
   					}
   				}
   			}
+
+  			// If all module is ready, setup loader
+  			// Loader: view
+  			Loader::CreateLoader('view', function ($filepath, $rootview = false) {
+  				// If there is no extension provided, default as .tpl
+  				if (!preg_match('/\.[a-z]+$/i', $filepath)) {
+  					$filepath .= '.tpl';
+  				}
+
+  				$root       = (($rootview) ? VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR;
+  				$tplManager = new TemplateManager($root . $filepath, $this->getCode());
+  				$tplManager->globalAssign([
+  					'view_path' => $root,
+  				]);
+  				$tplManager->addToQueue();
+
+  				return $tplManager;
+  			});
+
+  			// Loader: config
+  			Loader::CreateLoader('config', function ($filename) {
+  				return new Configuration($this, $filename);
+  			});
   		} else {
   			// Error: Loaded Twice
   			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
@@ -206,11 +229,21 @@ namespace RazyFramework
   		return false;
   	}
 
+  	public static function SetModuleFolder(string $path)
+  	{
+  		$modulePath = trim($path);
+  		$modulePath = realpath(preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $modulePath));
+  		if (!file_exists($modulePath) || !is_dir($modulePath)) {
+  			new ThrowError('ModuleManager', '4001', $path . ' does not exist or not a directory.');
+  		}
+  		self::$moduleFolder = $modulePath . \DIRECTORY_SEPARATOR;
+  	}
+
   	private function loadModule($moduleFolder)
   	{
-      if (!file_exists($moduleFolder) || !is_dir($moduleFolder)) {
-        return false;
-      }
+  		if (!file_exists($moduleFolder) || !is_dir($moduleFolder)) {
+  			return false;
+  		}
 
   		foreach (scandir($moduleFolder) as $node) {
   			if ('.' === $node || '..' === $node) {
@@ -227,17 +260,17 @@ namespace RazyFramework
   						$modulePackage = new ModulePackage($subModuleFolder, require $subModuleFolder . 'config.php');
   						if (ModulePackage::MODULE_STATUS_LOADED === $modulePackage->getPreloadStatus()) {
   							// Register the module if the module is loaded
-            		if ('RazyFramework\ModulePackage' === get_class($modulePackage)) {
-            			if (!isset($this->moduleRegistered[$modulePackage->getCode()])) {
-            				$this->moduleRegistered[$modulePackage->getCode()] = $modulePackage;
-            			} else {
-            				// Error: Duplicated Module
-            				new ThrowError('ModuleManaer', '1004', 'Duplicated Module Code');
-            			}
-            		} else {
-            			// Error: Invalid Class
-            			new ThrowError('ModuleManaer', '1005', 'Invalid Module File');
-            		}
+  							if ('RazyFramework\ModulePackage' === get_class($modulePackage)) {
+  								if (!isset($this->moduleRegistered[$modulePackage->getCode()])) {
+  									$this->moduleRegistered[$modulePackage->getCode()] = $modulePackage;
+  								} else {
+  									// Error: Duplicated Module
+  									new ThrowError('ModuleManaer', '1004', 'Duplicated Module Code');
+  								}
+  							} else {
+  								// Error: Invalid Class
+  								new ThrowError('ModuleManaer', '1005', 'Invalid Module File');
+  							}
   						}
   					} catch (Exception $e) {
   						// Error: Fail to load module file
@@ -249,15 +282,5 @@ namespace RazyFramework
   			}
   		}
   	}
-
-    static public function SetModuleFolder(string $path)
-    {
-      $modulePath = trim($path);
-      $modulePath = realpath(preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $modulePath));
-      if (!file_exists($modulePath) || !is_dir($modulePath)) {
-        new ThrowError('ModuleManager', '4001', $path . ' does not exist or not a directory.');
-      }
-      self::$moduleFolder = $modulePath . \DIRECTORY_SEPARATOR;
-    }
   }
 }
