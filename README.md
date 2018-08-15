@@ -8,8 +8,18 @@
 - Supports CLI mode
 - Pluggable controller, better coding management
 
+# What is the big change on next update?
+- **Package Manager**
+To install/update Module Package automatically via CLI or WebUI. You can add repository (default Razy official) to get more module package.
+- **Template and Module Cache**
+To improve Razy Framework performance, increase OPS
+- **Global Configration and Configuration library**
+You can use global config file to change the library or module folder location, or force to use https. Also, you can use Configuration library to create and read module config file in /configuration folder.
+- **Redesign database library**
+More powerful database library, provides single record operation flow and object-oriented with chainable query.
+
 # Task List
-- Preload and Ready event (Drafted)
+- Preload and Ready event (Implementation Testing)
 - New CLI Mode (Done)
 - Markdown library, Class (Done)
 - FTP library, Class
