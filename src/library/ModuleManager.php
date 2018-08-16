@@ -46,11 +46,12 @@ namespace RazyFramework
   					$filepath .= '.tpl';
   				}
 
-  				$root       = (($rootview) ? VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR;
-  				$tplManager = new TemplateManager($root . $filepath, $this->getCode());
-  				$tplManager->globalAssign([
-  					'view_path' => $root,
-  				]);
+          $root       = (($rootview) ? VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR;
+          $viewUrl       = (($rootview) ? VIEW_PATH : $this->getViewPathURL()) . \DIRECTORY_SEPARATOR;
+          $tplManager = new TemplateManager($root . $filepath, $this->getCode());
+          $tplManager->globalAssign([
+            'view_path' => $viewUrl,
+          ]);
   				$tplManager->addToQueue();
 
   				return $tplManager;
