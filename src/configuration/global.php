@@ -3,7 +3,7 @@ return [
   // Custom ``library`` path, set '' or false to use default path
   'library_path' => '',
 
-  // Custom ``mopdule`` path, set '' or false to use default path
+  // Custom ``module`` path, set '' or false to use default path
   'module_path' => '',
 
   // A callback function to identify the SSL protocol. Like Cloudflare,
@@ -13,7 +13,7 @@ return [
   // the protocol is using HTTPS correctly.
   'identify_ssl' => null,
 
-  // Force Razy Frameworks use https protocal, and it will force redirect to https
+  // Force Razy Frameworks use https protocal
   'force_ssl' => false
 ];
 ?>

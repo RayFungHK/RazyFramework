@@ -77,7 +77,8 @@ namespace RazyFramework
   			return $this->iterator[$index];
   		}
 
-  		return null;
+      $reference = null;
+  		return $reference;
   	}
 
   	private function reflection()

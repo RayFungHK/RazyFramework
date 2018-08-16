@@ -11,20 +11,14 @@
 
 namespace RazyFramework
 {
-  class Configuration
+  class Configuration extends \ArrayObject
   {
-  	private $config         = [];
   	private $configFilePath = '';
   	private $module;
 
   	public function __construct(ModulePackage $module, string $filename)
   	{
   		$configFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'configuration' . \DIRECTORY_SEPARATOR . $module->getCode() . \DIRECTORY_SEPARATOR;
-  		if (!file_exists($configFolder)) {
-  			mkdir($configFolder);
-  		} elseif (!is_dir($configFolder)) {
-  			new ThrowError('1001', 'Configuration', $configFolder . ' is not a directory.');
-  		}
 
   		$filename = trim($filename);
   		if (!preg_match('/^[\w-]+/i', $filename)) {
@@ -39,17 +33,42 @@ namespace RazyFramework
   				new ThrowError('1002', 'Configuration', $this->configFilePath . ' is not a valid config file.');
   			}
 
-  			$this->config = require $this->configFilePath;
+  			$config = require $this->configFilePath;
+
+        // Pass the config array to parent constructor
+  			parent::__construct($config);
   		}
+  	}
+
+  	public function &offsetGet($index)
+  	{
+  		if ($this->offsetExists($index)) {
+  			return $this->iterator[$index];
+  		}
+
+      $reference = null;
+  		return $reference;
   	}
 
   	public function commit()
   	{
+      // Get the config file path info
+      $pathParts = pathinfo($this->configFilePath);
+
+      // Check the configuration folder does exist
+      if (!file_exists($pathParts['dirname'])) {
+        // Create the directory
+        mkdir($pathParts['dirname']);
+      } elseif (!is_dir($pathParts['dirname'])) {
+        // If the path does exist but not a directory, throw an error
+        new ThrowError('1003', 'Configuration', $pathParts['dirname'] . ' is not a directory.');
+      }
+
   		if (!($handle = fopen($this->configFilePath, 'w'))) {
-  			new ThrowError('1003', 'Configuration', 'Cannot open file: ' . $this->configFilePath);
+  			new ThrowError('1004', 'Configuration', 'Cannot open file: ' . $this->configFilePath);
   		}
 
-  		fwrite($handle, "<?php\nreturn " . var_export([], true) . ";\n?>");
+  		fwrite($handle, "<?php\nreturn " . var_export($this->getArrayCopy(), true) . ";\n?>");
   		fclose($handle);
 
   		return $this;

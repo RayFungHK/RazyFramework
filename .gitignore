@@ -1,0 +1,2 @@
+src/configuration/*
+!src/configuration/global.php

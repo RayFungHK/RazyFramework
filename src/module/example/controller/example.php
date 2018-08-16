@@ -47,7 +47,9 @@ namespace RazyFramework
 
         // loader, a bundle of preset function
   			$config     = $this->load->config('general');
-  			$tplmanager = $this->load->view('main');
+        $config['parameter'] = '123';
+        $config->commit();
+   			$tplmanager = $this->load->view('main');
 
         // Markdown library
   			$md = new Markdown();
