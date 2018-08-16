@@ -14,6 +14,7 @@ namespace RazyFramework
   class Configuration extends \ArrayObject
   {
   	private $configFilePath = '';
+    private $loaded = false;
   	private $module;
 
   	public function __construct(ModulePackage $module, string $filename)
@@ -37,8 +38,14 @@ namespace RazyFramework
 
         // Pass the config array to parent constructor
   			parent::__construct($config);
+        $this->loaded = true;
   		}
   	}
+
+    public function isLoaded()
+    {
+      return $this->loaded;
+    }
 
   	public function &offsetGet($index)
   	{

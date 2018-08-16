@@ -41,7 +41,8 @@ namespace RazyFramework
   	const DATATYPE_TEXT       = 'TEXT';
   	const DATATYPE_MEDIUMTEXT = 'MEDIUMTEXT';
 
-  	private static $dbConnectionList = [];
+  	private static $dbConnectionLists = [];
+
   	private $dba;
   	private $tableList  = [];
   	private $queryCount = 0;
@@ -49,12 +50,16 @@ namespace RazyFramework
   	public function __construct($connectionName)
   	{
   		$connectionName = trim($connectionName);
-  		self::AddDBConnection($connectionName, $this);
+    	self::$dbConnectionLists[$connectionName] = $this;
   	}
 
-  	public static function GetDBConnection($connectionName)
+
+  	public static function GetConnection($connectionName)
   	{
-  		return self::$dbConnectionList[$connectionName];
+      if (!isset(self::$dbConnectionLists[$connectionName])) {
+        self::$dbConnectionLists[$connectionName] = new Database($connectionName);
+      }
+  		return self::$dbConnectionLists[$connectionName];
   	}
 
   	public function connect($host, $username, $password, $database)
@@ -134,11 +139,6 @@ namespace RazyFramework
   		}
 
   		return $this->tableList[$tableName];
-  	}
-
-  	private static function AddDBConnection($connectionName, $db)
-  	{
-  		self::$dbConnectionList[$connectionName] = $db;
   	}
   }
 }

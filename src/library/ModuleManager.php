@@ -40,7 +40,7 @@ namespace RazyFramework
 
   			// Creating Loader method in preload stage
   			// Loader: view
-  			Loader::CreateMethod('view', function ($filepath, $rootview = false) {
+  			Loader::CreateMethod('view', function (string $filepath, $rootview = false) {
   				// If there is no extension provided, default as .tpl
   				if (!preg_match('/\.[a-z]+$/i', $filepath)) {
   					$filepath .= '.tpl';
@@ -57,8 +57,13 @@ namespace RazyFramework
   			});
 
   			// Loader: config
-  			Loader::CreateMethod('config', function ($filename) {
+  			Loader::CreateMethod('config', function (string $filename) {
   				return new Configuration($this, $filename);
+  			});
+
+  			// Loader: db
+  			Loader::CreateMethod('db', function (string $connectionName) {
+  				return Database::GetConnection($connectionName);
   			});
 
   			$this->loadModule(self::$moduleFolder);
