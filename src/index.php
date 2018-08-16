@@ -20,7 +20,7 @@ namespace RazyFramework
 	}
 
   if (CLI_MODE) {
-    define('REQUEST_ROUT', null);
+    define('REQUEST_ROUTE', null);
 
     // Load module
     $moduleManager = new ModuleManager();
@@ -35,7 +35,7 @@ namespace RazyFramework
   	$urlQuery         = parse_url($urlQuery);
   	$urlQuery['path'] = rtrim($urlQuery['path'], '/') . '/';
 
-    define('REQUEST_ROUT', $urlQuery['path']);
+    define('REQUEST_ROUTE', $urlQuery['path']);
 
     // Load module
     $moduleManager = new ModuleManager();

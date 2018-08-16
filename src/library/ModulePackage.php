@@ -169,6 +169,31 @@ namespace RazyFramework
   		return $this->remapPath;
   	}
 
+  	public function getRoute(string $path)
+  	{
+  		$path = preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
+  		if (0 === strpos($path, $this->remapPath)) {
+  			// Get the relative path and remove the last slash
+  			$argsString = preg_replace('/\/*$/', '', substr($path, strlen($this->remapPath)));
+
+  			// Extract the path into an arguments array
+  			$args       = ($argsString) ? explode('/', $argsString) : [];
+  			$routeName  = (count($args)) ? $args[0] : '(:any)';
+
+  			// If method route mapping matched, return the contoller
+  			if (isset($this->routeMapping[$routeName])) {
+  				return $routeName;
+  			}
+  			$routeName = '(:any)';
+  			// If no method route matched, re-route all argument to (:any).
+  			if (isset($this->routeMapping['(:any)'])) {
+  				return $routeName;
+  			}
+  		}
+
+  		return false;
+  	}
+
   	public function route($args)
   	{
   		if (self::MODULE_STATUS_READY !== $this->preloadStatus) {
