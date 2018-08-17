@@ -46,12 +46,13 @@ namespace RazyFramework
   					$filepath .= '.tpl';
   				}
 
-          $root       = (($rootview) ? VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR;
-          $viewUrl       = (($rootview) ? VIEW_PATH : $this->getViewPathURL()) . \DIRECTORY_SEPARATOR;
-          $tplManager = new TemplateManager($root . $filepath, $this->getCode());
-          $tplManager->globalAssign([
-            'view_path' => $viewUrl,
-          ]);
+  				$root = (($rootview) ? VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR;
+  				$viewUrl = (($rootview) ? VIEW_PATH : $this->getViewPathURL()) . \DIRECTORY_SEPARATOR;
+
+  				$tplManager = new TemplateManager($root . $filepath, $this->getCode());
+  				$tplManager->globalAssign([
+  					'view_path' => $viewUrl,
+  				]);
   				$tplManager->addToQueue();
 
   				return $tplManager;
@@ -65,6 +66,13 @@ namespace RazyFramework
   			// Loader: db
   			Loader::CreateMethod('db', function (string $connectionName) {
   				return Database::GetConnection($connectionName);
+  			});
+
+  			// Loader: locate
+  			Loader::CreateMethod('locate', function (string $path) {
+  				$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
+  				header('location: ' . URL_BASE . $path);
+  				die();
   			});
 
   			$this->loadModule(self::$moduleFolder);
