@@ -118,9 +118,9 @@ namespace RazyFramework
 
   		// Preload module core controller
   		$this->coreController  = $this->getController($this->moduleCode);
-      if (!$this->coreController) {
-        new ThrowError('ModulePackage', '3004', $this->moduleCode . ' core controller not declared');
-      }
+  		if (!$this->coreController) {
+  			new ThrowError('ModulePackage', '3004', $this->moduleCode . ' core controller not declared');
+  		}
   		$this->preloadStatus   = ($this->coreController->moduleLoaded) ? self::MODULE_STATUS_LOADED : self::MODULE_STATUS_UNLOADED;
   	}
 
@@ -177,40 +177,40 @@ namespace RazyFramework
   		return $this->remapPath;
   	}
 
-    public function getRoute(string $path)
-    {
-      $path = preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
-      if (0 === strpos($path, $this->remapPath)) {
-        // Get the relative path and remove the last slash
-        $argsString = preg_replace('/\/*$/', '', substr($path, strlen($this->remapPath)));
+  	public function getRoute(string $path)
+  	{
+  		$path = preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
+  		if (0 === strpos($path, $this->remapPath)) {
+  			// Get the relative path and remove the last slash
+  			$argsString = preg_replace('/\/*$/', '', substr($path, strlen($this->remapPath)));
 
-        // Extract the path into an arguments array
-        $args = ($argsString) ? explode('/', $argsString) : [];
-    		$routeName  = (count($args)) ? $args[0] : '/';
+  			// Extract the path into an arguments array
+  			$args       = ($argsString) ? explode('/', $argsString) : [];
+  			$routeName  = (count($args)) ? $args[0] : '/';
 
-    		// If method route mapping matched, return the contoller
-    		if (isset($this->routeMapping[$routeName])) {
-    			return $routeName;
-    		} else {
-    			$routeName = '(:any)';
-    			// If no method route matched, re-route all argument to (:any).
-    			if (isset($this->routeMapping['(:any)'])) {
-      			return $routeName;
-    			}
-    		}
-      }
-      return false;
-    }
+  			// If method route mapping matched, return the contoller
+  			if (isset($this->routeMapping[$routeName])) {
+  				return $routeName;
+  			}
+  			$routeName = '(:any)';
+  			// If no method route matched, re-route all argument to (:any).
+  			if (isset($this->routeMapping['(:any)'])) {
+  				return $routeName;
+  			}
+  		}
+
+  		return false;
+  	}
 
   	public function route($args)
   	{
   		if (self::MODULE_STATUS_READY !== $this->preloadStatus) {
-  			new ThrowError('ModulePackage', '2003', 'System is not ready, you cannot route in preload stage.');
+  			new ThrowError('ModulePackage', '4001', 'System is not ready, you cannot route in preload stage.');
   		}
 
   		$moduleController = null;
 
-      // If there is no $args, find / (root) route
+  		// If there is no $args, find / (root) route
   		$routeName = (count($args)) ? $args[0] : '/';
 
   		// If method route mapping matched, return the contoller
@@ -219,17 +219,12 @@ namespace RazyFramework
 
   			$moduleController         = $this->getController($className);
   		} else {
-        // If no route matched, try to find (:any) wildcard route
+  			// If no route matched, try to find (:any) wildcard route
   			$routeName = '(:any)';
   			// If no method route matched, re-route all argument to (:any).
   			if (isset($this->routeMapping['(:any)'])) {
   				list($className, $method) = explode('.', $this->routeMapping['(:any)']);
   				$moduleController         = $this->getController($className);
-  			}
-
-  			if (!$moduleController) {
-  				// No (:any) route exists, return 404 not found
-  				return false;
   			}
   		}
 
@@ -240,8 +235,10 @@ namespace RazyFramework
   			$reflection = new \ReflectionMethod($moduleController, $method);
   			if (!$reflection->isPublic()) {
   				// Error: Controller function not callable
-  				new ThrowError('ModulePackage', '2002', 'Cannot execute the method, maybe it is not a public method');
+  				new ThrowError('ModulePackage', '4002', 'Cannot execute the method, maybe it is not a public method');
   			}
+  		} else {
+  			new ThrowError('ModulePackage', '4003', 'Controller method [' . $method . '] not declared.');
   		}
 
   		// Set the matched mapping name as route name
@@ -356,13 +353,12 @@ namespace RazyFramework
   			if ($_className !== $className) {
   				new ThrowError('ModulePackage', '1003', 'Controller\'s class ' . $className . ' not found, or the declared class name not match as the file name.');
   			}
-
   			if (class_exists($declaredClass)) {
   				// Create controller object and put into controller list
   				$this->controllerList[$className] = new $declaredClass($this);
 
   				// Check the controller class has inherit IController class or not
-  				if (!is_subclass_of($this->controllerList[$className], 'RazyFramework\\IController')) {
+  				if (!is_subclass_of($this->controllerList[$className], 'RazyFramework\IController')) {
   					// Error: Controller's class should inherit IController
   					new ThrowError('ModulePackage', '1002', 'Controller\'s class should inherit IController');
   				}
@@ -372,8 +368,8 @@ namespace RazyFramework
   			// Error: Controller's class not found
   			new ThrowError('ModulePackage', '1001', 'Controller\'s class not exists');
   		} else {
-        new ThrowError('ModulePackage', '1004', 'Controller\'s class file not found');
-      }
+  			new ThrowError('ModulePackage', '1004', 'Controller\'s class file not found');
+  		}
 
   		return null;
   	}
