@@ -20,30 +20,38 @@ namespace RazyFramework
 	}
 
   if (CLI_MODE) {
-    define('REQUEST_ROUTE', null);
+  	define('REQUEST_ROUTE', null);
 
-    // Load module
-    $moduleManager = new ModuleManager();
-  	$path = $moduleManager->getScriptRoute();
+  	// Load module
+  	$moduleManager = new ModuleManager();
+  	$path          = $moduleManager->getScriptRoute();
 
   	if (!$moduleManager->route($path)) {
   		die("Command not found\n");
   	}
   } else {
-  	$urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
+    // Enable gzip compression
+  	if (!ob_start('ob_gzhandler')) {
+  		ob_start();
+  	}
+
+		$urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
 
   	$urlQuery         = parse_url($urlQuery);
   	$urlQuery['path'] = rtrim($urlQuery['path'], '/') . '/';
+    $urlQuery['path'] = preg_replace('/^\/index.php/', '', $urlQuery['path']);
 
-    define('REQUEST_ROUTE', $urlQuery['path']);
+  	define('REQUEST_ROUTE', $urlQuery['path']);
 
-    // Load module
-    $moduleManager = new ModuleManager();
+  	// Load module
+  	$moduleManager = new ModuleManager();
   	if (!$moduleManager->route($urlQuery['path'])) {
   		header('HTTP/1.0 404 Not Found');
   		die();
   	}
 
   	TemplateManager::OutputQueued();
+
+    ob_end_flush();
   }
 }

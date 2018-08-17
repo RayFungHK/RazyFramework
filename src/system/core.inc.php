@@ -11,7 +11,12 @@
 
 namespace RazyFramework
 {
+	// Prevent Resubmission
+	session_cache_limiter('private_no_expire');
 	session_start();
+
+	// Remove useless header
+	header_remove('X-Powered-By');
 
   // Load global config
   $configuration = [];
