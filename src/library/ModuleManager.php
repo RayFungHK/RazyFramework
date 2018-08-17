@@ -51,6 +51,7 @@ namespace RazyFramework
 
   				$tplManager = new TemplateManager($root . $filepath, $this->getCode());
   				$tplManager->globalAssign([
+            'url_base' => URL_BASE,
   					'view_path' => $viewUrl,
   				]);
   				$tplManager->addToQueue();
@@ -70,9 +71,9 @@ namespace RazyFramework
 
   			// Loader: locate
   			Loader::CreateMethod('locate', function (string $path) {
-  				$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
+          $path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
   				header('location: ' . URL_BASE . $path);
-  				die();
+          die();
   			});
 
   			$this->loadModule(self::$moduleFolder);
