@@ -51,7 +51,7 @@ namespace RazyFramework
 
   				$tplManager = new TemplateManager($root . $filepath, $this->getCode());
   				$tplManager->globalAssign([
-            'url_base' => URL_BASE,
+  					'url_base'  => URL_BASE,
   					'view_path' => $viewUrl,
   				]);
   				$tplManager->addToQueue();
@@ -71,18 +71,20 @@ namespace RazyFramework
 
   			// Loader: locate
   			Loader::CreateMethod('locate', function (string $path) {
-          $path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
+  				$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
   				header('location: ' . URL_BASE . $path);
-          die();
+  				die();
   			});
 
   			$this->loadModule(self::$moduleFolder);
 
+  			$unloadModule = [];
   			// Load event: __onReady
   			foreach ($this->moduleRegistered as $moduleCode => $module) {
   				if (ModulePackage::MODULE_STATUS_UNLOADED === $module->ready()) {
-  					// Unload the module if the status is unloaded
-  					unset($this->moduleRegistered[$moduleCode]);
+  					// Unload the module if the status is unloaded.
+  					// Put the module to unload list
+  					$unloadModule[] = $moduleCode;
   				} elseif (ModulePackage::MODULE_STATUS_READY === $module->ready()) {
   					// If Module is ready, setup remap path
   					if ($remapPath = $module->getRemapPath()) {
@@ -92,6 +94,13 @@ namespace RazyFramework
   						}
   						$this->remapMapping[$remapPath] = $module;
   					}
+  				}
+  			}
+
+  			// If there are module marked unload
+  			if (count($unloadModule)) {
+  				foreach ($unloadModule as $moduleCode) {
+  					unset($this->moduleRegistered[$moduleCode]);
   				}
   			}
   		} else {
@@ -137,6 +146,11 @@ namespace RazyFramework
   	public function getStage()
   	{
   		return $this->stage;
+  	}
+
+  	public function moduleHasLoaded($moduleCode)
+  	{
+  		return isset($this->moduleRegistered[$moduleCode]);
   	}
 
   	public function loadLibrary($class)

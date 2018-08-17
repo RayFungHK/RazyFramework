@@ -190,8 +190,8 @@ namespace RazyFramework
   			} elseif (TemplateManager::HasEnvironmentVariable($tagname)) {
   				// Global level variable tag
   				$value = TemplateManager::GetEnvironmentVariable($tagname);
-  			} elseif (0 === $clipsCount && !$wrapped) {
-  				return $matches[0][0];
+  			} elseif (0 === $clipsCount) {
+  				return '';
   			}
 
   			// If variable tag includes modifier clips, start extract the modifier
