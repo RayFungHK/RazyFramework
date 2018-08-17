@@ -118,6 +118,9 @@ namespace RazyFramework
 
   		// Preload module core controller
   		$this->coreController  = $this->getController($this->moduleCode);
+      if (!$this->coreController) {
+        new ThrowError('ModulePackage', '3004', $this->moduleCode . ' core controller not declared');
+      }
   		$this->preloadStatus   = ($this->coreController->moduleLoaded) ? self::MODULE_STATUS_LOADED : self::MODULE_STATUS_UNLOADED;
   	}
 
@@ -183,7 +186,7 @@ namespace RazyFramework
 
         // Extract the path into an arguments array
         $args = ($argsString) ? explode('/', $argsString) : [];
-    		$routeName  = (count($args)) ? $args[0] : '(:any)';
+    		$routeName  = (count($args)) ? $args[0] : '/';
 
     		// If method route mapping matched, return the contoller
     		if (isset($this->routeMapping[$routeName])) {
@@ -206,14 +209,17 @@ namespace RazyFramework
   		}
 
   		$moduleController = null;
-  		$routeName        = (count($args)) ? $args[0] : '(:any)';
+
+      // If there is no $args, find / (root) route
+  		$routeName = (count($args)) ? $args[0] : '/';
 
   		// If method route mapping matched, return the contoller
   		if (isset($this->routeMapping[$routeName])) {
-  			$method                   = array_shift($args);
   			list($className, $method) = explode('.', $this->routeMapping[$routeName]);
+
   			$moduleController         = $this->getController($className);
   		} else {
+        // If no route matched, try to find (:any) wildcard route
   			$routeName = '(:any)';
   			// If no method route matched, re-route all argument to (:any).
   			if (isset($this->routeMapping['(:any)'])) {
@@ -365,7 +371,9 @@ namespace RazyFramework
   			}
   			// Error: Controller's class not found
   			new ThrowError('ModulePackage', '1001', 'Controller\'s class not exists');
-  		}
+  		} else {
+        new ThrowError('ModulePackage', '1004', 'Controller\'s class file not found');
+      }
 
   		return null;
   	}
