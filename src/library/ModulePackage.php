@@ -24,6 +24,7 @@ namespace RazyFramework
   	private $version           = '';
   	private $remapPath         = '';
   	private $routeName         = '';
+  	private $require           = [];
   	private $routeMapping      = [];
   	private $callableList      = [];
   	private $controllerList    = [];
@@ -114,6 +115,18 @@ namespace RazyFramework
   			unset($settings['remap']);
   		}
 
+  		if (array_key_exists('require', $settings)) {
+  			if (is_array($settings['require'])) {
+  				foreach ($settings['require'] as $moduleName => $version) {
+  					if (!preg_match('/^[\w-]+$/i', $moduleName)) {
+  						new ThrowError('ModulePackage', '3005', $moduleName . ' is not a valid module name.');
+  					}
+  					$this->require[$moduleName] = $version;
+  				}
+  			}
+  			unset($settings['require']);
+  		}
+
   		$this->additionalSetting = $settings;
 
   		// Preload module core controller
@@ -135,6 +148,11 @@ namespace RazyFramework
   		}
 
   		return $this->preloadStatus;
+  	}
+
+  	public function getRequire()
+  	{
+  		return $this->require;
   	}
 
   	public function getPreloadStatus()

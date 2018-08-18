@@ -13,11 +13,21 @@ namespace RazyFramework
 {
   class DatabaseTable
   {
-  	private $dbConn;
-  	private $tableName  = '';
-  	private $columnList = [];
-  	private $parmaryKey = [];
-  	private $hasAICol   = false;
+  	const COLUMN_CUSTOM    = -1;
+  	const COLUMN_AUTO_ID   = 0;
+  	const COLUMN_TEXT      = 1;
+  	const COLUMN_LONG_TEXT = 2;
+  	const COLUMN_INT       = 3;
+  	const COLUMN_BOOLEAN   = 4;
+  	const COLUMN_DECIMAL   = 5;
+  	const COLUMN_TIMESTAMP = 6;
+  	const COLUMN_DATETIME  = 7;
+  	const COLUMN_DATE      = 8;
+  	const COLUMN_JSON      = 9;
+
+  	private $tableName    = '';
+  	private $columnList   = [];
+  	private $aiDeclared   = false;
 
   	private $defaultCharacterSet = [
   		'big5'     => 'big5_chinese_ci',
@@ -63,64 +73,118 @@ namespace RazyFramework
   		'gb18030'  => 'gb18030_chinese_ci',
   	];
 
-  	public function __construct($dbConn, $tableName)
+  	public function __construct(string $tableName)
   	{
-  		$this->dbConn    = $dbConn;
   		$this->tableName = $tableName;
   	}
 
-  	public function addColumn($columnName, $setting = [])
+  	public function createColumn(string $name, $type = self::COLUMN_TEXT, $setting = [])
   	{
-  		$columnName = trim($columnName);
+  		$name = trim($name);
+
+  		if (!is_array($setting)) {
+  			$setting = [];
+  		}
+
   		if (!isset($this->columnList[$columnName])) {
-  			$this->columnList[$columnName] = [
-  				'datatype'       => null,
-  				'length'         => null,
-  				'default_value'  => null,
-  				'enumset'        => null,
-  				'no_null'        => true,
-  				'is_parmary_key' => false,
-  				'is_ai'          => false,
-  				'character_set'  => null,
-  				'collate'        => null,
-  			];
-  		}
+  			switch ($type) {
+  			  case self::COLUMN_AUTO_ID:
+  				  $setting['datatype']       = 'INT';
+  				  $setting['auto_increment'] = true;
+  				  $setting['index_type']     = 'primary';
+  				  $this->presetSetting($setting, [
+  				  	'length'        => '8',
+  				  	'default_value' => 0,
+  				  	'no_null'       => true,
+  				  ]);
+  				  if ($setting['auto_increment'] && $this->aiDeclared) {
+  				  	// Error: Only allow one Auto Increment Column
+  				  	new ThrowError('Database', '2001', 'One table only allowed to have one Auto Increment Column');
+  				  }
+  				  $this->aiDeclared     = true;
 
-  		if (isset($setting['datatype'])) {
-  			$this->columnList[$columnName]['datatype'] = strtoupper(trim($setting['datatype']));
-  			if (!preg_match_all('/^(BIT|(?:TINY|SMALL|MEDIUM|BIG)?INT|REAL|DOUBLE|FLOAT|DECIMAL|NUMERIC|DATE|TIME(?:STAMP)?|DATETIME|YEAR|(?:VAR)?CHAR|(?:VAR)?BINARY|(?:TINY|MEDIUM|LONG)?(?:TEXT|BLOB)|ENUM|SET|JSON)/i', $setting['datatype'], $matches, PREG_SET_ORDER)) {
-  				// Error: Duplicated Column Name
-  				new ThrowError('Database', '2002', 'Duplicated Column Name');
-  			}
+  				  break;
+  			  case self::COLUMN_TEXT:
+  				  $setting['datatype'] = 'TEXT';
+  				  $this->presetSetting($setting, [
+  				  	'length'        => '255',
+  				  	'default_value' => '',
+  				  	'no_null'       => true,
+  				  ]);
 
-  			if (isset($setting['length']) && null !== $setting['length']) {
-  				$this->columnList[$columnName]['length'] = trim($setting['length']);
-  			}
-  		} else {
-  			// Error: Missing Column Datatype
-  			new ThrowError('Database', '2001', 'Missing Column Datatype');
-  		}
+  				  break;
+  			  case self::COLUMN_LONG_TEXT:
+  				  $setting['datatype'] = 'LONGTEXT';
+  				  $this->presetSetting($setting, [
+  				  	'default_value' => '',
+  				  	'no_null'       => true,
+  				  ]);
 
-  		if (isset($setting['default_value'])) {
-  			$this->columnList[$columnName]['default_value'] = (null !== $setting['default_value']) ? (string) ($setting['default_value']) : null;
-  		}
+  				  break;
+  			  case self::COLUMN_INT:
+  				  $setting['datatype'] = 'INT';
+  				  $this->presetSetting($setting, [
+  				  	'length'        => '8',
+  				  	'default_value' => '0',
+  				  	'no_null'       => true,
+  				  ]);
 
-  		if (isset($setting['enumset'])) {
-  			$this->columnList[$columnName]['enumset'] = (array) $setting['enumset'];
-  		}
+            break;
+  			  case self::COLUMN_BOOLEAN:
+  				  $setting['datatype'] = 'TINYINT';
+  				  $this->presetSetting($setting, [
+  				  	'length'        => '1',
+  				  	'default_value' => '0',
+  				  	'no_null'       => true,
+  				  ]);
 
-  		if (isset($setting['no_null'])) {
-  			$this->columnList[$columnName]['no_null'] = (bool) $setting['no_null'];
-  		}
+            break;
+          case self::COLUMN_DECIMAL:
+  				  $setting['datatype'] = 'DECIMAL';
+  				  $this->presetSetting($setting, [
+  				  	'length'        => '8,2',
+  				  	'default_value' => '0',
+  				  	'no_null'       => true,
+  				  ]);
 
-  		if (isset($setting['is_ai'])) {
-  			$this->columnList[$columnName]['is_ai'] = (bool) $setting['is_ai'];
-  			if ($setting['is_ai'] && $this->hasAICol) {
-  				// Error: Only allow one Auto Increment Column
-  				new ThrowError('Database', '2003', 'Only allow one Auto Increment Column');
-  			}
-  			$this->hasAICol     = true;
-  			$this->parmaryKey[] = $columnName;
+            break;
+          case self::COLUMN_TIMESTAMP:
+  					$setting['datatype'] = 'TIMESTAMP';
+  					$this->presetSetting($setting, [
+  						'no_null' => true,
+  					]);
+
+  					break;
+          case self::COLUMN_DATETIME:
+  					$setting['datatype'] = 'DATETIME';
+  					$this->presetSetting($setting, [
+  						'no_null' => true,
+  					]);
+
+  					break;
+          case self::COLUMN_DATE:
+  					$setting['datatype'] = 'DATE';
+  					$this->presetSetting($setting, [
+  						'no_null' => true,
+  					]);
+
+  					break;
+          case self::COLUMN_CUSTOM:
+          default:
+  					if (!array_key_exists('datatype', $setting) || !preg_match('/^(BIT|(TINY|MEDIUM)(TEXT|BLOB|INT)|(SMALL|BIG)?INT|REAL|DOUBLE|FIXED|FLOAT|DEC(IMAL)?|NUMERIC|DATE|TIME(STAMP)?|DATETIME|YEAR|(VAR)?(CHAR|BINARY)|(LONG)?(TEXT|BLOB)|ENUM|SET|JSON|BOOL(EAN)?)$/i', $setting['datatype'])) {
+  						new ThrowError('Database', '2002', $setting['datatype'] . ' is not a valid data type.');
+  					}
+  					$this->presetSetting($setting, [
+  						'length'        => '255',
+  						'default_value' => '',
+  						'no_null'       => true,
+  					]);
+
+  				  break;
+        }
+
+  			$setting['datatype']     = strtoupper($setting['datatype']);
+  			$this->columnList[$name] = $setting;
   		}
 
   		return $this;
@@ -128,50 +192,79 @@ namespace RazyFramework
 
   	public function getSyntax()
   	{
-  		$createSyntax = 'CREATE TABLE ' . $this->tableName . ' (';
-  		$columnSyntax = [];
+  		$indexKey = [
+  			'primary'  => [],
+  			'index'    => [],
+  			'unique'   => [],
+  			'fulltext' => [],
+  			'spatial'  => [],
+  		];
+
+  		$commands = [];
   		foreach ($this->columnList as $columnName => $column) {
   			$syntax = '`' . $columnName . '`';
 
-  			$datatype = $column['datatype'];
-  			if (null !== $column['length']) {
-  				if (preg_match('/(BIT|(?:TINY|SMALL|MEDIUM|BIG)?INT|TIME(?:STAMP)?|DATETIME|(?:VAR)?CHAR|(?:VAR)?BINARY)|(?:TINY|MEDIUM|LONG)?(?:TEXT|BLOB)/i', $column['datatype'])) {
-  					$column['length'] = (int) ($column['length']);
-  					if ($column['length'] <= 0) {
-  						$column['length'] = null;
-  					}
-  				} elseif (preg_match('/(REAL|DOUBLE|FLOAT|DECIMAL|NUMERIC)/i', $column['datatype'])) {
-  					if (preg_match_all('/(\d+)(?:,\s*(\d+))?/', $column['length'], $matches, PREG_SET_ORDER, 0)) {
-  						$column['length'] = $matches[1] . ',' . $matches[2];
-  					} else {
-  						$column['length'] = null;
-  					}
+  			if (array_key_exists('length', $column)) {
+  				if (preg_match('/(BIT|BOOL(EAN)?|DATE(TIME)?|(TINY|MEDIUM)BLOB)/i', $column['datatype'])) {
+  					unset($column['length']);
   				} else {
-  					$column['length'] = null;
+  					if (preg_match('/(REAL|DOUBLE|FLOAT|DEC(IMAL)?|NUMERIC|FIXED)/i', $column['datatype'])) {
+  						$column['length'] = max((float) ($column['length']), 0);
+  					} else {
+  						$column['length'] = max((int) ($column['length']), 0);
+  						if ('YEAR' === $column['datatype']) {
+  							if (2 !== $column['length'] && 4 !== $column['length']) {
+  								$column['length'] = 4;
+  							}
+  						}
+  					}
   				}
   			}
-  			$syntax .= ' ' . $datatype . ((null !== $column['length']) ? '(' . $column['length'] . ')' : '');
+  			$syntax .= ' ' . $column['datatype'] . (($column['length']) ? '(' . $column['length'] . ')' : '');
   			$syntax .= (!$column['no_null']) ? ' NULL' : ' NOT NULL';
 
-  			if ($column['is_ai']) {
+  			if ($column['auto_increment']) {
   				$syntax .= ' AUTO_INCREMENT';
-  				$column['is_parmary_key'] = true;
+  				$indexKey['primary'][] = $columnName;
+  			} elseif (array_key_exists($column['index_type'], $indexKey)) {
+  				$indexKey[$column['index_type']][] = $columnName;
   			}
 
-  			if (isset($column['default_value'])) {
+  			if (isset($column['default_value']) && !$column['auto_increment']) {
   				$syntax .= " DEFAULT '" . $column['default_value'] . "'";
   			}
-  			$colSyntaxList[] = $syntax;
+
+  			$commands[] = $syntax;
   		}
 
-  		$createSyntax .= implode(', ', $colSyntaxList);
+  		$output .= 'CREATE TABLE ' . $this->tableName . ' (';
 
-  		if (count($this->parmaryKey)) {
-  			$createSyntax .= ', PRIMARY KEY(`' . implode('`, `', $this->parmaryKey) . '`)';
+  		// Primary key
+  		if (count($indexKey['primary'])) {
+  			$commands[] = 'PRIMARY KEY(`' . implode('`, `', $indexKey['primary']) . '`)';
   		}
-  		$createSyntax .= ') ENGINE InnoDB;';
+  		unset($indexKey['primary']);
 
-  		return $createSyntax;
+  		foreach ($indexKey as $index_type => $columns) {
+  			foreach ($columns as $column) {
+  				$commands[] = strtoupper($index_type) . '(`' . $column . '`)';
+  			}
+  		}
+
+  		$output .= implode(', ', $commands) . ') ENGINE InnoDB;';
+
+  		return $output;
+  	}
+
+  	private function presetSetting(array &$setting, array $preset)
+  	{
+  		foreach ($preset as $name => $value) {
+  			if (!array_key_exists($name, $setting)) {
+  				$setting[$name] = $value;
+  			}
+  		}
+
+  		return $this;
   	}
   }
 }

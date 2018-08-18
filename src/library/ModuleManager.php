@@ -21,14 +21,17 @@ namespace RazyFramework
   	private static $moduleFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
 
   	private $routeModule;
-  	private $remapSorted      = [];
-  	private $routeArguments   = [];
-  	private $remapMapping     = [];
-  	private $moduleRegistered = [];
-  	private $scriptPath       = '';
-  	private $scriptRoute      = '/';
-  	private $scriptParams     = [];
-  	private $stage            = '';
+  	private $remapSorted       = [];
+  	private $routeArguments    = [];
+  	private $remapMapping      = [];
+  	private $moduleLoaded      = [];
+  	private $moduleReady       = [];
+  	private $moduleUnloaded    = [];
+  	private $moduleInRequire   = [];
+  	private $scriptPath        = '';
+  	private $scriptRoute       = '/';
+  	private $scriptParams      = [];
+  	private $stage             = '';
   	private $target;
 
   	public function __construct()
@@ -51,8 +54,9 @@ namespace RazyFramework
 
   				$tplManager = new TemplateManager($root . $filepath, $this->getCode());
   				$tplManager->globalAssign([
-  					'url_base'  => URL_BASE,
-  					'view_path' => $viewUrl,
+  					'url_base'       => URL_BASE,
+  					'view_path'      => $viewUrl,
+  					'root_view_path' => VIEW_PATH_URL . '/',
   				]);
   				$tplManager->addToQueue();
 
@@ -78,30 +82,17 @@ namespace RazyFramework
 
   			$this->loadModule(self::$moduleFolder);
 
-  			$unloadModule = [];
+  			$moduleUnloaded = [];
+
   			// Load event: __onReady
-  			foreach ($this->moduleRegistered as $moduleCode => $module) {
-  				if (ModulePackage::MODULE_STATUS_UNLOADED === $module->ready()) {
-  					// Unload the module if the status is unloaded.
-  					// Put the module to unload list
-  					$unloadModule[] = $moduleCode;
-  				} elseif (ModulePackage::MODULE_STATUS_READY === $module->ready()) {
-  					// If Module is ready, setup remap path
-  					if ($remapPath = $module->getRemapPath()) {
-  						if (isset($this->remapMapping[$remapPath])) {
-  							// Error: Remap path registered
-  							new ThrowError('ModuleManager', '1003', 'Remap path [' . $remapPath . '] was registered.');
-  						}
-  						$this->remapMapping[$remapPath] = $module;
-  					}
+  			while ($module = array_shift($this->moduleLoaded)) {
+  				if (ModulePackage::MODULE_STATUS_LOADED === $module->getPreloadStatus()) {
+  					$this->doReady($module);
   				}
   			}
 
-  			// If there are module marked unload
-  			if (count($unloadModule)) {
-  				foreach ($unloadModule as $moduleCode) {
-  					unset($this->moduleRegistered[$moduleCode]);
-  				}
+  			if (count($this->moduleInRequire)) {
+  				new ThrowError('ModuleManager', '1002', 'The following module is required but load failed: ' . implode(', ', array_keys($this->moduleInRequire)));
   			}
   		} else {
   			// Error: Loaded Twice
@@ -150,13 +141,13 @@ namespace RazyFramework
 
   	public function moduleHasLoaded($moduleCode)
   	{
-  		return isset($this->moduleRegistered[$moduleCode]);
+  		return isset($this->moduleLoaded[$moduleCode]);
   	}
 
   	public function loadLibrary($class)
   	{
   		$classPath = str_replace('\\', \DIRECTORY_SEPARATOR, $class);
-  		foreach ($this->moduleRegistered as $module_code => $module) {
+  		foreach ($this->moduleReady as $module_code => $module) {
   			$libraryPath = $module->getModuleRoot() . 'library' . \DIRECTORY_SEPARATOR . $classPath . '.php';
 
   			if (file_exists($libraryPath)) {
@@ -191,10 +182,10 @@ namespace RazyFramework
   		list($moduleName, $mapping) = explode('.', $command);
 
   		if ($moduleName && $mapping) {
-  			if (isset($this->moduleRegistered[$moduleName])) {
-  				$this->target = $this->moduleRegistered[$moduleName];
+  			if (isset($this->moduleReady[$moduleName])) {
+  				$this->target = $this->moduleReady[$moduleName];
 
-  				return $this->moduleRegistered[$moduleName]->execute($mapping, $args);
+  				return $this->moduleReady[$moduleName]->execute($mapping, $args);
   			}
   		}
 
@@ -207,7 +198,7 @@ namespace RazyFramework
   		$event = array_shift($args);
   		$event = trim($event);
 
-  		foreach ($this->moduleRegistered as $moduleCode => $module) {
+  		foreach ($this->moduleReady as $moduleCode => $module) {
   			$module->trigger($event, $args);
   		}
 
@@ -284,6 +275,81 @@ namespace RazyFramework
   		self::$moduleFolder = $modulePath . \DIRECTORY_SEPARATOR;
   	}
 
+  	private function doReady(ModulePackage $module)
+  	{
+  		if (ModulePackage::MODULE_STATUS_LOADED === $module->getPreloadStatus()) {
+  			// Get module require list
+  			$require = $module->getRequire();
+
+  			// Trigger the require module' ready event first if there is any module cannot be loaded
+  			// Ignore module ready stage
+  			if (count($require)) {
+  				foreach ($require as $requireModuleName => $version) {
+  					if ($moduleName === $module->getCode()) {
+  						new ThrowError('ModuleManager', '1004', 'You cannot require module itself');
+  					}
+
+  					// If the module is ready, skip require
+  					if (isset($this->moduleReady[$moduleName])) {
+  						unset($require[$moduleName]);
+  					} else {
+  						// Add require module to list
+  						if (!isset($this->moduleInRequire[$require])) {
+  							$this->moduleInRequire[$requireModuleName] = [];
+  						}
+  						$this->moduleInRequire[$requireModuleName][$module->getCode()] = true;
+
+  						// If the unprocessed module is found, try to trigger its ready event
+  						if (isset($this->moduleLoaded[$requireModuleName])) {
+  							if (!$this->doReady($this->moduleLoaded[$requireModuleName])) {
+  								// If the module loads failed, return false
+  								$this->moduleUnloaded[$moduleName] = $requireModule;
+
+  								return false;
+  							}
+  							// Delete the module in require list
+  							unset($this->moduleInRequire[$requireModuleName]);
+  						}
+  					}
+  				}
+  			}
+
+  			if (ModulePackage::MODULE_STATUS_UNLOADED === $module->ready()) {
+  				// Unload the module if the status is unloaded.
+  				// Put the module to unload list
+  				$this->moduleUnloaded[$module->getCode()] = $module;
+
+  				return false;
+  			}
+
+  			if (ModulePackage::MODULE_STATUS_READY === $module->ready()) {
+  				if (isset($this->moduleInRequire[$module->getCode()])) {
+  					unset($this->moduleInRequire[$module->getCode()]);
+  				}
+  				$this->moduleReady[$module->getCode()] = $module;
+  				$this->setRemap($module);
+
+  				return true;
+  			}
+  		}
+
+  		return false;
+  	}
+
+  	private function setRemap(ModulePackage $module)
+  	{
+  		// If Module is ready, setup remap path
+  		if ($remapPath = $module->getRemapPath()) {
+  			if (isset($this->remapMapping[$remapPath])) {
+  				// Error: Remap path registered
+  				new ThrowError('ModuleManager', '1003', 'Remap path [' . $remapPath . '] was registered.');
+  			}
+  			$this->remapMapping[$remapPath] = $module;
+  		}
+
+  		return $this;
+  	}
+
   	private function loadModule($moduleFolder)
   	{
   		if (!file_exists($moduleFolder) || !is_dir($moduleFolder)) {
@@ -306,8 +372,8 @@ namespace RazyFramework
   						if (ModulePackage::MODULE_STATUS_LOADED === $modulePackage->getPreloadStatus()) {
   							// Register the module if the module is loaded
   							if ('RazyFramework\ModulePackage' === get_class($modulePackage)) {
-  								if (!isset($this->moduleRegistered[$modulePackage->getCode()])) {
-  									$this->moduleRegistered[$modulePackage->getCode()] = $modulePackage;
+  								if (!isset($this->moduleReady[$modulePackage->getCode()])) {
+  									$this->moduleLoaded[$modulePackage->getCode()] = $modulePackage;
   								} else {
   									// Error: Duplicated Module
   									new ThrowError('ModuleManaer', '1004', 'Duplicated Module Code');
