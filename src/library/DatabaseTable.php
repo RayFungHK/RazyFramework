@@ -86,102 +86,109 @@ namespace RazyFramework
   			$setting = [];
   		}
 
-  		if (!isset($this->columnList[$columnName])) {
+  		if (!isset($this->columnList[$name])) {
   			switch ($type) {
-  			  case self::COLUMN_AUTO_ID:
-  				  $setting['datatype']       = 'INT';
-  				  $setting['auto_increment'] = true;
-  				  $setting['index_type']     = 'primary';
-  				  $this->presetSetting($setting, [
-  				  	'length'        => '8',
-  				  	'default_value' => 0,
-  				  	'no_null'       => true,
-  				  ]);
-  				  if ($setting['auto_increment'] && $this->aiDeclared) {
-  				  	// Error: Only allow one Auto Increment Column
-  				  	new ThrowError('Database', '2001', 'One table only allowed to have one Auto Increment Column');
-  				  }
-  				  $this->aiDeclared     = true;
+			  case self::COLUMN_AUTO_ID:
+				  $setting['datatype']       = 'INT';
+				  $setting['auto_increment'] = true;
+				  $setting['index_type']     = 'primary';
+				  $this->presetSetting($setting, [
+				  	'length'        => '8',
+				  	'default_value' => 0,
+				  	'no_null'       => true,
+				  ]);
+				  if ($setting['auto_increment'] && $this->aiDeclared) {
+				  	// Error: Only allow one Auto Increment Column
+				  	new ThrowError('Database', '2001', 'One table only allowed to have one Auto Increment Column');
+				  }
+				  $this->aiDeclared     = true;
 
-  				  break;
-  			  case self::COLUMN_TEXT:
-  				  $setting['datatype'] = 'TEXT';
-  				  $this->presetSetting($setting, [
-  				  	'length'        => '255',
-  				  	'default_value' => '',
-  				  	'no_null'       => true,
-  				  ]);
+				  break;
+			  case self::COLUMN_TEXT:
+				  $setting['datatype'] = 'VARCHAR';
+				  $this->presetSetting($setting, [
+				  	'length'        => '255',
+				  	'default_value' => '',
+				  	'no_null'       => true,
+				  ]);
 
-  				  break;
-  			  case self::COLUMN_LONG_TEXT:
-  				  $setting['datatype'] = 'LONGTEXT';
-  				  $this->presetSetting($setting, [
-  				  	'default_value' => '',
-  				  	'no_null'       => true,
-  				  ]);
+				  break;
+			  case self::COLUMN_LONG_TEXT:
+				  $setting['datatype'] = 'LONGTEXT';
+				  $this->presetSetting($setting, [
+				  	'default_value' => '',
+				  	'no_null'       => true,
+				  ]);
 
-  				  break;
-  			  case self::COLUMN_INT:
-  				  $setting['datatype'] = 'INT';
-  				  $this->presetSetting($setting, [
-  				  	'length'        => '8',
-  				  	'default_value' => '0',
-  				  	'no_null'       => true,
-  				  ]);
+				  break;
+			  case self::COLUMN_INT:
+				  $setting['datatype'] = 'INT';
+				  $this->presetSetting($setting, [
+				  	'length'        => '8',
+				  	'default_value' => '0',
+				  	'no_null'       => true,
+				  ]);
 
-            break;
-  			  case self::COLUMN_BOOLEAN:
-  				  $setting['datatype'] = 'TINYINT';
-  				  $this->presetSetting($setting, [
-  				  	'length'        => '1',
-  				  	'default_value' => '0',
-  				  	'no_null'       => true,
-  				  ]);
+			break;
+			  case self::COLUMN_BOOLEAN:
+				  $setting['datatype'] = 'TINYINT';
+				  $this->presetSetting($setting, [
+				  	'length'        => '1',
+				  	'default_value' => '0',
+				  	'no_null'       => true,
+				  ]);
 
-            break;
-          case self::COLUMN_DECIMAL:
-  				  $setting['datatype'] = 'DECIMAL';
-  				  $this->presetSetting($setting, [
-  				  	'length'        => '8,2',
-  				  	'default_value' => '0',
-  				  	'no_null'       => true,
-  				  ]);
+			break;
+		  case self::COLUMN_DECIMAL:
+				  $setting['datatype'] = 'DECIMAL';
+				  $this->presetSetting($setting, [
+				  	'length'        => '8,2',
+				  	'default_value' => '0',
+				  	'no_null'       => true,
+				  ]);
 
-            break;
-          case self::COLUMN_TIMESTAMP:
-  					$setting['datatype'] = 'TIMESTAMP';
-  					$this->presetSetting($setting, [
-  						'no_null' => true,
-  					]);
+			break;
+		  case self::COLUMN_TIMESTAMP:
+					$setting['datatype'] = 'TIMESTAMP';
+					$this->presetSetting($setting, [
+						'no_null' => true,
+					]);
 
-  					break;
-          case self::COLUMN_DATETIME:
-  					$setting['datatype'] = 'DATETIME';
-  					$this->presetSetting($setting, [
-  						'no_null' => true,
-  					]);
+					break;
+		  case self::COLUMN_DATETIME:
+					$setting['datatype'] = 'DATETIME';
+					$this->presetSetting($setting, [
+						'no_null' => true,
+					]);
 
-  					break;
-          case self::COLUMN_DATE:
-  					$setting['datatype'] = 'DATE';
-  					$this->presetSetting($setting, [
-  						'no_null' => true,
-  					]);
+					break;
+		  case self::COLUMN_JSON:
+					$setting['datatype'] = 'JSON';
+					$this->presetSetting($setting, [
+						'no_null' => true,
+					]);
 
-  					break;
-          case self::COLUMN_CUSTOM:
-          default:
-  					if (!array_key_exists('datatype', $setting) || !preg_match('/^(BIT|(TINY|MEDIUM)(TEXT|BLOB|INT)|(SMALL|BIG)?INT|REAL|DOUBLE|FIXED|FLOAT|DEC(IMAL)?|NUMERIC|DATE|TIME(STAMP)?|DATETIME|YEAR|(VAR)?(CHAR|BINARY)|(LONG)?(TEXT|BLOB)|ENUM|SET|JSON|BOOL(EAN)?)$/i', $setting['datatype'])) {
-  						new ThrowError('Database', '2002', $setting['datatype'] . ' is not a valid data type.');
-  					}
-  					$this->presetSetting($setting, [
-  						'length'        => '255',
-  						'default_value' => '',
-  						'no_null'       => true,
-  					]);
+					break;
+		  case self::COLUMN_DATE:
+					$setting['datatype'] = 'DATE';
+					$this->presetSetting($setting, [
+						'no_null' => true,
+					]);
 
-  				  break;
-        }
+					break;
+		  case self::COLUMN_CUSTOM:
+		  default:
+					if (!array_key_exists('datatype', $setting) || !preg_match('/^(BIT|(TINY|MEDIUM)(TEXT|BLOB|INT)|(SMALL|BIG)?INT|REAL|DOUBLE|FIXED|FLOAT|DEC(IMAL)?|NUMERIC|DATE|TIME(STAMP)?|DATETIME|YEAR|(VAR)?(CHAR|BINARY)|(LONG)?(TEXT|BLOB)|ENUM|SET|JSON|BOOL(EAN)?)$/i', $setting['datatype'])) {
+						new ThrowError('Database', '2002', $setting['datatype'] . ' is not a valid data type.');
+					}
+					$this->presetSetting($setting, [
+						'length'        => '255',
+						'default_value' => '',
+						'no_null'       => true,
+					]);
+
+				  break;
+		}
 
   			$setting['datatype']     = strtoupper($setting['datatype']);
   			$this->columnList[$name] = $setting;
@@ -205,11 +212,11 @@ namespace RazyFramework
   			$syntax = '`' . $columnName . '`';
 
   			if (array_key_exists('length', $column)) {
-  				if (preg_match('/(BIT|BOOL(EAN)?|DATE(TIME)?|(TINY|MEDIUM)BLOB)/i', $column['datatype'])) {
+  				if (preg_match('/(BIT|BOOL(EAN)?|DATE(TIME)?|(TINY|MEDIUM)?BLOB|TEXT|GEOMETRY|JSON)/i', $column['datatype'])) {
   					unset($column['length']);
   				} else {
   					if (preg_match('/(REAL|DOUBLE|FLOAT|DEC(IMAL)?|NUMERIC|FIXED)/i', $column['datatype'])) {
-  						$column['length'] = max((float) ($column['length']), 0);
+  						$column['length'] = max((float) ($column['length']), 1);
   					} else {
   						$column['length'] = max((int) ($column['length']), 0);
   						if ('YEAR' === $column['datatype']) {
@@ -220,24 +227,24 @@ namespace RazyFramework
   					}
   				}
   			}
-  			$syntax .= ' ' . $column['datatype'] . (($column['length']) ? '(' . $column['length'] . ')' : '');
+  			$syntax .= ' ' . $column['datatype'] . ((isset($column['length'])) ? '(' . $column['length'] . ')' : '');
   			$syntax .= (!$column['no_null']) ? ' NULL' : ' NOT NULL';
 
-  			if ($column['auto_increment']) {
+  			if (array_key_exists('auto_increment', $column) && $column['auto_increment']) {
   				$syntax .= ' AUTO_INCREMENT';
   				$indexKey['primary'][] = $columnName;
-  			} elseif (array_key_exists($column['index_type'], $indexKey)) {
+  			} elseif (array_key_exists('index_type', $column)) {
   				$indexKey[$column['index_type']][] = $columnName;
   			}
 
-  			if (isset($column['default_value']) && !$column['auto_increment']) {
+  			if (isset($column['default_value']) && (!array_key_exists('auto_increment', $column) || !$column['auto_increment'])) {
   				$syntax .= " DEFAULT '" . $column['default_value'] . "'";
   			}
 
   			$commands[] = $syntax;
   		}
 
-  		$output .= 'CREATE TABLE ' . $this->tableName . ' (';
+  		$output = 'CREATE TABLE ' . $this->tableName . ' (';
 
   		// Primary key
   		if (count($indexKey['primary'])) {

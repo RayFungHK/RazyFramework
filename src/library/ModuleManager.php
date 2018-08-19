@@ -21,17 +21,18 @@ namespace RazyFramework
   	private static $moduleFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
 
   	private $routeModule;
-  	private $remapSorted       = [];
-  	private $routeArguments    = [];
-  	private $remapMapping      = [];
-  	private $moduleLoaded      = [];
-  	private $moduleReady       = [];
-  	private $moduleUnloaded    = [];
-  	private $moduleInRequire   = [];
-  	private $scriptPath        = '';
-  	private $scriptRoute       = '/';
-  	private $scriptParams      = [];
-  	private $stage             = '';
+  	private $remapSorted         = [];
+  	private $routeArguments      = [];
+  	private $remapMapping        = [];
+  	private $moduleLoaded        = [];
+  	private $moduleReady         = [];
+  	private $moduleUnloaded      = [];
+  	private $moduleInRequire     = [];
+  	private $scriptPath          = '';
+  	private $scriptRoute         = '/';
+  	private $scriptParams        = [];
+  	private $stage               = '';
+  	private $reroute             = '';
   	private $target;
 
   	public function __construct()
@@ -71,13 +72,6 @@ namespace RazyFramework
   			// Loader: db
   			Loader::CreateMethod('db', function (string $connectionName) {
   				return Database::GetConnection($connectionName);
-  			});
-
-  			// Loader: locate
-  			Loader::CreateMethod('locate', function (string $path) {
-  				$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
-  				header('location: ' . URL_BASE . $path);
-  				die();
   			});
 
   			$this->loadModule(self::$moduleFolder);
@@ -134,6 +128,13 @@ namespace RazyFramework
   		return self::$instance;
   	}
 
+  	public function locate(string $path)
+  	{
+  		$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
+  		header('location: ' . URL_BASE . $path);
+  		die();
+  	}
+
   	public function getStage()
   	{
   		return $this->stage;
@@ -142,6 +143,11 @@ namespace RazyFramework
   	public function moduleHasLoaded($moduleCode)
   	{
   		return isset($this->moduleLoaded[$moduleCode]);
+  	}
+
+  	public function moduleisReady($moduleCode)
+  	{
+  		return isset($this->moduleReady[$moduleCode]);
   	}
 
   	public function loadLibrary($class)
@@ -215,9 +221,17 @@ namespace RazyFramework
   		return $this->routeArguments;
   	}
 
-  	public function route($path)
+  	public function reroute(string $path)
   	{
-  		$path = preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
+  		$path          = preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
+  		$this->reroute = $path;
+
+  		return $this;
+  	}
+
+  	public function route(string $path)
+  	{
+  		$path = ($this->reroute) ? $this->reroute : preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
   		if (count($this->remapMapping)) {
   			// Sort the remap path list, the deepest route first
   			if (!$this->remapSorted) {
@@ -278,6 +292,7 @@ namespace RazyFramework
   	private function doReady(ModulePackage $module)
   	{
   		if (ModulePackage::MODULE_STATUS_LOADED === $module->getPreloadStatus()) {
+  			$eventObject['loadedModule'] = $module->getCode();
   			// Get module require list
   			$require = $module->getRequire();
 
@@ -285,16 +300,16 @@ namespace RazyFramework
   			// Ignore module ready stage
   			if (count($require)) {
   				foreach ($require as $requireModuleName => $version) {
-  					if ($moduleName === $module->getCode()) {
+  					if ($requireModuleName === $module->getCode()) {
   						new ThrowError('ModuleManager', '1004', 'You cannot require module itself');
   					}
 
   					// If the module is ready, skip require
-  					if (isset($this->moduleReady[$moduleName])) {
-  						unset($require[$moduleName]);
+  					if (isset($this->moduleReady[$requireModuleName])) {
+  						unset($require[$requireModuleName]);
   					} else {
   						// Add require module to list
-  						if (!isset($this->moduleInRequire[$require])) {
+  						if (!isset($this->moduleInRequire[$requireModuleName])) {
   							$this->moduleInRequire[$requireModuleName] = [];
   						}
   						$this->moduleInRequire[$requireModuleName][$module->getCode()] = true;

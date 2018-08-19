@@ -14,8 +14,9 @@ namespace RazyFramework
   class Configuration extends \ArrayObject
   {
   	private $configFilePath = '';
-    private $loaded = false;
+  	private $loaded         = false;
   	private $module;
+  	private $iterator;
 
   	public function __construct(ModulePackage $module, string $filename)
   	{
@@ -36,16 +37,17 @@ namespace RazyFramework
 
   			$config = require $this->configFilePath;
 
-        // Pass the config array to parent constructor
+  			// Pass the config array to parent constructor
   			parent::__construct($config);
-        $this->loaded = true;
+  			$this->loaded    = true;
+  			$this->iterator  = $this->getIterator();
   		}
   	}
 
-    public function isLoaded()
-    {
-      return $this->loaded;
-    }
+  	public function isLoaded()
+  	{
+  		return $this->loaded;
+  	}
 
   	public function &offsetGet($index)
   	{
@@ -53,23 +55,22 @@ namespace RazyFramework
   			return $this->iterator[$index];
   		}
 
-      $reference = null;
-  		return $reference;
+  		return null;
   	}
 
   	public function commit()
   	{
-      // Get the config file path info
-      $pathParts = pathinfo($this->configFilePath);
+  		// Get the config file path info
+  		$pathParts = pathinfo($this->configFilePath);
 
-      // Check the configuration folder does exist
-      if (!file_exists($pathParts['dirname'])) {
-        // Create the directory
-        mkdir($pathParts['dirname']);
-      } elseif (!is_dir($pathParts['dirname'])) {
-        // If the path does exist but not a directory, throw an error
-        new ThrowError('1003', 'Configuration', $pathParts['dirname'] . ' is not a directory.');
-      }
+  		// Check the configuration folder does exist
+  		if (!file_exists($pathParts['dirname'])) {
+  			// Create the directory
+  			mkdir($pathParts['dirname']);
+  		} elseif (!is_dir($pathParts['dirname'])) {
+  			// If the path does exist but not a directory, throw an error
+  			new ThrowError('1003', 'Configuration', $pathParts['dirname'] . ' is not a directory.');
+  		}
 
   		if (!($handle = fopen($this->configFilePath, 'w'))) {
   			new ThrowError('1004', 'Configuration', 'Cannot open file: ' . $this->configFilePath);

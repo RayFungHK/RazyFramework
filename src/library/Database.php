@@ -49,16 +49,16 @@ namespace RazyFramework
 
   	public function __construct($connectionName)
   	{
-  		$connectionName = trim($connectionName);
-    	self::$dbConnectionLists[$connectionName] = $this;
+  		$connectionName                           = trim($connectionName);
+  		self::$dbConnectionLists[$connectionName] = $this;
   	}
-
 
   	public static function GetConnection($connectionName)
   	{
-      if (!isset(self::$dbConnectionLists[$connectionName])) {
-        self::$dbConnectionLists[$connectionName] = new Database($connectionName);
-      }
+  		if (!isset(self::$dbConnectionLists[$connectionName])) {
+  			self::$dbConnectionLists[$connectionName] = new self($connectionName);
+  		}
+
   		return self::$dbConnectionLists[$connectionName];
   	}
 
@@ -80,27 +80,32 @@ namespace RazyFramework
 
   	public function query($sql, $parameters = [])
   	{
-      ++$this->queryCount;
-      if ($sql instanceof DatabaseTable) {
-        $statement = $this->dba->prepare($sql->getSyntax());
-    		$statement->execute();
-      } else {
-  		  $sql = trim($sql);
+  		++$this->queryCount;
+  		$boundParam = [];
 
-    		$boundParam = [];
-    		if (preg_match_all('/(@|:)([a-zA-Z0-9_]+)/i', $sql, $matches, PREG_SET_ORDER)) {
-    			foreach ($matches as $offset => $match) {
-    				if (!array_key_exists($match[2], $parameters)) {
-    					// Error: No parameters were bound
-    					new ThrowError('Database', '3001', 'No parameters were bound');
-    				}
-    				$boundParam[$match[0]] = $parameters[$match[2]];
-    			}
-    		}
+  		if ($sql instanceof DatabaseTable) {
+  			$statement = $this->dba->prepare($sql->getSyntax());
+  		} else {
+  			$sql = trim($sql);
 
-    		$statement = $this->dba->prepare($sql);
-    		$statement->execute($boundParam);
-      }
+  			if (preg_match_all('/(@|:)([a-zA-Z0-9_]+)/i', $sql, $matches, PREG_SET_ORDER)) {
+  				foreach ($matches as $offset => $match) {
+  					if (!array_key_exists($match[2], $parameters)) {
+  						// Error: No parameters were bound
+  						new ThrowError('Database', '3001', 'Parameter [' . $match[2] . '] value is missing.');
+  					}
+  					$boundParam[$match[0]] = $parameters[$match[2]];
+  				}
+  			}
+
+  			$statement = $this->dba->prepare($sql);
+  		}
+
+  		try {
+  			$statement->execute($boundParam);
+  		} catch (\PDOException $e) {
+  			new ThrowError('Database', '1001', $e->getMessage());
+  		}
 
   		return new DatabaseQuery($this->dba, $statement);
   	}

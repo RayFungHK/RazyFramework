@@ -195,9 +195,9 @@ namespace RazyFramework
   		return $this->remapPath;
   	}
 
-  	public function getRoute(string $path)
+  	public function getRoute()
   	{
-  		$path = preg_replace('/[\\\\\/]+/', '/', '/' . trim($path) . '/');
+  		$path = preg_replace('/[\\\\\/]+/', '/', '/' . trim(REQUEST_ROUTE) . '/');
   		if (0 === strpos($path, $this->remapPath)) {
   			// Get the relative path and remove the last slash
   			$argsString = preg_replace('/\/*$/', '', substr($path, strlen($this->remapPath)));
@@ -210,13 +210,17 @@ namespace RazyFramework
   			if (isset($this->routeMapping[$routeName])) {
   				return $routeName;
   			}
+
   			$routeName = '(:any)';
   			// If no method route matched, re-route all argument to (:any).
   			if (isset($this->routeMapping['(:any)'])) {
   				return $routeName;
   			}
+
+  			return '';
   		}
 
+  		// Not matches the remap route, return false
   		return false;
   	}
 
@@ -255,8 +259,6 @@ namespace RazyFramework
   				// Error: Controller function not callable
   				new ThrowError('ModulePackage', '4002', 'Cannot execute the method, maybe it is not a public method');
   			}
-  		} else {
-  			new ThrowError('ModulePackage', '4003', 'Controller method [' . $method . '] not declared.');
   		}
 
   		// Set the matched mapping name as route name
