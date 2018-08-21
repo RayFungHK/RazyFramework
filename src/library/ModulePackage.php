@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -24,6 +24,7 @@ namespace RazyFramework
   	private $version           = '';
   	private $remapPath         = '';
   	private $routeName         = '';
+  	private $isRouted          = false;
   	private $require           = [];
   	private $routeMapping      = [];
   	private $callableList      = [];
@@ -170,6 +171,16 @@ namespace RazyFramework
   		return $this->moduleCode;
   	}
 
+  	public function getVersion()
+  	{
+  		return $this->version;
+  	}
+
+  	public function isRouted()
+  	{
+  		return $this->isRouted;
+  	}
+
   	public function getModuleRoot()
   	{
   		return SYSTEM_ROOT . $this->moduleRoot;
@@ -250,6 +261,10 @@ namespace RazyFramework
   			}
   		}
 
+  		if (!$moduleController) {
+  			return false;
+  		}
+
   		$methodExists = false;
   		// Check the methed is callable or not, protected and private method is not executeable
   		if (method_exists($moduleController, $method)) {
@@ -263,6 +278,8 @@ namespace RazyFramework
 
   		// Set the matched mapping name as route name
   		$this->routeName = $routeName;
+
+  		$this->isRouted = true;
 
   		// Pass all arguments to routed method
   		$result = call_user_func_array([$moduleController, $method], $args);

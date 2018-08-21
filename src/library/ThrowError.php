@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -24,7 +24,7 @@ namespace RazyFramework
 
   		echo sprintf($errorPageOutput, $errorModule, $errorCode, $message);
 
-      ob_end_flush();
+  		ob_end_flush();
   		die();
   	}
   }

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *

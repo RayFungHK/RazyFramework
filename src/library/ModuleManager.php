@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -56,6 +56,7 @@ namespace RazyFramework
   				$tplManager = new TemplateManager($root . $filepath, $this->getCode());
   				$tplManager->globalAssign([
   					'url_base'       => URL_BASE,
+  					'module_root'    => URL_BASE . $this->getRemapPath(),
   					'view_path'      => $viewUrl,
   					'root_view_path' => VIEW_PATH_URL . '/',
   				]);

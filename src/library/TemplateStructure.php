@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -50,7 +50,7 @@ namespace RazyFramework
   					// Add current block into mapping list
   					$this->structureMapping[$matches[3]] = $tplObject;
   					$this->structureContent[]            = $this->structureMapping[$matches[3]];
-  				} elseif ('END' === $matches[1] && $matches[3] == $blockName) {
+  				} elseif ('END' === $matches[1] && $matches[3] === $blockName) {
   					$blockClosed = true;
 
   					break;

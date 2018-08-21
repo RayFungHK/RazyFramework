@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -96,9 +96,9 @@ namespace RazyFramework
 
   			/*
   			if ($bytes === false) {
-				// onClientDisconnect
-				unset($this->clients[(int) $client->getSocket()]);
-				$this->trigger('onClientDisconnect', $client->getSocket());
+  				// onClientDisconnect
+  				unset($this->clients[(int) $client->getSocket()]);
+  				$this->trigger('onClientDisconnect', $client->getSocket());
   			}
   			*/
 

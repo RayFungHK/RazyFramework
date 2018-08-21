@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -21,28 +21,28 @@ namespace RazyFramework
 
   		$type = trim(strtolower($type));
   		switch ($type) {
-    		case 'binary':
-    		  $frameHead[0] = 130;
+  			case 'binary':
+  			  $frameHead[0] = 130;
 
-    		  break;
-    		case 'close':
-    		  $frameHead[0] = 136;
+  			  break;
+  			case 'close':
+  			  $frameHead[0] = 136;
 
-    		  break;
-    		case 'ping':
-    		  $frameHead[0] = 137;
+  			  break;
+  			case 'ping':
+  			  $frameHead[0] = 137;
 
-    		  break;
-    		case 'pong':
-    		  $frameHead[0] = 138;
+  			  break;
+  			case 'pong':
+  			  $frameHead[0] = 138;
 
-    		  break;
-    		case 'text':
-    		default:
-    		  $frameHead[0] = 129;
+  			  break;
+  			case 'text':
+  			default:
+  			  $frameHead[0] = 129;
 
-    		  break;
-    	 }
+  			  break;
+  		}
 
   		if ($length > 65535) {
   			$binary      = str_split(sprintf('%064b', $length), 8);

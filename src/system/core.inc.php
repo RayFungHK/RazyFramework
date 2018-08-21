@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -12,7 +12,6 @@
 namespace RazyFramework
 {
 	// Prevent Resubmission
-	session_cache_limiter('private_no_expire');
 	session_start();
 
 	// Remove useless header
@@ -84,7 +83,7 @@ namespace RazyFramework
 				$libraryFolder = trim($configuration['library_path']);
 				$libraryFolder = realpath(preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $libraryFolder . \DIRECTORY_SEPARATOR));
 
-				if ($libraryFolder === false || !is_dir($libraryFolder)) {
+				if (false === $libraryFolder || !is_dir($libraryFolder)) {
 					// If the library folder does not exists or not a directory
 					header('HTTP/1.0 500 Internal Server Error');
 					die();

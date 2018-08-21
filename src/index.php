@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -30,16 +30,16 @@ namespace RazyFramework
   		die("Command not found\n");
   	}
   } else {
-    // Enable gzip compression
+  	// Enable gzip compression
   	if (!ob_start('ob_gzhandler')) {
   		ob_start();
   	}
 
-		$urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
+  	$urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
 
   	$urlQuery         = parse_url($urlQuery);
   	$urlQuery['path'] = rtrim($urlQuery['path'], '/') . '/';
-    $urlQuery['path'] = preg_replace('/^\/index.php/', '', $urlQuery['path']);
+  	$urlQuery['path'] = preg_replace('/^\/index.php/', '', $urlQuery['path']);
 
   	define('REQUEST_ROUTE', $urlQuery['path']);
 
@@ -52,6 +52,6 @@ namespace RazyFramework
 
   	TemplateManager::OutputQueued();
 
-    ob_end_flush();
+  	ob_end_flush();
   }
 }

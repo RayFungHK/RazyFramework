@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -15,13 +15,13 @@ namespace RazyFramework
   {
   	protected $object                      = '';
   	protected $reflection                  = '';
-  	private static $functions        = [];
-  	private static $dynamicFunctions = [];
+  	private static $functions              = [];
+  	private static $dynamicFunctions       = [];
 
   	public function __call($funcName, $args)
   	{
-  		$funcName = trim($funcName);
-      $closureFunction = null;
+  		$funcName        = trim($funcName);
+  		$closureFunction = null;
 
   		if (!array_key_exists($funcName, self::$functions)) {
   			self::$functions[$funcName] = null;
@@ -31,26 +31,26 @@ namespace RazyFramework
   				$callback = require $pluginFile;
   				if (is_callable($callback)) {
   					self::$functions[$funcName] = $callback;
-            $closureFunction = $callback;
+  					$closureFunction            = $callback;
   				}
   			}
   		} else {
-        $closureFunction = self::$functions[$funcName];
-      }
+  			$closureFunction = self::$functions[$funcName];
+  		}
 
   		if (!$closureFunction) {
-        if (isset(self::$dynamicFunctions[$funcName])) {
-          $closureFunction = self::$dynamicFunctions[$funcName];
-        } else {
-          new ThrowError('DataFactory', '1001', 'Cannot load [' . $funcName . '] convertor function.');
-        }
+  			if (isset(self::$dynamicFunctions[$funcName])) {
+  				$closureFunction = self::$dynamicFunctions[$funcName];
+  			} else {
+  				new ThrowError('DataFactory', '1001', 'Cannot load [' . $funcName . '] convertor function.');
+  			}
   		}
 
   		// Bind convertor object to closure function
   		$result = call_user_func_array($closureFunction->bindTo($this->object), $args);
 
-      // Update the value for chainable
-      $this->object->value = $result;
+  		// Update the value for chainable
+  		$this->object->value = $result;
 
   		// Call DataFactory reflection function to change the value
   		call_user_func($this->reflection, $result);
@@ -58,8 +58,8 @@ namespace RazyFramework
   		return (!$this->object->chainable) ? $result : $this;
   	}
 
-    static function CreateConvertor(string $name, callable $callback)
-    {
+  	public static function CreateConvertor(string $name, callable $callback)
+  	{
   		$name = trim($name);
   		if (preg_match('/^[\w-]+$/', $name)) {
   			if (!isset(self::$filters[$name])) {
@@ -70,15 +70,15 @@ namespace RazyFramework
   				self::$dynamicFunctions[$name] = $callback;
   			}
   		}
-    }
+  	}
 
   	public function setPointer($value, $reflection)
   	{
   		// Create an object for closure binding
   		$this->object = (object) [
-  			'value'    => $value,
-  			'dataType' => strtolower(gettype($value)),
-        'chainable' => false
+  			'value'     => $value,
+  			'dataType'  => strtolower(gettype($value)),
+  			'chainable' => false,
   		];
 
   		$this->reflection = $reflection;

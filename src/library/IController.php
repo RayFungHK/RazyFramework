@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -32,7 +32,7 @@ namespace RazyFramework
   		// Load Preload Event
   		$this->moduleLoaded = ($this->__onModuleLoaded()) ? true : false;
 
-      // Setup Loader
+  		// Setup Loader
   		$this->load          = new Loader($module);
   	}
 

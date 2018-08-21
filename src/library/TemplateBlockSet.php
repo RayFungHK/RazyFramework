@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -250,10 +250,7 @@ namespace RazyFramework
   			new ThrowError('TemplateBlockSet', '3001', 'Cannot load [' . $filterName . '] filter function.');
   		}
 
-  		return call_user_func(
-  			\Closure::bind($filter, $bindObject),
-  			$bindObject->parameter
-  		);
+  		return call_user_func(\Closure::bind($filter, $bindObject), $bindObject->parameter);
   	}
   }
 }

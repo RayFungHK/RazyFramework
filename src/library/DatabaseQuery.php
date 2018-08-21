@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -33,8 +33,11 @@ namespace RazyFramework
 
   			return $object;
   		}
+
   		if (is_string($object) && class_exists($object)) {
-  			$this->statement->fetch(\PDO::class, $object);
+  			$this->statement->fetch(\PDO::FETCH_CLASS, $object);
+  		} elseif (is_object($object)) {
+  			$this->statement->fetch(\PDO::FETCH_INTO, $object);
   		} else {
   			return $this->statement->fetch(\PDO::FETCH_ASSOC);
   		}

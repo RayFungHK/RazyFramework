@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -44,8 +44,8 @@ namespace RazyFramework
   	private static $dbConnectionLists = [];
 
   	private $dba;
-  	private $tableList  = [];
-  	private $queryCount = 0;
+  	private $prepareList  = [];
+  	private $queryCount   = 0;
 
   	public function __construct($connectionName)
   	{
@@ -78,77 +78,84 @@ namespace RazyFramework
   		}
   	}
 
+  	public function lazy(string $sql, $parameters = [])
+  	{
+  		return $this->query($sql, $parameters)->fetch();
+  	}
+
+  	public function prepare($sql, $parameters = [])
+  	{
+  		if ($sql instanceof DatabaseTable) {
+  			$statement = $this->dba->prepare($sql->getSyntax());
+  		} else {
+  			$statement = $this->dba->prepare($sql);
+
+  			if (preg_match_all('/:([\w]+)/', $sql, $matches, PREG_SET_ORDER)) {
+  				foreach ($matches as $offset => $match) {
+  					if (!array_key_exists($match[1], $parameters)) {
+  						// Error: No parameters were bound
+  						new ThrowError('Database', '3001', 'Parameter [' . $match[1] . '] value is missing.');
+  					}
+
+  					$datatype = \PDO::PARAM_STR;
+  					if (null === $parameters[$match[1]]) {
+  						$datatype = \PDO::PARAM_NULL;
+  					} elseif (is_int($parameters[$match[1]])) {
+  						$datatype = \PDO::PARAM_INT;
+  					} elseif (is_bool($parameters[$match[1]])) {
+  						$datatype = \PDO::PARAM_BOOL;
+  					}
+
+  					$statement->bindParam($match[0], $parameters[$match[1]], $datatype);
+  				}
+  			}
+  		}
+
+  		$this->prepareList[(int) $statement] = $statement;
+
+  		return $statement;
+  	}
+
+  	public function commit($rollback = false)
+  	{
+  		if (count($this->prepareList)) {
+  			$dba->beginTransaction();
+  			foreach ($this->prepareList as $statement) {
+  				try {
+  					$statement->execute();
+  				} catch (\PDOException $e) {
+  					if ($rollback) {
+  						$dba->rollBack();
+  					}
+  					new ThrowError('Database', '1001', $e->getMessage());
+  				}
+  			}
+  			$dba->commit();
+  		}
+
+  		return $this;
+  	}
+
   	public function query($sql, $parameters = [])
   	{
   		++$this->queryCount;
   		$boundParam = [];
 
-  		if ($sql instanceof DatabaseTable) {
-  			$statement = $this->dba->prepare($sql->getSyntax());
-  		} else {
-  			$sql = trim($sql);
-
-  			if (preg_match_all('/(@|:)([a-zA-Z0-9_]+)/i', $sql, $matches, PREG_SET_ORDER)) {
-  				foreach ($matches as $offset => $match) {
-  					if (!array_key_exists($match[2], $parameters)) {
-  						// Error: No parameters were bound
-  						new ThrowError('Database', '3001', 'Parameter [' . $match[2] . '] value is missing.');
-  					}
-  					$boundParam[$match[0]] = $parameters[$match[2]];
-  				}
-  			}
-
-  			$statement = $this->dba->prepare($sql);
-  		}
+  		$statement = $this->prepare($sql, $parameters);
 
   		try {
-  			$statement->execute($boundParam);
+  			$statement->execute();
   		} catch (\PDOException $e) {
   			new ThrowError('Database', '1001', $e->getMessage());
   		}
 
+  		unset($this->prepareList[(int) $statement]);
+
   		return new DatabaseQuery($this->dba, $statement);
   	}
 
-  	public function queryReturn($sql, $parameters = [])
+  	public static function Insert(string $tableName, array $dataset)
   	{
-  		$query = $this->query($sql, $parameters);
-
-  		return $query->fetch();
-  	}
-
-  	public function insert($table, $dataSet, $columnSpecified = [])
-  	{
-  		$columnList      = '';
-  		$paramList       = '';
-  		$columnSpecified = array_flip($columnSpecified);
-  		if (count($dataSet)) {
-  			foreach ($dataSet as $column => $value) {
-  				$isOption = false;
-  				if ('!' === $column[0]) {
-  					$column   = substr($column, 1);
-  					$isOption = true;
-  				}
-  				if (count($columnSpecified) && !isset($columnSpecified[$column])) {
-  					continue;
-  				}
-  				$columnMapping = ($isOption) ? $value : ':' . $column;
-  				$columnList .= ($columnList) ? ', ' . $column : $column;
-  				$paramList .= ($paramList) ? ', ' . $columnMapping : $columnMapping;
-  			}
-  		}
-
-  		return $this->query('INSERT INTO ' . $table . ' (' . $columnList . ') VALUES (' . $paramList . ')', $dataSet);
-  	}
-
-  	public function newTable($tableName)
-  	{
-  		$tableName = trim($tableName);
-  		if (!isset($this->tableList[$tableName])) {
-  			$this->tableList[$tableName] = new DatabaseTable($this, $tableName);
-  		}
-
-  		return $this->tableList[$tableName];
   	}
   }
 }
