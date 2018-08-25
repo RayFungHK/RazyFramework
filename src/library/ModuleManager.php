@@ -96,11 +96,6 @@ namespace RazyFramework
   		// If all module ready, change to ready stage
   		$this->stage = self::STATUS_READY_STAGE;
 
-  		// Trigger __onBeforeRoute event
-    	foreach ($this->moduleReady as $module) {
-  			$module->beforeRoute();
-  		}
-
   		if (CLI_MODE) {
   			// Cli Mode, get arguments and parameters
   			$argv             = $_SERVER['argv'];

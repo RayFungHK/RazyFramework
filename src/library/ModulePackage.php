@@ -17,7 +17,6 @@ namespace RazyFramework
   	const MODULE_STATUS_PENDING  = 0;
   	const MODULE_STATUS_LOADED   = 1;
   	const MODULE_STATUS_READY    = 2;
-  	const MODULE_STATUS_ROUTABLE = 3;
 
   	private $moduleRoot        = '';
   	private $moduleCode        = '';
@@ -152,16 +151,6 @@ namespace RazyFramework
   		return $this->preloadStatus;
   	}
 
-  	public function beforeRoute()
-  	{
-  		if (self::MODULE_STATUS_READY === $this->preloadStatus) {
-  			$this->coreController->__onBeforeRoute();
-  			$this->preloadStatus = self::MODULE_STATUS_ROUTABLE;
-  		}
-
-  		return $this;
-  	}
-
   	public function getRequire()
   	{
   		return $this->require;
@@ -248,7 +237,7 @@ namespace RazyFramework
 
   	public function route($args)
   	{
-  		if (self::MODULE_STATUS_ROUTABLE !== $this->preloadStatus) {
+  		if (self::MODULE_STATUS_READY !== $this->preloadStatus) {
   			new ThrowError('ModulePackage', '4001', 'System is not ready, you cannot route in preload stage.');
   		}
 
@@ -292,6 +281,9 @@ namespace RazyFramework
   		$this->routeName = $routeName;
 
   		$this->isRouted = true;
+
+      // Trigger __onBeforeRoute event
+      $moduleController->__onBeforeRoute();
 
   		// Pass all arguments to routed method
   		$result = call_user_func_array([$moduleController, $method], $args);

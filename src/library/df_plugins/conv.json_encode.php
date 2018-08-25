@@ -12,9 +12,8 @@
 return function () {
 	$this->chainable = true;
 	if (!function_exists('deeprun')) {
-		function deeprun($data)
-		{
-			if (!is_array($data)) {
+		function deeprun($data) {
+			if ($data instanceof \RazyFramework\DataFactory) {
 				$data = $data->getArrayCopy();
 			}
 

@@ -84,18 +84,18 @@ namespace RazyFramework
   					if (is_array($label) && count($label)) {
   						$controlString .= '<optgroup value="$key">';
   						foreach ($label as $optionKey => $optionValue) {
-  							$controlString .= '<option value="' . $optionKey . '"' . (($this->value === $optionValue) ? ' selected="selected"' : '') . '>' . $optionValue . '</option>';
+  							$controlString .= '<option value="' . $optionKey . '"' . (($this->value == $optionValue) ? ' selected="selected"' : '') . '>' . $optionValue . '</option>';
   						}
   						$controlString .= '</optgroup>';
   					} else {
-  						$controlString .= '<option value="' . $value . '"' . (($this->value === $value) ? ' selected="selected"' : '') . '>' . $label . '</option>';
+  						$controlString .= '<option value="' . $value . '"' . (($this->value == $value) ? ' selected="selected"' : '') . '>' . $label . '</option>';
   					}
   				}
   			}
   			$controlString .= '</' . $tagName . '>';
   		} elseif (self::TYPE_PASSWORD === $this->type || self::TYPE_TEXT === $this->type || self::TYPE_CHECKBOX === $this->type || self::TYPE_RADIO === $this->type) {
   			if (isset($this->attributeList['value']) && (self::TYPE_CHECKBOX === $this->type || self::TYPE_RADIO === $this->type)) {
-  				if ($this->value === $this->attributeList['value']) {
+  				if ($this->value == $this->attributeList['value']) {
   					$controlString .= ' checked="checked"';
   				}
   			}
