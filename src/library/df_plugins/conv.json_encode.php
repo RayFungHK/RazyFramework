@@ -30,5 +30,5 @@ return function () {
 		}
 	}
 
-	return json_encode(deeprun($this->value));
+	$this->value = json_encode(deeprun($this->value));
 };

@@ -248,6 +248,7 @@ namespace RazyFramework
 
   		// If method route mapping matched, return the contoller
   		if (isset($this->routeMapping[$routeName])) {
+        $routeName = (count($args)) ? array_shift($args) : '/';
   			list($className, $method) = explode('.', $this->routeMapping[$routeName]);
 
   			$moduleController         = $this->getController($className);

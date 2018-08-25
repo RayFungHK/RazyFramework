@@ -13,22 +13,20 @@ namespace RazyFramework
 {
   class Database
   {
-  	const DATATYPE_BIT       = 'BIT';
-  	const DATATYPE_INT       = 'INT';
-  	const DATATYPE_TIME      = 'TIME';
-  	const DATATYPE_TIMESTAMP = 'TIMESTAMP';
-  	const DATATYPE_DATETIME  = 'DATETIME';
-  	const DATATYPE_CHAR      = 'CHAR';
-  	const DATATYPE_VARCHAR   = 'VARCHAR';
-  	const DATATYPE_BINARY    = 'BINARY';
-  	const DATATYPE_VARBINARY = 'VARBINARY';
-
-  	const DATATYPE_REAL    = 'REAL';
-  	const DATATYPE_DOUBLE  = 'DOUBLE';
-  	const DATATYPE_FLOAT   = 'FLOAT';
-  	const DATATYPE_DECIMAL = 'DECIMAL';
-  	const DATATYPE_NUMERIC = 'NUMERIC';
-
+  	const DATATYPE_BIT        = 'BIT';
+  	const DATATYPE_INT        = 'INT';
+  	const DATATYPE_TIME       = 'TIME';
+  	const DATATYPE_TIMESTAMP  = 'TIMESTAMP';
+  	const DATATYPE_DATETIME   = 'DATETIME';
+  	const DATATYPE_CHAR       = 'CHAR';
+  	const DATATYPE_VARCHAR    = 'VARCHAR';
+  	const DATATYPE_BINARY     = 'BINARY';
+  	const DATATYPE_VARBINARY  = 'VARBINARY';
+  	const DATATYPE_REAL       = 'REAL';
+  	const DATATYPE_DOUBLE     = 'DOUBLE';
+  	const DATATYPE_FLOAT      = 'FLOAT';
+  	const DATATYPE_DECIMAL    = 'DECIMAL';
+  	const DATATYPE_NUMERIC    = 'NUMERIC';
   	const DATATYPE_ENUM       = 'ENUM';
   	const DATATYPE_SET        = 'SET';
   	const DATATYPE_JSON       = 'JSON';
@@ -37,17 +35,35 @@ namespace RazyFramework
   	const DATATYPE_BLOB       = 'BLOB';
   	const DATATYPE_MEDIUMBLOB = 'MEDIUMBLOB';
   	const DATATYPE_LONGTEXT   = 'LONGTEXT';
+  	const DATATYPE_MEDIUMTEXT = 'MEDIUMTEXT';
   	const DATATYPE_TINYTEXT   = 'TINYTEXT';
   	const DATATYPE_TEXT       = 'TEXT';
-  	const DATATYPE_MEDIUMTEXT = 'MEDIUMTEXT';
+
+  	const COLUMN_CUSTOM    = -1;
+  	const COLUMN_AUTO_ID   = 0;
+  	const COLUMN_TEXT      = 1;
+  	const COLUMN_LONG_TEXT = 2;
+  	const COLUMN_INT       = 3;
+  	const COLUMN_BOOLEAN   = 4;
+  	const COLUMN_DECIMAL   = 5;
+  	const COLUMN_TIMESTAMP = 6;
+  	const COLUMN_DATETIME  = 7;
+  	const COLUMN_DATE      = 8;
+  	const COLUMN_JSON      = 9;
+
+  	const FETCH_ASSOC    = 0;
+  	const FETCH_ALL      = 1;
+  	const FETCH_GROUP    = 2;
+  	const FETCH_KEY_PAIR = 3;
 
   	private static $dbConnectionLists = [];
 
   	private $dba;
   	private $prepareList  = [];
-  	private $queryCount   = 0;
+  	private $queried      = 0;
+  	private $prepared     = 0;
 
-  	public function __construct($connectionName)
+  	public function __construct(string $connectionName)
   	{
   		$connectionName                           = trim($connectionName);
   		self::$dbConnectionLists[$connectionName] = $this;
@@ -78,59 +94,49 @@ namespace RazyFramework
   		}
   	}
 
-  	public function lazy(string $sql, $parameters = [])
+  	public function lazy($sql, $parameters = [])
   	{
   		return $this->query($sql, $parameters)->fetch();
+  	}
+
+  	public function createStatement(string $sql)
+  	{
+  		return new DatabaseStatement($this, $sql);
   	}
 
   	public function prepare($sql, $parameters = [])
   	{
   		if ($sql instanceof DatabaseTable) {
-  			$statement = $this->dba->prepare($sql->getSyntax());
+  			$dbs = new DatabaseStatement($this, $sql->getSyntax());
+  		} elseif ($sql instanceof DatabaseStatement) {
+  			$dbs = $sql;
   		} else {
-  			$statement = $this->dba->prepare($sql);
-
-  			if (preg_match_all('/:([\w]+)/', $sql, $matches, PREG_SET_ORDER)) {
-  				foreach ($matches as $offset => $match) {
-  					if (!array_key_exists($match[1], $parameters)) {
-  						// Error: No parameters were bound
-  						new ThrowError('Database', '3001', 'Parameter [' . $match[1] . '] value is missing.');
-  					}
-
-  					$datatype = \PDO::PARAM_STR;
-  					if (null === $parameters[$match[1]]) {
-  						$datatype = \PDO::PARAM_NULL;
-  					} elseif (is_int($parameters[$match[1]])) {
-  						$datatype = \PDO::PARAM_INT;
-  					} elseif (is_bool($parameters[$match[1]])) {
-  						$datatype = \PDO::PARAM_BOOL;
-  					}
-
-  					$statement->bindParam($match[0], $parameters[$match[1]], $datatype);
-  				}
-  			}
+  			$dbs = $this->createStatement($sql);
   		}
 
-  		$this->prepareList[(int) $statement] = $statement;
+      $dbs->setParameter($parameters);
 
-  		return $statement;
+  		$this->prepareList[$dbs->getResourceId()] = $dbs;
+  		++$this->prepared;
+
+  		return $dbs;
   	}
 
   	public function commit($rollback = false)
   	{
   		if (count($this->prepareList)) {
-  			$dba->beginTransaction();
-  			foreach ($this->prepareList as $statement) {
+  			$this->dba->beginTransaction();
+  			foreach ($this->prepareList as $dbs) {
   				try {
-  					$statement->execute();
+  					$dbs->getStatement()->execute();
   				} catch (\PDOException $e) {
   					if ($rollback) {
-  						$dba->rollBack();
+  						$this->dba->rollBack();
   					}
   					new ThrowError('Database', '1001', $e->getMessage());
   				}
   			}
-  			$dba->commit();
+  			$this->dba->commit();
   		}
 
   		return $this;
@@ -138,24 +144,80 @@ namespace RazyFramework
 
   	public function query($sql, $parameters = [])
   	{
-  		++$this->queryCount;
-  		$boundParam = [];
-
-  		$statement = $this->prepare($sql, $parameters);
+  		++$this->queried;
+  		$dbs       = $this->prepare($sql, $parameters);
+  		$statement = $dbs->getStatement();
 
   		try {
   			$statement->execute();
   		} catch (\PDOException $e) {
-  			new ThrowError('Database', '1001', $e->getMessage());
+  			new ThrowError('Database', '1002', $e->getMessage());
   		}
 
-  		unset($this->prepareList[(int) $statement]);
+  		unset($this->prepareList[$dbs->getResourceId()]);
 
-  		return new DatabaseQuery($this->dba, $statement);
+  		return new DatabaseQuery($statement);
   	}
 
-  	public static function Insert(string $tableName, array $dataset)
+  	public function createInsertSQL(string $tableName, array $dataset)
   	{
+  		$tableName = trim($tableName);
+  		if (!$tableName) {
+  			new ThrowError('Database', '4003', 'Table name should not be empty');
+  		}
+
+  		if (!count($dataset)) {
+  			new ThrowError('Database', '4004', 'Dataset should not be empty');
+  		}
+
+  		return $this->prepare('INSERT INTO ' . $tableName . ' (' . implode(', ', $dataset) . ') VALUES (:' . implode(", :", $dataset) . ')');
+  	}
+
+  	public function createUpdateSQL(string $tableName, array $dataset)
+  	{
+  		$tableName = trim($tableName);
+  		if (!$tableName) {
+  			new ThrowError('Database', '4003', 'Table name should not be empty');
+  		}
+
+  		if (!count($dataset)) {
+  			new ThrowError('Database', '4004', 'Dataset should not be empty');
+  		}
+
+  		$updateSet = [];
+  		foreach ($dataset as $column) {
+  			$updateSet[] = $column . ' = :' . $column;
+  		}
+
+  		return $this->prepare('UPDATE ' . $tableName . ' SET ' . implode(', ', $updateSet));
+  	}
+
+  	public function lastID()
+  	{
+  		return $this->dba->lastInsertId();
+  	}
+
+  	public function getQueried()
+  	{
+  		return $this->queried;
+  	}
+
+  	public function getPrepared()
+  	{
+  		return $this->prepared;
+  	}
+
+  	public function getAdapter()
+  	{
+  		return $this->dba;
+  	}
+
+  	public function select(string $syntax, $column = '')
+  	{
+  		$dbs = new DatabaseStatement($this);
+      $dbs->select($syntax, $column);
+
+  		return $dbs;
   	}
   }
 }

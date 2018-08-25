@@ -11,6 +11,6 @@
 
 return function () {
 	$this->chainable = true;
-	return floatval($this->value);
+	$this->value = floatval($this->value);
 }
 ?>

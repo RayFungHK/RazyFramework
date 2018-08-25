@@ -274,7 +274,7 @@ namespace RazyFramework
   		return $matches[0][0];
   	}
 
-  	private function parseCloseTag($matches, $outputContent)
+  	private function parseClosingTag($matches, $outputContent)
   	{
   		// This procedure is guaranteed the variable tag or function tag is balanced
   		$matchedTag = $matches;
@@ -325,7 +325,7 @@ namespace RazyFramework
   			$result .= substr($unparsed, 0, $matches[0][1]);
 
   			// Find the close tag and parse the content
-  			$parsed = $this->parseCloseTag($matches, substr($unparsed, $matches[0][1] + strlen($matches[0][0])));
+  			$parsed = $this->parseClosingTag($matches, substr($unparsed, $matches[0][1] + strlen($matches[0][0])));
 
   			// Put the parsed variable tag or function tag to result
   			$result .= $parsed[0];

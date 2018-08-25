@@ -60,7 +60,6 @@ namespace RazyFramework
   					'view_path'      => $viewUrl,
   					'root_view_path' => VIEW_PATH_URL . '/',
   				]);
-  				$tplManager->addToQueue();
 
   				return $tplManager;
   			});

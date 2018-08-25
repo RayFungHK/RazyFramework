@@ -12,8 +12,6 @@
 return function () {
 	$this->chainable = true;
 	if ('string' === $this->dataType) {
-		return strtolower($this->value);
+		$this->value = strtolower($this->value);
 	}
-
-	return $this->value;
 };

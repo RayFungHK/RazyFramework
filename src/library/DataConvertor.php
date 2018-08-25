@@ -49,13 +49,9 @@ namespace RazyFramework
   		// Bind convertor object to closure function
   		$result = call_user_func_array($closureFunction->bindTo($this->object), $args);
 
-  		// Update the value for chainable
-  		$this->object->value = $result;
+      call_user_func($this->reflection, $this->object->value);
 
-  		// Call DataFactory reflection function to change the value
-  		call_user_func($this->reflection, $result);
-
-  		return (!$this->object->chainable) ? $result : $this;
+      return (!$this->object->chainable) ? $result : $this;
   	}
 
   	public static function CreateConvertor(string $name, callable $callback)
@@ -74,11 +70,12 @@ namespace RazyFramework
 
   	public function setPointer($value, $reflection)
   	{
+      $self = $this;
   		// Create an object for closure binding
   		$this->object = (object) [
   			'value'     => $value,
   			'dataType'  => strtolower(gettype($value)),
-  			'chainable' => false,
+  			'chainable' => false
   		];
 
   		$this->reflection = $reflection;

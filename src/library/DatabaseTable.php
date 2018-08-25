@@ -13,18 +13,6 @@ namespace RazyFramework
 {
   class DatabaseTable
   {
-  	const COLUMN_CUSTOM    = -1;
-  	const COLUMN_AUTO_ID   = 0;
-  	const COLUMN_TEXT      = 1;
-  	const COLUMN_LONG_TEXT = 2;
-  	const COLUMN_INT       = 3;
-  	const COLUMN_BOOLEAN   = 4;
-  	const COLUMN_DECIMAL   = 5;
-  	const COLUMN_TIMESTAMP = 6;
-  	const COLUMN_DATETIME  = 7;
-  	const COLUMN_DATE      = 8;
-  	const COLUMN_JSON      = 9;
-
   	private $tableName    = '';
   	private $columnList   = [];
   	private $aiDeclared   = false;
@@ -78,7 +66,7 @@ namespace RazyFramework
   		$this->tableName = $tableName;
   	}
 
-  	public function createColumn(string $name, $type = self::COLUMN_TEXT, $setting = [])
+  	public function createColumn(string $name, $type = Database::COLUMN_TEXT, $setting = [])
   	{
   		$name = trim($name);
 
@@ -88,7 +76,7 @@ namespace RazyFramework
 
   		if (!isset($this->columnList[$name])) {
   			switch ($type) {
-			  case self::COLUMN_AUTO_ID:
+			  case Database::COLUMN_AUTO_ID:
 				  $setting['datatype']       = 'INT';
 				  $setting['auto_increment'] = true;
 				  $setting['index_type']     = 'primary';
@@ -104,7 +92,7 @@ namespace RazyFramework
 				  $this->aiDeclared     = true;
 
 				  break;
-			  case self::COLUMN_TEXT:
+			  case Database::COLUMN_TEXT:
 				  $setting['datatype'] = 'VARCHAR';
 				  $this->presetSetting($setting, [
 				  	'length'        => '255',
@@ -113,7 +101,7 @@ namespace RazyFramework
 				  ]);
 
 				  break;
-			  case self::COLUMN_LONG_TEXT:
+			  case Database::COLUMN_LONG_TEXT:
 				  $setting['datatype'] = 'LONGTEXT';
 				  $this->presetSetting($setting, [
 				  	'default_value' => '',
@@ -121,7 +109,7 @@ namespace RazyFramework
 				  ]);
 
 				  break;
-			  case self::COLUMN_INT:
+			  case Database::COLUMN_INT:
 				  $setting['datatype'] = 'INT';
 				  $this->presetSetting($setting, [
 				  	'length'        => '8',
@@ -129,8 +117,8 @@ namespace RazyFramework
 				  	'no_null'       => true,
 				  ]);
 
-			break;
-			  case self::COLUMN_BOOLEAN:
+				break;
+				case Database::COLUMN_BOOLEAN:
 				  $setting['datatype'] = 'TINYINT';
 				  $this->presetSetting($setting, [
 				  	'length'        => '1',
@@ -139,7 +127,7 @@ namespace RazyFramework
 				  ]);
 
 			break;
-		  case self::COLUMN_DECIMAL:
+			  case Database::COLUMN_DECIMAL:
 				  $setting['datatype'] = 'DECIMAL';
 				  $this->presetSetting($setting, [
 				  	'length'        => '8,2',
@@ -147,37 +135,39 @@ namespace RazyFramework
 				  	'no_null'       => true,
 				  ]);
 
-			break;
-		  case self::COLUMN_TIMESTAMP:
+				  break;
+			  case Database::COLUMN_TIMESTAMP:
 					$setting['datatype'] = 'TIMESTAMP';
 					$this->presetSetting($setting, [
 						'no_null' => true,
 					]);
 
 					break;
-		  case self::COLUMN_DATETIME:
-					$setting['datatype'] = 'DATETIME';
-					$this->presetSetting($setting, [
-						'no_null' => true,
-					]);
+			  case Database::COLUMN_DATETIME:
+						$setting['datatype'] = 'DATETIME';
+						$this->presetSetting($setting, [
+							'no_null'       => false,
+							'default_value' => null,
+						]);
 
 					break;
-		  case self::COLUMN_JSON:
-					$setting['datatype'] = 'JSON';
-					$this->presetSetting($setting, [
-						'no_null' => true,
-					]);
+			  case Database::COLUMN_JSON:
+						$setting['datatype'] = 'JSON';
+						$this->presetSetting($setting, [
+							'no_null' => true,
+						]);
 
 					break;
-		  case self::COLUMN_DATE:
-					$setting['datatype'] = 'DATE';
-					$this->presetSetting($setting, [
-						'no_null' => true,
-					]);
+			  case Database::COLUMN_DATE:
+						$setting['datatype'] = 'DATE';
+						$this->presetSetting($setting, [
+							'no_null'       => false,
+							'default_value' => null,
+						]);
 
 					break;
-		  case self::COLUMN_CUSTOM:
-		  default:
+			  case Database::COLUMN_CUSTOM:
+			  default:
 					if (!array_key_exists('datatype', $setting) || !preg_match('/^(BIT|(TINY|MEDIUM)(TEXT|BLOB|INT)|(SMALL|BIG)?INT|REAL|DOUBLE|FIXED|FLOAT|DEC(IMAL)?|NUMERIC|DATE|TIME(STAMP)?|DATETIME|YEAR|(VAR)?(CHAR|BINARY)|(LONG)?(TEXT|BLOB)|ENUM|SET|JSON|BOOL(EAN)?)$/i', $setting['datatype'])) {
 						new ThrowError('Database', '2002', $setting['datatype'] . ' is not a valid data type.');
 					}
@@ -188,7 +178,7 @@ namespace RazyFramework
 					]);
 
 				  break;
-		}
+			}
 
   			$setting['datatype']     = strtoupper($setting['datatype']);
   			$this->columnList[$name] = $setting;

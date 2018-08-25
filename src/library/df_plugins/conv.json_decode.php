@@ -12,8 +12,6 @@
 return function ($toarray = false) {
 	$this->chainable = true;
 	if ('string' === $this->dataType) {
-		return json_decode($this->value, (bool) $toarray);
+		$this->value = json_decode($this->value, (bool) $toarray);
 	}
-
-	return $this->value;
 };

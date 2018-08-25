@@ -14,16 +14,24 @@ namespace RazyFramework
   class DatabaseQuery
   {
   	private $statement;
-  	private $dba;
 
-  	public function __construct($dba, $statement)
+  	public function __construct($statement)
   	{
   		$this->statement = $statement;
-  		$this->dba       = $dba;
   	}
 
   	public function fetch($object = null)
   	{
+  		if (Database::FETCH_ALL === $object) {
+  			return $this->statement->fetchAll(\PDO::FETCH_ASSOC);
+  		}
+  		if (Database::FETCH_GROUP === $object) {
+  			return $this->statement->fetchAll(\PDO::FETCH_ASSOC | \PDO::FETCH_GROUP);
+  		}
+  		if (Database::FETCH_KEY_PAIR === $object) {
+  			return $this->statement->fetchAll(\PDO::FETCH_KEY_PAIR);
+  		}
+
   		if (is_array($object) && count($object)) {
   			foreach ($object as $mapping => $column) {
   				$object[$mapping] = null;
@@ -35,35 +43,17 @@ namespace RazyFramework
   		}
 
   		if (is_string($object) && class_exists($object)) {
-  			$this->statement->fetch(\PDO::FETCH_CLASS, $object);
-  		} elseif (is_object($object)) {
-  			$this->statement->fetch(\PDO::FETCH_INTO, $object);
-  		} else {
-  			return $this->statement->fetch(\PDO::FETCH_ASSOC);
+  			return $this->statement->fetch(\PDO::FETCH_CLASS, $object);
   		}
+
+  		if (is_object($object)) {
+  			return $this->statement->fetch(\PDO::FETCH_INTO, $object);
+  		}
+
+  		return $this->statement->fetch(\PDO::FETCH_ASSOC);
   	}
 
-  	public function fetchAll()
-  	{
-  		return $this->statement->fetchAll(\PDO::FETCH_ASSOC);
-  	}
-
-  	public function fetchGroup()
-  	{
-  		return $this->statement->fetchAll(\PDO::FETCH_ASSOC | \PDO::FETCH_GROUP);
-  	}
-
-  	public function fetchPair()
-  	{
-  		return $this->statement->fetchAll(\PDO::FETCH_KEY_PAIR);
-  	}
-
-  	public function lastInsertID()
-  	{
-  		return (isset($this->dba)) ? $this->dba->lastInsertId() : 0;
-  	}
-
-  	public function affectedRow()
+  	public function affected()
   	{
   		return (isset($this->statement)) ? $this->statement->rowCount() : 0;
   	}

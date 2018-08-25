@@ -50,8 +50,6 @@ namespace RazyFramework
   		die();
   	}
 
-  	TemplateManager::OutputQueued();
-
   	ob_end_flush();
   }
 }

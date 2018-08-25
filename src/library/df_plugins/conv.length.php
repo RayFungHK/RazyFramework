@@ -13,6 +13,7 @@ return function () {
 	if (is_array($this) || 'array' === $this->dataType || $this->value instanceof \ArrayAccess) {
 		return count($this->value);
 	}
+
 	if ('string' === $this->dataType) {
 		return strlen($this->value);
 	}

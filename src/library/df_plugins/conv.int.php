@@ -12,5 +12,5 @@
 return function () {
 	$this->chainable = true;
 
-	return (int) ($this->value);
+	$this->value = (int) ($this->value);
 };

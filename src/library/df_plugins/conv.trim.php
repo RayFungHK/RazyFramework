@@ -14,6 +14,6 @@ return function () {
 	if ('string' !== $this->dataType && 'integer' !== $this->dataType && 'double' !== $this->dataType) {
 		$this->value = print_r($this->value, true);
 	}
-
-	return trim($this->value);
+	
+	$this->value = trim($this->value);
 };
