@@ -324,7 +324,7 @@ namespace RazyFramework
   								}
   							}
 
-  							$isNaturalJoin   = !isset($clip[10]) && !$clip[10] && !$clip[7];
+  							$isNaturalJoin   = (!isset($clip[10]) || !$clip[10]) && (!isset($clip[7]) || !$clip[7]);
   							$prefixJoinType  = $this->getJoinType($clip[1], $isNaturalJoin);
   							$postfixJoinType = (!isset($clip[11])) ? '' : $this->getJoinType($clip[11], $isNaturalJoin);
 

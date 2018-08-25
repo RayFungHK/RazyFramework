@@ -17,6 +17,7 @@ namespace RazyFramework
   	const MODULE_STATUS_PENDING  = 0;
   	const MODULE_STATUS_LOADED   = 1;
   	const MODULE_STATUS_READY    = 2;
+  	const MODULE_STATUS_ROUTABLE = 3;
 
   	private $moduleRoot        = '';
   	private $moduleCode        = '';
@@ -151,6 +152,16 @@ namespace RazyFramework
   		return $this->preloadStatus;
   	}
 
+  	public function beforeRoute()
+  	{
+  		if (self::MODULE_STATUS_READY === $this->preloadStatus) {
+  			$this->coreController->__onBeforeRoute();
+  			$this->preloadStatus = self::MODULE_STATUS_ROUTABLE;
+  		}
+
+  		return $this;
+  	}
+
   	public function getRequire()
   	{
   		return $this->require;
@@ -237,7 +248,7 @@ namespace RazyFramework
 
   	public function route($args)
   	{
-  		if (self::MODULE_STATUS_READY !== $this->preloadStatus) {
+  		if (self::MODULE_STATUS_ROUTABLE !== $this->preloadStatus) {
   			new ThrowError('ModulePackage', '4001', 'System is not ready, you cannot route in preload stage.');
   		}
 
@@ -248,7 +259,7 @@ namespace RazyFramework
 
   		// If method route mapping matched, return the contoller
   		if (isset($this->routeMapping[$routeName])) {
-        $routeName = (count($args)) ? array_shift($args) : '/';
+  			$routeName                = (count($args)) ? array_shift($args) : '/';
   			list($className, $method) = explode('.', $this->routeMapping[$routeName]);
 
   			$moduleController         = $this->getController($className);

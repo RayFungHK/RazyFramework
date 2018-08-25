@@ -87,5 +87,10 @@ namespace RazyFramework
   		// false:   Module is not ready and unloaded
   		return true;
   	}
+
+  	public function __onBeforeRoute()
+  	{
+  		return true;
+  	}
   }
 }

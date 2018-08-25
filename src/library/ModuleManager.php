@@ -39,62 +39,67 @@ namespace RazyFramework
   	{
   		if (null === self::$instance) {
   			self::$instance = $this;
-
-  			$this->stage = self::STATUS_PRELOAD_STAGE;
-
-  			// Creating Loader method in preload stage
-  			// Loader: view
-  			Loader::CreateMethod('view', function (string $filepath, $rootview = false) {
-  				// If there is no extension provided, default as .tpl
-  				if (!preg_match('/\.[a-z]+$/i', $filepath)) {
-  					$filepath .= '.tpl';
-  				}
-
-  				$root = (($rootview) ? VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR;
-  				$viewUrl = (($rootview) ? VIEW_PATH : $this->getViewPathURL()) . \DIRECTORY_SEPARATOR;
-
-  				$tplManager = new TemplateManager($root . $filepath, $this->getCode());
-  				$tplManager->globalAssign([
-  					'url_base'       => URL_BASE,
-  					'module_root'    => URL_BASE . $this->getRemapPath(),
-  					'view_path'      => $viewUrl,
-  					'root_view_path' => VIEW_PATH_URL . '/',
-  				]);
-
-  				return $tplManager;
-  			});
-
-  			// Loader: config
-  			Loader::CreateMethod('config', function (string $filename) {
-  				return new Configuration($this, $filename);
-  			});
-
-  			// Loader: db
-  			Loader::CreateMethod('db', function (string $connectionName) {
-  				return Database::GetConnection($connectionName);
-  			});
-
-  			$this->loadModule(self::$moduleFolder);
-
-  			$moduleUnloaded = [];
-
-  			// Load event: __onReady
-  			while ($module = array_shift($this->moduleLoaded)) {
-  				if (ModulePackage::MODULE_STATUS_LOADED === $module->getPreloadStatus()) {
-  					$this->doReady($module);
-  				}
-  			}
-
-  			if (count($this->moduleInRequire)) {
-  				new ThrowError('ModuleManager', '1002', 'The following module is required but load failed: ' . implode(', ', array_keys($this->moduleInRequire)));
-  			}
   		} else {
   			// Error: Loaded Twice
   			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
   		}
 
+  		$this->stage = self::STATUS_PRELOAD_STAGE;
+
+  		// Creating Loader method in preload stage
+  		// Loader: view
+  		Loader::CreateMethod('view', function (string $filepath, $rootview = false) {
+  			// If there is no extension provided, default as .tpl
+  			if (!preg_match('/\.[a-z]+$/i', $filepath)) {
+  				$filepath .= '.tpl';
+  			}
+
+  			$root = (($rootview) ? VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR;
+  			$viewUrl = (($rootview) ? VIEW_PATH : $this->getViewPathURL()) . \DIRECTORY_SEPARATOR;
+
+  			$tplManager = new TemplateManager($root . $filepath, $this->getCode());
+  			$tplManager->globalAssign([
+  				'url_base'       => URL_BASE,
+  				'module_root'    => URL_BASE . $this->getRemapPath(),
+  				'view_path'      => $viewUrl,
+  				'root_view_path' => VIEW_PATH_URL . '/',
+  			]);
+
+  			return $tplManager;
+  		});
+
+  		// Loader: config
+  		Loader::CreateMethod('config', function (string $filename) {
+  			return new Configuration($this, $filename);
+  		});
+
+  		// Loader: db
+  		Loader::CreateMethod('db', function (string $connectionName) {
+  			return Database::GetConnection($connectionName);
+  		});
+
+  		$this->loadModule(self::$moduleFolder);
+
+  		$moduleUnloaded = [];
+
+  		// Load event: __onReady
+  		while ($module = array_shift($this->moduleLoaded)) {
+  			if (ModulePackage::MODULE_STATUS_LOADED === $module->getPreloadStatus()) {
+  				$this->doReady($module);
+  			}
+  		}
+
+  		if (count($this->moduleInRequire)) {
+  			new ThrowError('ModuleManager', '1002', 'The following module is required but load failed: ' . implode(', ', array_keys($this->moduleInRequire)));
+  		}
+
   		// If all module ready, change to ready stage
   		$this->stage = self::STATUS_READY_STAGE;
+
+  		// Trigger __onBeforeRoute event
+    	foreach ($this->moduleReady as $module) {
+  			$module->beforeRoute();
+  		}
 
   		if (CLI_MODE) {
   			// Cli Mode, get arguments and parameters
