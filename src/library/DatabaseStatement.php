@@ -16,15 +16,15 @@ namespace RazyFramework
   	private static $lastResourceId = 0;
 
   	private $dbObject;
-  	private $parameters                       = [];
-  	private $isSelectStatement                = false;
-  	private $whereable                        = false;
-  	private $cached                           = false;
-  	private $columns                          = '';
-  	private $selectSyntax                     = '';
-  	private $whereSyntax                      = '';
-  	private $whereRegex                       = '([|,])?(!)?((:?[\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.(?4))?|\{\$(?:[^{}\\\\]++|\\\\.)*\}|\"(?:[^"\\\\]++|\\\\.)*\"|\?|(?:-?\d+(?:\.\d+)?)|\{\?(?:[^{}\\\\]++|\\\\.)*\})(?(2)|(?:(!=|[<>]=?|=\*|=)((?3))))?(?(1)|([|,])?)';
-  	private $selectRegex                      =  '([><+\-\*]|\G)?(([\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.((?3)))?)(?:\[({\?(?:[^{}\\\\]++|\\\\.)*}|(?2)|"(?:[^"\\\\]++|\\\\.)*"|(?:-?\d+(?:\.\d+)?)|:[\w]+)(?:(!=|=\||=\*|=)((?5)))?\])?(?(1)|([><+\-\*])?)';
+  	private $parameters        = [];
+  	private $isSelectStatement = false;
+  	private $whereable         = false;
+  	private $cached            = false;
+  	private $columns           = '';
+  	private $selectSyntax      = '';
+  	private $whereSyntax       = '';
+  	private $whereRegex        = '([|,])?(!)?((:?[\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.(?4))?|\{\$(?:[^{}\\\\]++|\\\\.)*\}|\"(?:[^"\\\\]++|\\\\.)*\"|\?|(?:-?\d+(?:\.\d+)?)|\{\?(?:[^{}\\\\]++|\\\\.)*\})(?(2)|(?:(!=|[<>]=?|=\*|=)((?3))))?(?(1)|([|,])?)';
+  	private $selectRegex       =  '([><+\-\*]|\G)?(?:(?:(([\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.((?3)))?)|\{\$([\w-]+) ((?3))\})(?:\[(?:({\?(?:[^{}\\\\]++|\\\\.)*}|(?2)|"(?:[^"\\\\]++|\\\\.)*"|(?:-?\d+(?:\.\d+)?)|:[\w]+)(?:(!=|=\||=\*|=)((?5)))?|\?((?:[^\[\]\\\\]++|\\\\.)+))\])?)(?(1)|([><+\-\*])?)';
 
   	public function __construct(Database $dbObject, $sql = '')
   	{
@@ -53,7 +53,7 @@ namespace RazyFramework
   				}
   			} else {
   				$this->searchParameters($sql);
-        }
+  			}
   		}
 
   		$this->dbObject   = $dbObject;
@@ -63,9 +63,9 @@ namespace RazyFramework
   	public function where(string $syntax)
   	{
   		if ($this->whereable) {
-  			$syntax               = trim($syntax);
-  			$this->whereSyntax    = $this->parseWhereSyntax($this->parseBracket($syntax));
-  			$this->cached         = false;
+  			$syntax            = trim($syntax);
+  			$this->whereSyntax = $this->parseWhereSyntax($this->parseBracket($syntax));
+  			$this->cached      = false;
 
   			$this->searchParameters();
   		}
@@ -73,14 +73,14 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function select(string $syntax, $column = '')
+  	public function select(string $syntax, $column = '', $subquery = [])
   	{
   		if (!$column || !is_string($column)) {
   			$column = '*';
   		}
 
   		$syntax                  = trim($syntax);
-  		$this->selectSyntax      = $this->parseSelectSyntax($this->parseBracket($syntax));
+  		$this->selectSyntax      = $this->parseSelectSyntax($this->parseBracket($syntax), $subquery);
   		$this->columns           = preg_split('/((?:[\'"`])|(\()).+?(?(2)\)|\1)(*SKIP)(*FAIL)|\s*,\s*/', $column);
   		$this->whereable         = true;
   		$this->cached            = false;
@@ -247,7 +247,7 @@ namespace RazyFramework
   		}
   	}
 
-  	private function getJoinType(string $flag, $condition)
+  	private function getJoinType(string $flag, $isNaturalJoin = false)
   	{
   		$joinType = '';
 
@@ -258,19 +258,19 @@ namespace RazyFramework
   				$joinType = ' RIGHT JOIN ';
   			} elseif ('+' === $flag) {
   				$joinType = ' FULL JOIN ';
-  				if (!$condition) {
+  				if ($isNaturalJoin) {
   					new ThrowError('Database', 3005, 'Full join does not allow natural join.');
   				}
   			} elseif ('-' === $flag) {
   				$joinType = ' JOIN ';
   			} elseif ('*' === $flag) {
   				$joinType = ' CROSS JOIN ';
-  				if ($condition) {
+  				if (!$isNaturalJoin) {
   					new ThrowError('Database', 3006, 'Cross join does not allow condition syntax.');
   				}
   			}
 
-  			if (!$condition) {
+  			if ($isNaturalJoin) {
   				$joinType = ' NATURAL' . $joinType;
   			}
   		}
@@ -278,7 +278,7 @@ namespace RazyFramework
   		return $joinType;
   	}
 
-  	private function parseSelectSyntax(array $parsedStatement)
+  	private function parseSelectSyntax(array $parsedStatement, $subquery = [])
   	{
   		$result      = [];
   		$syntaxEnded = false;
@@ -289,37 +289,48 @@ namespace RazyFramework
   				$result[] = $this->parseSyntax($statement);
   			} else {
   				if (!preg_match('/^(?:' . $this->selectRegex . ')+?$/', $statement)) {
-  					new ThrowError('Database', 3001, 'Invalid Select-Syntax format.');
+  					new ThrowError('Database', 4001, 'Invalid Select-Syntax format.');
   				} else {
   					if (preg_match_all('/' . $this->selectRegex . '/', $statement, $matches, PREG_SET_ORDER)) {
   						$firstTable = null;
   						foreach ($matches as $clip) {
   							// 1: Prefix Join
   							// 2: Full Table Name
-  							// 3: Prefix
+  							// 3: Alias
   							// 4: Table Name
-  							// 5: Left side condition
-  							// 6: Operator
-  							// 7: Right side condidion
-  							// 8: Postfix Join
+  							// 5: Sub Query
+  							// 6: Sub Query Alias
+  							// 7: Left side condition
+  							// 8: Operator
+  							// 9: Right side condidion
+  							// 10: Where-Syntax
+  							// 11: Postfix Join
 
-  							if (!isset($clip[4])) {
-  								$fullTableName = $clip[2];
-  								$tableName     = $clip[3];
-  								$prefix        = $clip[3];
+  							if (isset($clip[5]) && $clip[5]) {
+  								if (!isset($subquery[$clip[5]]) || !($subquery[$clip[5]] instanceof self)) {
+  									new ThrowError('Database', 4002, $clip[5] . ' is not a DatabaseStatement object.');
+  								}
+  								$subquerySQL   = $subquery[$clip[5]]->getStatement()->queryString;
+  								$tableName     = $clip[6];
+  								$alias         = $clip[6];
+  								$fullTableName = '(' . $subquerySQL . ') AS ' . $clip[6];
   							} else {
-  								$tableName     = $clip[4];
-  								$prefix        = $clip[3];
-  								$fullTableName = $clip[4] . ' AS ' . $clip[3];
+  								if (!isset($clip[4]) || !$clip[4]) {
+  									$alias         = $clip[3];
+  									$fullTableName = $clip[3];
+  								} else {
+  									$alias         = $clip[3];
+  									$fullTableName = $clip[4] . ' AS ' . $clip[3];
+  								}
   							}
 
-  							$prefixJoinType  = $this->getJoinType($clip[1], isset($clip[5]) ? $clip[5] : '');
-  							$postfixJoinType = (!isset($clip[8])) ? '' : $this->getJoinType($clip[8], $clip[5]);
+  							$isNaturalJoin   = !isset($clip[10]) && !$clip[10] && !$clip[7];
+  							$prefixJoinType  = $this->getJoinType($clip[1], $isNaturalJoin);
+  							$postfixJoinType = (!isset($clip[11])) ? '' : $this->getJoinType($clip[11], $isNaturalJoin);
 
   							if (!$firstTable) {
   								$firstTable =[
-  									'name'      => $tableName,
-  									'prefix'    => $prefix,
+  									'alias'     => $alias,
   									'fullename' => $fullTableName,
   								];
   								$result[] = $fullTableName . $postfixJoinType;
@@ -327,12 +338,15 @@ namespace RazyFramework
   								continue;
   							}
 
-  							if ($clip[5]) {
-  								$left = $this->parseField($clip[5]);
+                $condition = '';
+  							if (isset($clip[10]) && $clip[10]) {
+  								$condition = $this->parseWhereSyntax($this->parseBracket($clip[10]));
+  							} elseif ($clip[7]) {
+  								$left = $this->parseField($clip[7]);
 
-  								if (isset($clip[6])) {
-  									$operator = $clip[6];
-  									$right    = $this->parseField($clip[7]);
+  								if (isset($clip[8])) {
+  									$operator = $clip[8];
+  									$right    = $this->parseField($clip[9]);
 
   									if ('=*' === $operator) {
   										$operator = ' LIKE ';
@@ -342,13 +356,12 @@ namespace RazyFramework
   										$operator = ' ' . $operator . ' ';
   									}
 
-  									$result[] = $prefixJoinType . $fullTableName . ' ON ' . $left . $operator . $right . $postfixJoinType;
+  									$condition = $left . $operator . $right;
   								} else {
-  									$left     = $firstTable['prefix'] . '.' . $clip[5];
-  									$right    = $prefix . '.' . $clip[5];
-  									$result[] = $prefixJoinType . $fullTableName . ' ON ' . $left . ' = ' . $right . $postfixJoinType;
+  									$condition = $firstTable['alias'] . '.' . $clip[7] . ' = ' . $alias . '.' . $clip[7];
   								}
   							}
+  							$result[] = $prefixJoinType . $fullTableName . (($condition) ? ' ON ' . $condition : '') . $postfixJoinType;
   						}
   					}
   				}
@@ -442,13 +455,13 @@ namespace RazyFramework
   		$result = [];
 
   		// Search the closing delimiter
-  		while (preg_match('/(?:[^"{}()]++|(?:({\?)|")(?:[^"{}\\\\]++|\\\\.)*(?(1)}|"))(*SKIP)(*FAIL)|([()])?/', $unparsed, $matches, PREG_OFFSET_CAPTURE)) {
+  		while (preg_match('/(?:"|(\{)|(\[))(?:[^"{\[\]}\\\\]++|\\\\.)*(?(1)}|(?(2)\]|"))(*SKIP)(*FAIL)|([()])/', $unparsed, $matches, PREG_OFFSET_CAPTURE)) {
   			if ($matches[0][1] > 0) {
   				// Put the previous content to list
   				$result[] = trim(substr($unparsed, 0, $matches[0][1]));
   			}
 
-  			if (')' === $matches[2][0]) {
+  			if (')' === $matches[0][0]) {
   				$object = (object) [
   					'text' => $result,
   				];
@@ -457,9 +470,9 @@ namespace RazyFramework
   			}
 
   			// Find the closing delimiter and parse the string
-  			$basketContent   = $this->splitBasket(substr($unparsed, $matches[0][1] + 1));
-  			$result[]        = $basketContent[0];
-  			$unparsed        = $basketContent[1];
+  			$basketContent = $this->splitBasket(substr($unparsed, $matches[0][1] + 1));
+  			$result[]      = $basketContent[0];
+  			$unparsed      = $basketContent[1];
   		}
   	}
 
@@ -468,14 +481,14 @@ namespace RazyFramework
   		$result   = [];
   		$unparsed = $statement;
   		// Search the opening delimiter
-  		while (preg_match('/(?:[^"{}(]++|(?:({\?)|")(?:[^"{}\\\\]++|\\\\.)*(?(1)}|"))(*SKIP)(*FAIL)|(\()/', $unparsed, $matches, PREG_OFFSET_CAPTURE)) {
+  		while (preg_match('/(?:"|(\{)|(\[))(?:[^"{\[\]}\\\\]++|\\\\.)*(?(1)}|(?(2)\]|"))(*SKIP)(*FAIL)|(\()/', $unparsed, $matches, PREG_OFFSET_CAPTURE)) {
   			// Put the string to result that before the opening delimiter
-  			if ($matches[2][1] > 0) {
-  				$result[] = substr($unparsed, 0, $matches[2][1]);
+  			if ($matches[3][1] > 0) {
+  				$result[] = substr($unparsed, 0, $matches[3][1]);
   			}
 
   			// Find the closing delimiter and parse the string
-  			$parsed   = $this->splitBasket(substr($unparsed, $matches[2][1] + 1));
+  			$parsed   = $this->splitBasket(substr($unparsed, $matches[3][1] + 1));
   			$result[] = $parsed[0];
   			$unparsed = $parsed[1];
   		}

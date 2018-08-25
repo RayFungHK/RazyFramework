@@ -212,10 +212,10 @@ namespace RazyFramework
   		return $this->dba;
   	}
 
-  	public function select(string $syntax, $column = '')
+  	public function select(string $syntax, $column = '', $subquery = [])
   	{
   		$dbs = new DatabaseStatement($this);
-      $dbs->select($syntax, $column);
+      $dbs->select($syntax, $column, $subquery);
 
   		return $dbs;
   	}
