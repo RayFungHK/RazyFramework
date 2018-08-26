@@ -21,6 +21,8 @@ namespace RazyFramework
   	private $whereable         = false;
   	private $cached            = false;
   	private $columns           = '';
+  	private $startRecord       = '';
+  	private $fetchLength       = '';
   	private $selectSyntax      = '';
   	private $whereSyntax       = '';
   	private $whereRegex        = '([|,])?(!)?((:?[\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.(?4))?|\{\$(?:[^{}\\\\]++|\\\\.)*\}|\"(?:[^"\\\\]++|\\\\.)*\"|\?|(?:-?\d+(?:\.\d+)?)|\{\?(?:[^{}\\\\]++|\\\\.)*\})(?(2)|(?:(!=|[<>]=?|=\*|=)((?3))))?(?(1)|([|,])?)';
@@ -56,6 +58,10 @@ namespace RazyFramework
   			}
   		}
 
+  		if (null === $dbObject->getAdapter()) {
+  			new ThrowError('DatabaseStatement', 1004, 'Database adapter is null or it does not connect to databse.');
+  		}
+
   		$this->dbObject   = $dbObject;
   		$this->resourceId = self::CreateInstance();
   	}
@@ -69,6 +75,14 @@ namespace RazyFramework
 
   			$this->searchParameters();
   		}
+
+  		return $this;
+  	}
+
+  	public function limit(int $start, $length = 20)
+  	{
+  		$this->startRecord = max($start, 0);
+  		$this->fetchLength = max((int) $length, 5);
 
   		return $this;
   	}
@@ -138,6 +152,10 @@ namespace RazyFramework
   					$sql = 'SELECT ' . ((count($this->columns)) ? implode(', ', $this->columns) : '*') . ' FROM ' . $this->selectSyntax;
   					if ($this->whereable && $this->whereSyntax) {
   						$sql .= ' WHERE ' . $this->whereSyntax;
+  					}
+
+  					if ($this->startRecord > 0) {
+  						$sql .= ' LIMIT ' . $this->startRecord . ', ' . $this->fetchLength;
   					}
   					$this->sql = $sql;
   				}
@@ -338,7 +356,7 @@ namespace RazyFramework
   								continue;
   							}
 
-                $condition = '';
+  							$condition = '';
   							if (isset($clip[10]) && $clip[10]) {
   								$condition = $this->parseWhereSyntax($this->parseBracket($clip[10]));
   							} elseif ($clip[7]) {

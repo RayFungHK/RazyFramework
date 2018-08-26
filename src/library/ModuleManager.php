@@ -96,6 +96,11 @@ namespace RazyFramework
   		// If all module ready, change to ready stage
   		$this->stage = self::STATUS_READY_STAGE;
 
+      // Prepare Routing
+      foreach ($this->moduleReady as $module) {
+        $module->prepareRouting();
+      }
+
   		if (CLI_MODE) {
   			// Cli Mode, get arguments and parameters
   			$argv             = $_SERVER['argv'];
@@ -138,11 +143,6 @@ namespace RazyFramework
   	public function getStage()
   	{
   		return $this->stage;
-  	}
-
-  	public function moduleHasLoaded($moduleCode)
-  	{
-  		return isset($this->moduleLoaded[$moduleCode]);
   	}
 
   	public function moduleisReady($moduleCode)
@@ -292,9 +292,10 @@ namespace RazyFramework
   	private function doReady(ModulePackage $module)
   	{
   		if (ModulePackage::MODULE_STATUS_LOADED === $module->getPreloadStatus()) {
-  			$eventObject['loadedModule'] = $module->getCode();
   			// Get module require list
   			$require = $module->getRequire();
+
+        unset($this->moduleLoaded[$module->getCode()]);
 
   			// Trigger the require module' ready event first if there is any module cannot be loaded
   			// Ignore module ready stage

@@ -104,8 +104,8 @@ namespace RazyFramework
 			  case Database::COLUMN_LONG_TEXT:
 				  $setting['datatype'] = 'LONGTEXT';
 				  $this->presetSetting($setting, [
-				  	'default_value' => '',
-				  	'no_null'       => true,
+				  	'default_value' => null,
+				  	'no_null'       => false,
 				  ]);
 
 				  break;

@@ -88,6 +88,13 @@ namespace RazyFramework
   		return true;
   	}
 
+  	public function __onPrepareRouting()
+  	{
+  		// true:    Module is routable
+  		// false:   Module is not routable
+  		return true;
+  	}
+
   	public function __onBeforeRoute()
   	{
   		return true;

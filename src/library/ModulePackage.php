@@ -13,10 +13,12 @@ namespace RazyFramework
 {
   class ModulePackage
   {
-  	const MODULE_STATUS_UNLOADED = -1;
-  	const MODULE_STATUS_PENDING  = 0;
-  	const MODULE_STATUS_LOADED   = 1;
-  	const MODULE_STATUS_READY    = 2;
+  	const MODULE_STATUS_UNLOADED     = -1;
+  	const MODULE_STATUS_PENDING      = 0;
+  	const MODULE_STATUS_LOADED       = 1;
+  	const MODULE_STATUS_READY        = 2;
+  	const MODULE_STATUS_ROUTABLE     = 3;
+  	const MODULE_STATUS_NOT_ROUTABLE = 4;
 
   	private $moduleRoot        = '';
   	private $moduleCode        = '';
@@ -206,6 +208,19 @@ namespace RazyFramework
   		return $this->remapPath;
   	}
 
+  	public function prepareRouting()
+  	{
+  		if (self::MODULE_STATUS_READY === $this->preloadStatus) {
+  			if ($this->coreController->__onPrepareRouting()) {
+  				$this->preloadStatus = self::MODULE_STATUS_ROUTABLE;
+  			} else {
+  				$this->preloadStatus = self::MODULE_STATUS_NOT_ROUTABLE;
+  			}
+  		}
+
+  		return $this;
+  	}
+
   	public function getRoute()
   	{
   		$path = preg_replace('/[\\\\\/]+/', '/', '/' . trim(REQUEST_ROUTE) . '/');
@@ -237,8 +252,12 @@ namespace RazyFramework
 
   	public function route($args)
   	{
-  		if (self::MODULE_STATUS_READY !== $this->preloadStatus) {
-  			new ThrowError('ModulePackage', '4001', 'System is not ready, you cannot route in preload stage.');
+  		if (self::MODULE_STATUS_ROUTABLE !== $this->preloadStatus) {
+  			if (self::MODULE_STATUS_NOT_ROUTABLE === $this->preloadStatus) {
+  				new ThrowError('ModulePackage', '4001', 'The module is denied to routing in.');
+  			}
+
+  			new ThrowError('ModulePackage', '4002', 'System is not ready, you cannot route in preload stage.');
   		}
 
   		$moduleController = null;
@@ -282,8 +301,8 @@ namespace RazyFramework
 
   		$this->isRouted = true;
 
-      // Trigger __onBeforeRoute event
-      $moduleController->__onBeforeRoute();
+  		// Trigger __onBeforeRoute event
+  		$moduleController->__onBeforeRoute();
 
   		// Pass all arguments to routed method
   		$result = call_user_func_array([$moduleController, $method], $args);

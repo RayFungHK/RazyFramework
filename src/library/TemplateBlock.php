@@ -288,8 +288,10 @@ namespace RazyFramework
   			$regex = '/\{(?:\/(' . $matches[2][0] . ')|(' . $matches[2][0] . '((?:\h+\w+(?:=(?>\w+|"(?>[^"\\\\]+|\\\\.)*"))*)*)))\}/';
   		}
 
-  		$pos             = 0;
-  		$balanceTagCount = 1;
+  		$pos               = 0;
+  		$balanceTagCount   = 1;
+  		$lastClosingTagPos = 0;
+  		$lastSplitPos      = 0;
   		// Search the tag with the same tag name and type
   		while (preg_match($regex, $outputContent, $matches, PREG_OFFSET_CAPTURE, $pos)) {
   			if ($matches[1][0]) {
@@ -304,12 +306,23 @@ namespace RazyFramework
   						substr($outputContent, $matches[0][1] + strlen($matches[0][0])),
   					];
   				}
+  				$lastClosingTagPos = $matches[0][1];
+  				$lastSplitPos      = $matches[0][1] + strlen($matches[0][0]);
   			} else {
   				++$balanceTagCount;
   			}
 
   			// Update the current position
   			$pos = $matches[0][1] + strlen($matches[0][0]);
+  		}
+
+  		if ($balanceTagCount > 0 && $lastClosingTagPos) {
+  			// If the variable tag is not balanced and there is atleast one set variable tag found
+  			// Pass wrapped content to parseModifier() with the last closing tag position
+  			return [
+  				$this->parseModifier($matchedTag, substr($outputContent, 0, $lastClosingTagPos)),
+  				substr($outputContent, $lastSplitPos),
+  			];
   		}
 
   		return [$this->parseModifier($matchedTag, null), $outputContent];
