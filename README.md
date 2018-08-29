@@ -19,7 +19,7 @@ You can use global config file to change the library or module folder location, 
 More powerful database library, provides single record operation flow and object-oriented with chainable query.</strike>
 
 # Task List
-- Preload and Ready event (Implementation Testing)
+- Preload and Ready event (Done)
 - New CLI Mode (Done)
 - Markdown library, Class (Done)
 - FTP library, Class

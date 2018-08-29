@@ -32,7 +32,7 @@ return [
 				}
 			}
 		}
-		$result .= '</ul>';
+		$result .= '</li></ul>';
 
 		return $result;
 	},

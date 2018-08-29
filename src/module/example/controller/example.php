@@ -54,6 +54,7 @@ namespace RazyFramework
         // Markdown library
   			$md = new Markdown();
   			$md->loadFile($this->module->getViewPath() . \DIRECTORY_SEPARATOR . 'markdown-sample.txt');
+        print_r(new DOMParser($md->parse()));
 
   			$df = new DataFactory([
   				'name'   => ' Ray Fung ',
@@ -81,6 +82,7 @@ namespace RazyFramework
   			$tplmanager('levelA:odd-filter')->assign('name', function ($value) {
   				return $value . ' (Found)';
   			});
+        $tplmanager->output();
   		}
   	}
 

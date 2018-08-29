@@ -26,7 +26,7 @@ return [
 				}
 			}
 		}
-		$result .= '</ol>';
+		$result .= '</li></ol>';
 
 		return $result;
 	},
