@@ -54,7 +54,8 @@ namespace RazyFramework
         // Markdown library
   			$md = new Markdown();
   			$md->loadFile($this->module->getViewPath() . \DIRECTORY_SEPARATOR . 'markdown-sample.txt');
-        print_r(new DOMParser($md->parse()));
+        $elements = DOMParser::Parse($md->parse());
+        print_r($elements('h1'));
 
   			$df = new DataFactory([
   				'name'   => ' Ray Fung ',

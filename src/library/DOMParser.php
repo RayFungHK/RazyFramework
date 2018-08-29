@@ -13,13 +13,11 @@ namespace RazyFramework
 {
   class DOMParser
   {
-  	private $domElement;
-
-  	public function __construct(string $html)
+  	public static function Parse(string $html)
   	{
-      $this->domElement = new DOMElement(DOMElement::DOMTYPE_DOCUMENT, '', '');
-      $this->domElement->html($html);
-  	}
+  		$domElement = new DOMElement(DOMElement::DOMTYPE_DOCUMENT, '', '');
 
+  		return $domElement->html($html);
+  	}
   }
 }
