@@ -15,9 +15,22 @@ namespace RazyFramework
   {
   	public static function Parse(string $html)
   	{
-  		$domElement = new DOMElement(DOMElement::DOMTYPE_DOCUMENT, '', '');
+  		$domElement = new DOMElement(DOMElement::DOMTYPE_NODELIST, '', '');
 
   		return $domElement->html($html);
+  	}
+
+  	public static function ParseFromFile(string $path)
+  	{
+      return self::ParseFromURL($path);
+  	}
+
+  	public static function ParseFromURL(string $path)
+  	{
+  		$domElement = new DOMElement(DOMElement::DOMTYPE_NODELIST, '', '');
+
+      $html = file_get_contents($path);
+      return $domElement->html($html);
   	}
   }
 }

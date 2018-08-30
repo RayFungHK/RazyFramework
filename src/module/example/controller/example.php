@@ -82,15 +82,15 @@ namespace RazyFramework
   				return $value . ' (Found)';
   			});
 
-        $elements = DOMParser::Parse($md->parse());
-        foreach (['p', 'h1+p', 'h1~p', 'a', 'pre[language]', 'ul>li', 'ul>li:nth-child(2n+1)', 'li:nth-child(odd)', 'li:nth-child(even)'] as $selector) {
+        $elements = DOMParser::ParseFromURL('https://www.w3schools.com/css/css_syntax.asp');
+        foreach (['p', 'h2+p', 'h2~p', '.notranslate', '[class*="sidesection"]', '[name]', 'p:nth-child(2n+1)', 'p:nth-child(odd)', 'p:nth-child(even)'] as $selector) {
           $selectorBlock = $root->newBlock('selector');
           $selectorBlock->assign([
             'selector' => $selector
           ]);
           foreach ($elements($selector) as $dom) {
-            $selectorBlock->newBlock('element', $dom->getNodeName())->assign([
-              'name' => $dom->getNodeName(),
+            $selectorBlock->newBlock('element', $dom->nodeName)->assign([
+              'name' => $dom->nodeName,
               'count' => function($value) {
                 $value = $value ?? 0;
                 return ++$value;
