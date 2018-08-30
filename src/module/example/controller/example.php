@@ -54,8 +54,6 @@ namespace RazyFramework
         // Markdown library
   			$md = new Markdown();
   			$md->loadFile($this->module->getViewPath() . \DIRECTORY_SEPARATOR . 'markdown-sample.txt');
-        $elements = DOMParser::Parse($md->parse());
-        print_r($elements('h1'));
 
   			$df = new DataFactory([
   				'name'   => ' Ray Fung ',
@@ -83,6 +81,24 @@ namespace RazyFramework
   			$tplmanager('levelA:odd-filter')->assign('name', function ($value) {
   				return $value . ' (Found)';
   			});
+
+        $elements = DOMParser::Parse($md->parse());
+        foreach (['p', 'h1+p', 'h1~p', 'a', 'pre[language]', 'ul>li', 'ul>li:nth-child(2n+1)', 'li:nth-child(odd)', 'li:nth-child(even)'] as $selector) {
+          $selectorBlock = $root->newBlock('selector');
+          $selectorBlock->assign([
+            'selector' => $selector
+          ]);
+          foreach ($elements($selector) as $dom) {
+            $selectorBlock->newBlock('element', $dom->getNodeName())->assign([
+              'name' => $dom->getNodeName(),
+              'count' => function($value) {
+                $value = $value ?? 0;
+                return ++$value;
+              }
+            ]);
+          }
+        }
+
         $tplmanager->output();
   		}
   	}
