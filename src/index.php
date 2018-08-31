@@ -14,6 +14,11 @@ namespace RazyFramework
   define('SYSTEM_ROOT', __DIR__);
   require SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'system' . \DIRECTORY_SEPARATOR . 'core.inc.php';
 
+  // Setup the default module folder
+	if (array_key_exists('module_path', $configuration) && is_array($configuration['module_path'])) {
+		ModuleManager::SetDefaultModulePath($configuration['module_path']);
+	}
+
 	// Setup the module path from global config
 	if (array_key_exists('module_distribution', $configuration) && is_array($configuration['module_distribution'])) {
 		ModuleManager::SetModuleDistribution($configuration['module_distribution']);

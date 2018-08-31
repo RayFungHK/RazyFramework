@@ -97,20 +97,15 @@ namespace RazyFramework
 
   		// Match the module distribution, if no module distribution declared, use default module path.
   		if (count(self::$moduleDistributions)) {
-  			foreach (self::$moduleDistributions as $route => $path) {
-  				if (0 === strpos($this->urlQuery, $route)) {
-  					// If module distribution is found
-  					self::$moduleFolder = $path;
-            self::$distribution = $route;
-
-  					// Update the URL query
-  					$this->urlQuery = substr($this->urlQuery, strlen($route) - 1);
-  					break;
-  				}
+  			// If there is distribution matched, start load module
+  			// If no distribution matched, no module will be loaded
+  			if ($this->matchDistribution()) {
+  				$this->loadModule(self::$moduleFolder);
   			}
+  		} else {
+  			// If no distribution declared, load default module folder
+  			$this->loadModule(self::$moduleFolder);
   		}
-
-  		$this->loadModule(self::$moduleFolder);
 
   		$moduleUnloaded = [];
 
@@ -316,28 +311,42 @@ namespace RazyFramework
   		return false;
   	}
 
+  	public static function SetDefaultModulePath(string $path)
+  	{
+  		$path = realpath(preg_replace('/[\/\\\\]+/', \DIRECTORY_SEPARATOR, \DIRECTORY_SEPARATOR . trim($path) . \DIRECTORY_SEPARATOR));
+  		if (!$path || !file_exists($modulePath) || !is_dir($modulePath)) {
+  			new ThrowError('ModuleManager', '5001', 'The default module path does not exist or not a directory.');
+  		}
+
+  		self::$moduleFolder = $path;
+  	}
+
   	public static function SetModuleDistribution(array $distributions)
   	{
   		foreach ($distributions as $route => $modulePath) {
-        // If the path is a callback function, execute once and obtain the return value
-        if (is_callable($modulePath)) {
-          $modulePath = $modulePath();
-        }
+  			// If the path is a callback function, execute once and obtain the return value
+  			if (is_callable($modulePath)) {
+  				$modulePath = $modulePath();
+  			}
 
-        if (!is_string($modulePath)) {
-          new ThrowError('ModuleManager', '4001', $route . ' is not a valid path string.');
-        }
+  			if (!is_string($modulePath)) {
+  				new ThrowError('ModuleManager', '4001', $route . ' is not a valid path string.');
+  			}
 
+  			// Tidy route and module path
   			$route      = preg_replace('/[\/\\\\]+/', '/', '/' . trim($route) . '/');
   			$modulePath = preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $modulePath . \DIRECTORY_SEPARATOR);
+
   			if (!$modulePath || !file_exists($modulePath) || !is_dir($modulePath)) {
   				new ThrowError('ModuleManager', '4002', $path . ' does not exist or not a directory.');
   			}
 
+  			// Add distribution and ignore path
   			self::$moduleDistributions[$route] = $modulePath;
   			self::$ignorePath[$modulePath]     = true;
   		}
 
+  		// Sort module distribution mapping
   		if (count(self::$moduleDistributions)) {
   			uksort(self::$moduleDistributions, function ($path_a, $path_b) {
   				$count_a = substr_count($path_a, '/');
@@ -349,6 +358,26 @@ namespace RazyFramework
   				return ($count_a < $count_b) ? 1 : -1;
   			});
   		}
+  	}
+
+  	private function matchDistribution()
+  	{
+  		if (count(self::$moduleDistributions)) {
+  			foreach (self::$moduleDistributions as $route => $path) {
+  				if (0 === strpos($this->urlQuery, $route)) {
+  					// If module distribution is found
+  					self::$moduleFolder = $path;
+  					self::$distribution = $route;
+
+  					// Update the URL query
+  					$this->urlQuery = substr($this->urlQuery, strlen($route) - 1);
+
+  					return true;
+  				}
+  			}
+  		}
+
+  		return false;
   	}
 
   	private function doReady(ModulePackage $module)
@@ -441,10 +470,10 @@ namespace RazyFramework
 
   			// Get the module path
   			$subModuleFolder = $moduleFolder . $node . \DIRECTORY_SEPARATOR;
-        if (isset(self::$ignorePath[$subModuleFolder])) {
-          // Skip scanning the module distribution folder
-          continue;
-        }
+  			if (isset(self::$ignorePath[$subModuleFolder])) {
+  				// Skip scanning the module distribution folder
+  				continue;
+  			}
 
   			if (is_dir($subModuleFolder)) {
   				// Search the setting file
