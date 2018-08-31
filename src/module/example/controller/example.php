@@ -82,7 +82,7 @@ namespace RazyFramework
   				return $value . ' (Found)';
   			});
 
-        $elements = DOMParser::ParseFromURL('https://www.w3schools.com/css/css_syntax.asp');
+        $elements = DOMElement::ParseFromURL('https://www.w3schools.com/css/css_syntax.asp');
         foreach (['p', 'h2+p', 'h2~p', '.notranslate', '[class*="sidesection"]', '[name]', 'p:nth-child(2n+1)', 'p:nth-child(odd)', 'p:nth-child(even)'] as $selector) {
           $selectorBlock = $root->newBlock('selector');
           $selectorBlock->assign([

@@ -57,9 +57,9 @@ namespace RazyFramework
   			$collection = [];
 
   			foreach ($matches as $clip) {
-          if (!isset($clip[4]) && !$clip[5]) {
-      			new ThrowError('DOMElement', 4001, 'Invalid Selector syntax');
-          }
+  				if (!isset($clip[4]) && !$clip[5]) {
+  					new ThrowError('DOMElement', 4001, 'Invalid Selector syntax');
+  				}
 
   				$tagname   = '';
   				$attrValue = '';
@@ -69,16 +69,16 @@ namespace RazyFramework
   					preg_match('/:([\w-]++)(?:\((?|"(.+?)"|([^\(\)]++))\))?/', $clip[6], $filter);
   				}
 
-          if (isset($clip[4])) {
-    				if ($clip[2] || !$clip[3]) {
-    					$tagname = ($clip[2]) ? $clip[2] : $clip[4];
-    					if ($clip[2]) {
-    						$attrValue = $clip[4];
-    					}
-    				} elseif ($clip[3]) {
-              $attrValue = $clip[4];
-            }
-          }
+  				if (isset($clip[4])) {
+  					if ($clip[2] || !$clip[3]) {
+  						$tagname = ($clip[2]) ? $clip[2] : $clip[4];
+  						if ($clip[2]) {
+  							$attrValue = $clip[4];
+  						}
+  					} elseif ($clip[3]) {
+  						$attrValue = $clip[4];
+  					}
+  				}
 
   				$attributes = [];
   				if ($clip[5]) {
@@ -128,7 +128,8 @@ namespace RazyFramework
   			}
   		}
 
-      $domNodeList = new self(self::DOMTYPE_NODELIST);
+  		$domNodeList = new self(self::DOMTYPE_NODELIST);
+
   		return $domNodeList->append($elements);
   	}
 
@@ -146,64 +147,79 @@ namespace RazyFramework
   				}
 
   				return trim($text);
+    		case 'innerHTML':
+    		  if (self::DOMTYPE_TEXTNODE === $this->nodeType) {
+    		  	return $this->text;
+    		  }
 
-        case 'innerHTML':
-          if (self::DOMTYPE_TEXTNODE === $this->nodeType) {
-            return $this->text;
-          }
+    		  if (self::DOMTYPE_COMMENT === $this->nodeType) {
+    		  	return '<!--' . $this->text . '-->';
+    		  }
 
-          if (self::DOMTYPE_COMMENT === $this->nodeType) {
-            return '<!--' . $this->text . '-->';
-          }
+    		  if (self::DOMTYPE_ELEMENT === $this->nodeType) {
+    		  	$html = '<' . $this->nodeName;
+    		  	if ($this->attributes) {
+    		  		foreach ($this->attributes as $name => $value) {
+    		  			if (null !== $value) {
+    		  				$html .= ' ' . $name;
+    		  				if (true !== $value && $value) {
+    		  					$html .= '="' . $value . '"';
+    		  				}
+    		  			}
+    		  		}
+    		  	}
 
-          if (self::DOMTYPE_ELEMENT === $this->nodeType) {
-            $html = '<' . $this->nodeName;
-            if ($this->attributes) {
-              foreach ($this->attributes as $name => $value) {
-                if (null !== $value) {
-                  $html .= ' ' . $name;
-                  if (true !== $value && $value) {
-                    $html .= '="' . $value . '"';
-                  }
-                }
-              }
-            }
+    		  	if (preg_match('/area|base|br|hr|embed|iframe|img|input|link|meta|param|source|track/i', $this->nodeName)) {
+    		  		$html .= ' />';
+    		  	} else {
+    		  		$html .= '>';
+    		  		foreach ($this as $node) {
+    		  			$html .= $node->innerHTML;
+    		  		}
+    		  		$html .= '</' . $this->nodeName . '>';
+    		  	}
+    		  }
 
-            if (preg_match('/area|base|br|hr|embed|iframe|img|input|link|meta|param|source|track/i', $this->nodeName)) {
-              $html .= ' />';
-            } else {
-              $html .= '>';
-              foreach ($this as $node) {
-                $html .= $node->innerHTML;
-              }
-              $html .= '</' . $this->nodeName . '>';
-            }
-          }
+    		  if (self::DOMTYPE_NODELIST === $this->nodeType) {
+    		  	$html = '';
+    		  	foreach ($this as $node) {
+    		  		$html .= $node->innerHTML;
+    		  	}
+    		  }
 
-          if (self::DOMTYPE_NODELIST === $this->nodeType) {
-            $html = '';
-            foreach ($this as $node) {
-              $html .= $node->innerHTML;
-            }
-          }
+    		  return $html;
+    			case 'children':
+    				return $this->elementNodes;
+    			case 'nodeList':
+    				return $this;
+    			case 'parentNode':
+    			  return $this->parent;
+    			case 'nodeType':
+    			  return $this->nodeType;
+    			case 'nodeName':
+    			  return $this->nodeName;
+    	  }
+  	}
 
-          return $html;
+  	public static function Parse(string $html)
+  	{
+  		$domElement = new self(self::DOMTYPE_NODELIST, '', '');
 
-  			case 'children':
-  				return $this->elementNodes;
+  		return $domElement->html($html);
+  	}
 
-  			case 'nodeList':
-  				return $this;
+  	public static function ParseFromFile(string $path)
+  	{
+  		return self::ParseFromURL($path);
+  	}
 
-  			case 'parentNode':
-  			  return $this->parent;
+  	public static function ParseFromURL(string $path)
+  	{
+  		$domElement = new self(self::DOMTYPE_NODELIST, '', '');
 
-    		case 'nodeType':
-    		  return $this->nodeType;
+  		$html = file_get_contents($path);
 
-    		case 'nodeName':
-    		  return $this->nodeName;
-  	  }
+  		return $domElement->html($html);
   	}
 
   	public function getGuid()
@@ -213,12 +229,11 @@ namespace RazyFramework
 
   	public function html(string $html)
   	{
-      $this->storage = [];
-  		$html = trim($html);
+  		$this->storage = [];
+  		$html          = trim($html);
   		if ($html) {
-        $this->parse($html);
+  			$this->parseHTML($html);
   		}
-
 
   		return $this;
   	}
@@ -250,12 +265,12 @@ namespace RazyFramework
   		return $this;
   	}
 
-    public function removeAttr(string $attrName)
-    {
-      unset($this->attributes[$attrName]);
+  	public function removeAttr(string $attrName)
+  	{
+  		unset($this->attributes[$attrName]);
 
-      return $this;
-    }
+  		return $this;
+  	}
 
   	public function hasAttr(string $attrName)
   	{
@@ -308,7 +323,8 @@ namespace RazyFramework
 
   						$pos = strpos($value, $attr[3]);
   						if ('*=' === $attr[2] && false === $pos) {
-                echo $pos;
+  							echo $pos;
+
   							return false;
   						}
 
@@ -372,7 +388,7 @@ namespace RazyFramework
   		return false;
   	}
 
-  	private function parse(string $html)
+  	private function parseHTML(string $html)
   	{
   		$unparsed = $html;
   		// Search the opening delimiter
@@ -444,10 +460,7 @@ namespace RazyFramework
   			$pos = $matches[0][1] + strlen($matches[0][0]);
   		}
 
-      return [
-        $content,
-        '',
-      ];
+  		return [$content, ''];
   	}
   }
 }
