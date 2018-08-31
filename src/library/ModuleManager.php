@@ -17,8 +17,11 @@ namespace RazyFramework
   	const STATUS_READY_STAGE   = 2;
   	const STATUS_ROUTING_STAGE = 3;
 
-  	private static $instance     = null;
-  	private static $moduleFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
+  	private static $instance            = null;
+  	private static $moduleFolder        = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
+  	private static $moduleDistributions = [];
+  	private static $distribution        = '';
+  	private static $ignorePath          = [];
 
   	private $routeModule;
   	private $remapSorted         = [];
@@ -33,6 +36,7 @@ namespace RazyFramework
   	private $scriptParams        = [];
   	private $stage               = '';
   	private $reroute             = '';
+  	private $urlQuery            = '';
   	private $target;
 
   	public function __construct()
@@ -42,6 +46,19 @@ namespace RazyFramework
   		} else {
   			// Error: Loaded Twice
   			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
+  		}
+
+  		// Obtain the URL request query string
+  		if (!CLI_MODE) {
+  			$urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
+
+  			$pathInfo       = parse_url($urlQuery);
+  			$this->urlQuery = rtrim($pathInfo['path'], '/') . '/';
+  			$this->urlQuery = preg_replace('/^\/index.php/', '', $this->urlQuery);
+  		} else {
+  			if (count($argv)) {
+  				$this->urlQuery = array_shift($argv);
+  			}
   		}
 
   		$this->stage = self::STATUS_PRELOAD_STAGE;
@@ -78,6 +95,21 @@ namespace RazyFramework
   			return Database::GetConnection($connectionName);
   		});
 
+  		// Match the module distribution, if no module distribution declared, use default module path.
+  		if (count(self::$moduleDistributions)) {
+  			foreach (self::$moduleDistributions as $route => $path) {
+  				if (0 === strpos($this->urlQuery, $route)) {
+  					// If module distribution is found
+  					self::$moduleFolder = $path;
+            self::$distribution = $route;
+
+  					// Update the URL query
+  					$this->urlQuery = substr($this->urlQuery, strlen($route) - 1);
+  					break;
+  				}
+  			}
+  		}
+
   		$this->loadModule(self::$moduleFolder);
 
   		$moduleUnloaded = [];
@@ -96,10 +128,10 @@ namespace RazyFramework
   		// If all module ready, change to ready stage
   		$this->stage = self::STATUS_READY_STAGE;
 
-      // Prepare Routing
-      foreach ($this->moduleReady as $module) {
-        $module->prepareRouting();
-      }
+  		// Prepare Routing
+  		foreach ($this->moduleReady as $module) {
+  			$module->prepareRouting();
+  		}
 
   		if (CLI_MODE) {
   			// Cli Mode, get arguments and parameters
@@ -126,6 +158,11 @@ namespace RazyFramework
 
   			$this->scriptRoute = preg_replace('/\/+/', '/', '/' . implode('/', $args) . '/');
   		}
+  	}
+
+  	public function getURLQuery()
+  	{
+  		return $this->urlQuery;
   	}
 
   	public static function GetInstance()
@@ -279,14 +316,39 @@ namespace RazyFramework
   		return false;
   	}
 
-  	public static function SetModuleFolder(string $path)
+  	public static function SetModuleDistribution(array $distributions)
   	{
-  		$modulePath = trim($path);
-  		$modulePath = realpath(preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $modulePath));
-  		if (!file_exists($modulePath) || !is_dir($modulePath)) {
-  			new ThrowError('ModuleManager', '4001', $path . ' does not exist or not a directory.');
+  		foreach ($distributions as $route => $modulePath) {
+        // If the path is a callback function, execute once and obtain the return value
+        if (is_callable($modulePath)) {
+          $modulePath = $modulePath();
+        }
+
+        if (!is_string($modulePath)) {
+          new ThrowError('ModuleManager', '4001', $route . ' is not a valid path string.');
+        }
+
+  			$route      = preg_replace('/[\/\\\\]+/', '/', '/' . trim($route) . '/');
+  			$modulePath = preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $modulePath . \DIRECTORY_SEPARATOR);
+  			if (!$modulePath || !file_exists($modulePath) || !is_dir($modulePath)) {
+  				new ThrowError('ModuleManager', '4002', $path . ' does not exist or not a directory.');
+  			}
+
+  			self::$moduleDistributions[$route] = $modulePath;
+  			self::$ignorePath[$modulePath]     = true;
   		}
-  		self::$moduleFolder = $modulePath . \DIRECTORY_SEPARATOR;
+
+  		if (count(self::$moduleDistributions)) {
+  			uksort(self::$moduleDistributions, function ($path_a, $path_b) {
+  				$count_a = substr_count($path_a, '/');
+  				$count_b = substr_count($path_b, '/');
+  				if ($count_a === $count_b) {
+  					return 0;
+  				}
+
+  				return ($count_a < $count_b) ? 1 : -1;
+  			});
+  		}
   	}
 
   	private function doReady(ModulePackage $module)
@@ -295,7 +357,7 @@ namespace RazyFramework
   			// Get module require list
   			$require = $module->getRequire();
 
-        unset($this->moduleLoaded[$module->getCode()]);
+  			unset($this->moduleLoaded[$module->getCode()]);
 
   			// Trigger the require module' ready event first if there is any module cannot be loaded
   			// Ignore module ready stage
@@ -379,6 +441,11 @@ namespace RazyFramework
 
   			// Get the module path
   			$subModuleFolder = $moduleFolder . $node . \DIRECTORY_SEPARATOR;
+        if (isset(self::$ignorePath[$subModuleFolder])) {
+          // Skip scanning the module distribution folder
+          continue;
+        }
+
   			if (is_dir($subModuleFolder)) {
   				// Search the setting file
   				if (file_exists($subModuleFolder . 'config.php')) {

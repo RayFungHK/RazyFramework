@@ -15,8 +15,8 @@ namespace RazyFramework
   require SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'system' . \DIRECTORY_SEPARATOR . 'core.inc.php';
 
 	// Setup the module path from global config
-	if (isset($configuration['module_path']) && trim($configuration['module_path'])) {
-		ModuleManager::SetModuleFolder($configuration['module_path']);
+	if (array_key_exists('module_distribution', $configuration) && is_array($configuration['module_distribution'])) {
+		ModuleManager::SetModuleDistribution($configuration['module_distribution']);
 	}
 
   if (CLI_MODE) {
@@ -35,17 +35,11 @@ namespace RazyFramework
   		ob_start();
   	}
 
-  	$urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
-
-  	$urlQuery         = parse_url($urlQuery);
-  	$urlQuery['path'] = rtrim($urlQuery['path'], '/') . '/';
-  	$urlQuery['path'] = preg_replace('/^\/index.php/', '', $urlQuery['path']);
-
-  	define('REQUEST_ROUTE', $urlQuery['path']);
-
   	// Load module
   	$moduleManager = new ModuleManager();
-  	if (!$moduleManager->route($urlQuery['path'])) {
+  	define('REQUEST_ROUTE', $moduleManager->getURLQuery());
+
+  	if (!$moduleManager->route(REQUEST_ROUTE)) {
   		header('HTTP/1.0 404 Not Found');
   		die();
   	}

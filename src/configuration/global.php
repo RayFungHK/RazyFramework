@@ -25,4 +25,10 @@ return [
 
 	// Force Razy Frameworks use https protocal
 	'force_ssl' => false,
+
+	'module_distribution' => [
+		'/admin' => function() {
+			return SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR . 'admin';
+		},
+	],
 ];

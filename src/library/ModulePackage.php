@@ -104,7 +104,7 @@ namespace RazyFramework
   			if (is_array($settings['route'])) {
   				foreach ($settings['route'] as $routeName => $namespace) {
   					$routeName = trim($routeName);
-  					if (!$routeName || !$this->isValidNamespace($namespace)) {
+  					if (!$routeName || (!$namespace || (!is_callable($namespace) && !is_string($namespace)))) {
   						new ThrowError('ModulePackage', '3004', 'Invalid route\'s class mapping format');
   					}
   					$this->routeMapping[$routeName] = $namespace;
