@@ -33,7 +33,7 @@ namespace RazyFramework
   		$this->itemPerPage = min($settings['item_per_page'] ?? 20, 5);
   		$this->currentPage = max((int) ($this->queryString[$pageParam] ?? 1), 1);
 
-  		unset($this->queryString['page']);
+  		unset($this->queryString[$pageParam]);
   	}
 
   	public static function SetParser(callable $callback)
