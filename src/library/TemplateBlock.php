@@ -97,7 +97,7 @@ namespace RazyFramework
   				$blockName = $content->getBlockName();
 
   				// Define a temporary name for post process
-  				$tempName = '{__POSTPARSE#' . sprintf('%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff)) . '}';
+  				$tempName = '{__POSTPARSE#' . bin2hex(random_bytes(4)) . '}';
 
   				// Put nest structure content into seperated list
   				$seperatedBlock[$tempName] = '';

@@ -15,7 +15,7 @@ namespace RazyFramework
   {
   	private $statement;
 
-  	public function __construct(DatabaseStatement $statement)
+  	public function __construct(\PDOStatement $statement)
   	{
   		$this->statement = $statement;
   	}

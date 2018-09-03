@@ -14,6 +14,8 @@ namespace RazyFramework
   class DatabaseStatement
   {
   	private static $lastResourceId = 0;
+    private const REGEX_WHERE = '([|,])?(!)?((:?[\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.(?4))?|\{\$(?:[^{}\\\\]++|\\\\.)*\}|\"(?:[^"\\\\]++|\\\\.)*\"|\?|(?:-?\d+(?:\.\d+)?)|\{\?(?:[^{}\\\\]++|\\\\.)*\})(?(2)|(?:(!=|[<>]=?|=\*|=)((?3))))?(?(1)|([|,])?)';
+    private const REGEX_SELECT = '([><+\-\*]|\G)?(?:(?:(([\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.((?3)))?)|\{\$([\w-]+) ((?3))\})(?:\[(?:({\?(?:[^{}\\\\]++|\\\\.)*}|(?2)|"(?:[^"\\\\]++|\\\\.)*"|(?:-?\d+(?:\.\d+)?)|:[\w]+)(?:(!=|=\||=\*|=)((?5)))?|\?((?:[^\[\]\\\\]++|\\\\.)+))\])?)(?(1)|([><+\-\*])?)';
 
   	private $dbObject;
   	private $parameters        = [];
@@ -25,8 +27,6 @@ namespace RazyFramework
   	private $fetchLength       = '';
   	private $selectSyntax      = '';
   	private $whereSyntax       = '';
-  	private $whereRegex        = '([|,])?(!)?((:?[\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.(?4))?|\{\$(?:[^{}\\\\]++|\\\\.)*\}|\"(?:[^"\\\\]++|\\\\.)*\"|\?|(?:-?\d+(?:\.\d+)?)|\{\?(?:[^{}\\\\]++|\\\\.)*\})(?(2)|(?:(!=|[<>]=?|=\*|=)((?3))))?(?(1)|([|,])?)';
-  	private $selectRegex       =  '([><+\-\*]|\G)?(?:(?:(([\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.((?3)))?)|\{\$([\w-]+) ((?3))\})(?:\[(?:({\?(?:[^{}\\\\]++|\\\\.)*}|(?2)|"(?:[^"\\\\]++|\\\\.)*"|(?:-?\d+(?:\.\d+)?)|:[\w]+)(?:(!=|=\||=\*|=)((?5)))?|\?((?:[^\[\]\\\\]++|\\\\.)+))\])?)(?(1)|([><+\-\*])?)';
 
   	public function __construct(Database $dbObject, string $sql = '')
   	{
@@ -306,10 +306,10 @@ namespace RazyFramework
   			} elseif (is_array($statement)) {
   				$result[] = $this->parseSyntax($statement);
   			} else {
-  				if (!preg_match('/^(?:' . $this->selectRegex . ')+?$/', $statement)) {
+  				if (!preg_match('/^(?:' . self::REGEX_SELECT . ')+?$/', $statement)) {
   					new ThrowError('Database', 4001, 'Invalid Select-Syntax format.');
   				} else {
-  					if (preg_match_all('/' . $this->selectRegex . '/', $statement, $matches, PREG_SET_ORDER)) {
+  					if (preg_match_all('/' . self::REGEX_SELECT . '/', $statement, $matches, PREG_SET_ORDER)) {
   						$firstTable = null;
   						foreach ($matches as $clip) {
   							// 1: Prefix Join
@@ -399,10 +399,10 @@ namespace RazyFramework
   			} elseif (is_array($statement)) {
   				$result[] = $this->parseWhereSyntax($statement);
   			} else {
-  				if (!preg_match('/^(?:' . $this->whereRegex . ')+?$/', $statement)) {
+  				if (!preg_match('/^(?:' . self::REGEX_WHERE . ')+?$/', $statement)) {
   					new ThrowError('DatabaseStatement', 3001, 'Invalid Where-Syntax format.');
   				} else {
-  					if (preg_match_all('/' . $this->whereRegex . '/', $statement, $matches, PREG_SET_ORDER)) {
+  					if (preg_match_all('/' . self::REGEX_WHERE . '/', $statement, $matches, PREG_SET_ORDER)) {
   						foreach ($matches as $clip) {
   							// 1: Prefix Condition
   							// 2: Negative symbol (!)
