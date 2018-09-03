@@ -14,5 +14,5 @@ return function () {
 		return false;
 	}
 
-	return filter_var($this->value, FILTER_VALIDATE_EMAIL);
+	return false !== filter_var($this->value, FILTER_VALIDATE_EMAIL);
 };

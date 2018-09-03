@@ -69,7 +69,7 @@ namespace RazyFramework
   		self::$dbConnectionLists[$connectionName] = $this;
   	}
 
-  	public static function GetConnection($connectionName)
+  	public static function GetConnection(string $connectionName)
   	{
   		if (!isset(self::$dbConnectionLists[$connectionName])) {
   			self::$dbConnectionLists[$connectionName] = new self($connectionName);
@@ -78,7 +78,7 @@ namespace RazyFramework
   		return self::$dbConnectionLists[$connectionName];
   	}
 
-  	public function connect($host, $username, $password, $database)
+  	public function connect(string $host, string $username, string $password, string $database)
   	{
   		try {
   			$connectionString = 'mysql:host=' . $host . ';dbname=' . $database . ';charset=UTF8';
@@ -94,7 +94,7 @@ namespace RazyFramework
   		}
   	}
 
-  	public function lazy($sql, $parameters = [])
+  	public function lazy($sql, array $parameters = [])
   	{
   		return $this->query($sql, $parameters)->fetch();
   	}
@@ -104,15 +104,17 @@ namespace RazyFramework
   		return new DatabaseStatement($this, $sql);
   	}
 
-  	public function prepare($sql, $parameters = [])
+  	public function prepare($sql, array $parameters = [])
   	{
   		if ($sql instanceof DatabaseTable) {
   			$dbs = new DatabaseStatement($this, $sql->getSyntax());
   		} elseif ($sql instanceof DatabaseStatement) {
   			$dbs = $sql;
-  		} else {
+  		} elseif (is_string($sql)) {
   			$dbs = $this->createStatement($sql);
-  		}
+  		} else {
+        new ThrowError('Database', 1001, 'Invalid SQL statement object, it should be a DatabaseTable, DatabaseStatement or string.');
+      }
 
       $dbs->setParameter($parameters);
 
@@ -122,7 +124,7 @@ namespace RazyFramework
   		return $dbs;
   	}
 
-  	public function commit($rollback = false)
+  	public function commit(bool $rollback = false)
   	{
   		if (count($this->prepareList)) {
   			$this->dba->beginTransaction();
@@ -142,7 +144,7 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function query($sql, $parameters = [])
+  	public function query($sql, array $parameters = [])
   	{
   		++$this->queried;
   		$dbs       = $this->prepare($sql, $parameters);
@@ -212,7 +214,7 @@ namespace RazyFramework
   		return $this->dba;
   	}
 
-  	public function select(string $syntax, $column = '', $subquery = [])
+  	public function select(string $syntax, string $column = '', array $subquery = [])
   	{
   		$dbs = new DatabaseStatement($this);
       $dbs->select($syntax, $column, $subquery);

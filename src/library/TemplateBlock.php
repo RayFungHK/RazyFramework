@@ -20,26 +20,23 @@ namespace RazyFramework
   	private static $modifiers        = [];
   	private static $dynamicModifiers = [];
 
-  	public function __construct($structure, $tagName)
+  	public function __construct(TemplateStructure $structure, string $tagName)
   	{
   		$this->tagName = $tagName;
-  		if ('RazyFramework\\TemplateStructure' !== get_class($structure)) {
-  			new ThrowError('TemplateBlock', '1001', 'Invalid TemplateStructure object.');
-  		}
   		$this->structure = $structure;
   	}
 
-  	public function getBlockList($blockName)
+  	public function getBlockList(string $blockName)
   	{
-  		return (isset($this->blockList[$blockName])) ? $this->blockList[$blockName] : [];
+  		return $this->blockList[$blockName] ?? [];
   	}
 
-  	public function blockCount($blockName)
+  	public function blockCount(string $blockName)
   	{
   		return (isset($this->blockList[$blockName])) ? count($this->blockList[$blockName]) : 0;
   	}
 
-  	public function hasBlock($blockName, $tagName = '')
+  	public function hasBlock(string $blockName, string $tagName = '')
   	{
   		$blockName = trim($blockName);
   		if ($tagName) {
@@ -51,7 +48,7 @@ namespace RazyFramework
   		}
   	}
 
-  	public function newBlock($blockName, $tagName = '')
+  	public function newBlock(string $blockName, string $tagName = '')
   	{
   		$blockName = trim($blockName);
   		if ($this->structure->hasBlock($blockName)) {
@@ -126,14 +123,14 @@ namespace RazyFramework
   		return $outputContent;
   	}
 
-  	public function hasVariable($variable)
+  	public function hasVariable(string $variable)
   	{
   		$variable = trim($variable);
 
   		return array_key_exists($variable, $this->variableList);
   	}
 
-  	public function getVariable($variable)
+  	public function getVariable(string $variable)
   	{
   		$variable = trim($variable);
 
@@ -170,7 +167,7 @@ namespace RazyFramework
   		}
   	}
 
-  	private function parseModifier($matches, $wrapped = null)
+  	private function parseModifier(array $matches, string $wrapped = null)
   	{
   		// If there is a $ at the beginning, parse as variable tag
   		if ($matches[1][0]) {
@@ -239,7 +236,12 @@ namespace RazyFramework
   				return ($value) ? $this->parseTag($wrapped) : '';
   			}
 
-  			return $value;
+  			// It value is not a string, return empty string
+        if (null === $value || is_string($value) || is_scalar($value) || (is_object($value) && method_exists($value, '__toString'))) {
+  				return $value;
+  			}
+
+  			return '';
   		}
   		$funcname   = $matches[2][0];
   		$clipsCount = preg_match_all('/\h+(\w+)(?:=(?|(\w+)|"((?>[^"\\\\]+|\\\\.)*)"))?/', $matches[3][0], $clips, PREG_SET_ORDER);
@@ -274,7 +276,7 @@ namespace RazyFramework
   		return $matches[0][0];
   	}
 
-  	private function parseClosingTag($matches, $outputContent)
+  	private function parseClosingTag(array $matches, string $outputContent)
   	{
   		// This procedure is guaranteed the variable tag or function tag is balanced
   		$matchedTag = $matches;
@@ -328,7 +330,7 @@ namespace RazyFramework
   		return [$this->parseModifier($matchedTag, null), $outputContent];
   	}
 
-  	private function parseTag($outputContent)
+  	private function parseTag(string $outputContent)
   	{
   		$result   = '';
   		$unparsed = $outputContent;
@@ -353,7 +355,7 @@ namespace RazyFramework
   		return $result;
   	}
 
-  	private static function GetModifier($modifier)
+  	private static function GetModifier(string $modifier)
   	{
   		if (!array_key_exists($modifier, self::$modifiers)) {
   			self::$modifiers[$modifier] = null;
@@ -377,7 +379,7 @@ namespace RazyFramework
   		return self::$modifiers[$modifier];
   	}
 
-  	private static function CallModifier($type, $modifier, object $bindObject)
+  	private static function CallModifier(string $type, string $modifier, object $bindObject)
   	{
   		$modifierName = $type . '.' . $modifier;
   		if (!($modifier = self::GetModifier($modifierName))) {

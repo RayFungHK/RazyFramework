@@ -25,7 +25,7 @@ namespace RazyFramework
   	private $blockPointer;
   	private $templateManager;
 
-  	public function __construct($templateManager, $blockName, &$tplContent, $blockType = 'BLOCK', $parentStructure = null)
+  	public function __construct(TemplateManager $templateManager, string $blockName, array &$tplContent, string $blockType = 'BLOCK', TemplateStructure $parentStructure = null)
   	{
   		// Setup the block name, type and parent
   		$this->blockName       = $blockName;
@@ -88,21 +88,18 @@ namespace RazyFramework
   		return $this->blockName;
   	}
 
-  	public function hasBlock($blockName)
+  	public function hasBlock(string $blockName)
   	{
   		$blockName = trim($blockName);
 
   		return isset($this->structureMapping[$blockName]);
   	}
 
-  	public function getBlockStructure($blockName)
+  	public function getBlockStructure(string $blockName)
   	{
   		$blockName = trim($blockName);
-  		if (isset($this->structureMapping[$blockName])) {
-  			return $this->structureMapping[$blockName];
-  		}
 
-  		return null;
+  		return $this->structureMapping[$blockName] ?? null;
   	}
   }
 }

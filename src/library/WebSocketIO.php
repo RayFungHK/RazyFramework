@@ -13,7 +13,7 @@ namespace RazyFramework
 {
   class WebSocketIO
   {
-  	public static function Mask($payload, $type = 'text', $masked = true)
+  	public static function Mask(string $payload, string $type = 'text', bool $masked = true)
   	{
   		$length    = strlen($payload);
   		$frameHead = [];
@@ -84,7 +84,7 @@ namespace RazyFramework
   		return $frame;
   	}
 
-  	public static function Unmask($data, &$decoded = '')
+  	public static function Unmask(string $data, array &$decoded = [])
   	{
   		if (!isset($decoded)) {
   			$decoded = [

@@ -21,7 +21,7 @@ namespace RazyFramework
   		parent::__construct((is_array($blockList)) ? $blockList : [$blockList]);
   	}
 
-  	public function find($selector)
+  	public function find(string $selector)
   	{
   		// Trim selector, remove repeatly slash
   		$selector = trim(preg_replace('/\/+/', '/', $selector . '/'));
@@ -163,7 +163,7 @@ namespace RazyFramework
   		}
   	}
 
-  	public function each($callback)
+  	public function each(callable $callback)
   	{
   		if (is_callable($callback)) {
   			if (count($this)) {
@@ -189,7 +189,7 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function filter($callback)
+  	public function filter(callable $callback)
   	{
   		if (is_callable($callback)) {
   			if (count($this)) {
@@ -221,7 +221,7 @@ namespace RazyFramework
   		}
   	}
 
-  	private static function GetFilter($filter)
+  	private static function GetFilter(string $filter)
   	{
   		if (!array_key_exists($filter, self::$filters)) {
   			self::$filters[$filter] = null;
@@ -244,7 +244,7 @@ namespace RazyFramework
   		return self::$filters[$filter];
   	}
 
-  	private static function CallFilter($filterName, $bindObject)
+  	private static function CallFilter(string $filterName, object $bindObject)
   	{
   		if (!($filter = self::GetFilter($filterName))) {
   			new ThrowError('TemplateBlockSet', '3001', 'Cannot load [' . $filterName . '] filter function.');

@@ -177,12 +177,12 @@ namespace RazyFramework
   		return $this->stage;
   	}
 
-  	public function moduleisReady($moduleCode)
+  	public function moduleisReady(string $moduleCode)
   	{
   		return isset($this->moduleReady[$moduleCode]);
   	}
 
-  	public function loadLibrary($class)
+  	public function loadLibrary(string $class)
   	{
   		$classPath = str_replace('\\', \DIRECTORY_SEPARATOR, $class);
   		foreach ($this->moduleReady as $module_code => $module) {
@@ -457,7 +457,7 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	private function loadModule($moduleFolder)
+  	private function loadModule(string $moduleFolder)
   	{
   		if (!file_exists($moduleFolder) || !is_dir($moduleFolder)) {
   			return false;

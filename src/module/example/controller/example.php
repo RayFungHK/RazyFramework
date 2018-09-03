@@ -15,7 +15,8 @@ namespace RazyFramework
   {
   	public function main()
   	{
-      echo 'Default Module Distribution';
+      $tplManager = $this->load->view('main')->addToQueue();
+      $tplManager->output();
   	}
   }
 }

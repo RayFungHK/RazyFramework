@@ -23,7 +23,7 @@ namespace RazyFramework
   	private static $environmentVariableList = [];
   	private static $outputQueue             = [];
 
-  	public function __construct($tplPath, $tplName = '')
+  	public function __construct(string $tplPath, string $tplName = '')
   	{
   		// Read file content
   		if (!file_exists($tplPath)) {
@@ -55,7 +55,7 @@ namespace RazyFramework
 		//self::$LoadedExTemplate[$this->tplName] = $this;
   	}
 
-  	public function __invoke($selector)
+  	public function __invoke(string $selector)
   	{
   		// Remove repeatly slash
   		$selector = trim(preg_replace('/\/+/', '/', $selector));
@@ -75,7 +75,7 @@ namespace RazyFramework
   		return $blockSet->find($selector);
   	}
 
-  	public function gotoBlock($blockName)
+  	public function gotoBlock(string $blockName)
   	{
   		$blockName = preg_replace('/\/+/', '/', trim($blockName));
   		if ($blockName) {
@@ -115,21 +115,21 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function hasGlobalVariable($variable)
+  	public function hasGlobalVariable(string $variable)
   	{
   		$variable = trim($variable);
 
   		return array_key_exists($variable, $this->variableList);
   	}
 
-  	public function getGlobalVariable($variable)
+  	public function getGlobalVariable(string $variable)
   	{
   		$variable = trim($variable);
 
   		return (array_key_exists($variable, $this->variableList)) ? $this->variableList[$variable] : null;
   	}
 
-  	public function output($returnAsValue = false)
+  	public function output(bool $returnAsValue = false)
   	{
   		if ($returnAsValue) {
   			return $this->blockTree->output();
@@ -137,7 +137,7 @@ namespace RazyFramework
   		echo $this->blockTree->output();
   	}
 
-  	public function addToQueue($templateName = '')
+  	public function addToQueue(string $templateName = '')
   	{
   		$templateName = trim($templateName);
   		if (!$templateName) {
@@ -159,14 +159,14 @@ namespace RazyFramework
   		}
   	}
 
-  	public static function HasEnvironmentVariable($variable)
+  	public static function HasEnvironmentVariable(string $variable)
   	{
   		$variable = trim($variable);
 
   		return array_key_exists($variable, self::$environmentVariableList);
   	}
 
-  	public static function GetEnvironmentVariable($variable)
+  	public static function GetEnvironmentVariable(string $variable)
   	{
   		$variable = trim($variable);
 

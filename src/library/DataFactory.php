@@ -15,8 +15,6 @@ namespace RazyFramework
   {
   	private static $preventWarning  = true;
   	private static $functionMapping = [];
-  	private $convertor;
-  	private $reflection;
   	private $pointer;
   	private $iterator;
 
@@ -27,8 +25,8 @@ namespace RazyFramework
   		} elseif (!is_array($data) && !array_key_exists('ArrayAccess', class_implements($data))) {
   			$data = [$data];
   		}
-  		$this->convertor = new DataConvertor();
   		$this->iterator  = $this->getIterator();
+
   		parent::__construct($data);
   	}
 
@@ -53,11 +51,14 @@ namespace RazyFramework
   		return call_user_func_array(self::$functionMapping[$funcName]->bindTo($this), $args);
   	}
 
-  	public function __invoke($index)
+  	public function __invoke(string $index)
   	{
-  		$this->pointer = $index;
+  		$index = trim($index);
+  		if (!$index) {
+  			new ThrowError('DataFactory', '2001', 'The invoke index cannot be empty.');
+  		}
 
-  		return $this->convertor->setPointer($this[$index], $this->reflection()->bindTo($this));
+  		return new DataConvertor($this, $index);
   	}
 
   	public static function DisableWarning()
@@ -77,19 +78,7 @@ namespace RazyFramework
   			return $this->iterator[$index];
   		}
 
-      $reference = null;
-  		return $reference;
-  	}
-
-  	private function reflection()
-  	{
-  		if (!$this->reflection) {
-  			$this->reflection = function ($value) {
-  				$this[$this->pointer] = $value;
-  			};
-  		}
-
-  		return $this->reflection;
+  		return null;
   	}
   }
 }

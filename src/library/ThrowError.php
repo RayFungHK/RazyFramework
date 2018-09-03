@@ -13,7 +13,7 @@ namespace RazyFramework
 {
   class ThrowError
   {
-  	public function __construct($errorModule, $errorCode, $message)
+  	public function __construct(string $errorModule, $errorCode, string $message)
   	{
   		if (CLI_MODE) {
   			die('[' . $errorModule . '] #' . $errorCode . ': ' . $message);

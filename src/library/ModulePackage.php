@@ -165,7 +165,7 @@ namespace RazyFramework
 
   	public function getSetting(string $variable)
   	{
-  		return (isset($this->additionalSetting[$variable])) ? $this->additionalSetting[$variable] : null;
+  		return $this->additionalSetting[$variable] ?? null;
   	}
 
   	public function getCode()
@@ -250,7 +250,7 @@ namespace RazyFramework
   		return false;
   	}
 
-  	public function route($args)
+  	public function route(array $args)
   	{
   		if (self::MODULE_STATUS_ROUTABLE !== $this->preloadStatus) {
   			if (self::MODULE_STATUS_NOT_ROUTABLE === $this->preloadStatus) {
@@ -318,7 +318,7 @@ namespace RazyFramework
   		return $this->routeName;
   	}
 
-  	public function trigger($mapping, $args)
+  	public function trigger(string $mapping, array $args)
   	{
   		if ($this->preloadStatus <= 1) {
   			new ThrowError('ModulePackage', '4006', 'System is not ready, you cannot trigger in preload stage.');
@@ -348,7 +348,7 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function execute($mapping, $args)
+  	public function execute(string $mapping, array $args)
   	{
   		if ($this->preloadStatus <= 1) {
   			new ThrowError('ModulePackage', '4007', 'System is not ready, you cannot execute in preload stage.');
@@ -379,7 +379,7 @@ namespace RazyFramework
   		return null;
   	}
 
-  	private function isValidNamespace($namespace)
+  	private function isValidNamespace(string $namespace)
   	{
   		$namespace = trim($namespace);
   		if ($namespace && preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+\.[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+$/', $namespace)) {
@@ -389,7 +389,7 @@ namespace RazyFramework
   		return false;
   	}
 
-  	private function getController($className)
+  	private function getController(string $className)
   	{
   		// Search defined controller from list
   		if (isset($this->controllerList[$className])) {

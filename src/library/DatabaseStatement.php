@@ -28,7 +28,7 @@ namespace RazyFramework
   	private $whereRegex        = '([|,])?(!)?((:?[\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.(?4))?|\{\$(?:[^{}\\\\]++|\\\\.)*\}|\"(?:[^"\\\\]++|\\\\.)*\"|\?|(?:-?\d+(?:\.\d+)?)|\{\?(?:[^{}\\\\]++|\\\\.)*\})(?(2)|(?:(!=|[<>]=?|=\*|=)((?3))))?(?(1)|([|,])?)';
   	private $selectRegex       =  '([><+\-\*]|\G)?(?:(?:(([\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.((?3)))?)|\{\$([\w-]+) ((?3))\})(?:\[(?:({\?(?:[^{}\\\\]++|\\\\.)*}|(?2)|"(?:[^"\\\\]++|\\\\.)*"|(?:-?\d+(?:\.\d+)?)|:[\w]+)(?:(!=|=\||=\*|=)((?5)))?|\?((?:[^\[\]\\\\]++|\\\\.)+))\])?)(?(1)|([><+\-\*])?)';
 
-  	public function __construct(Database $dbObject, $sql = '')
+  	public function __construct(Database $dbObject, string $sql = '')
   	{
   		$sql = trim($sql);
   		if (preg_match('/^\(/', $sql)) {
@@ -41,7 +41,7 @@ namespace RazyFramework
 
   			if (preg_match('/^(SELECT|UPDATE|DELETE\s+FROM)\s+/i', $this->sql)) {
   				$this->whereable   = true;
-  				$this->whereSyntax = (isset($splitted[1])) ? $splitted[1] : '';
+  				$this->whereSyntax = $splitted[1] ?? '';
   				if (preg_match('/^((?:[\'"`])|(\()).+?(?(2)\)|\1)(*SKIP)(*FAIL)|SELECT\s+(.+?)\s+FROM\s+(.++)/i', $this->sql, $matches)) {
   					if (!isset($matches[3])) {
   						new ThrowError('DatabaseStatement', 1003, 'SELECT syntax does not contain any column.');
@@ -79,7 +79,7 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function limit(int $start, $length = 20)
+  	public function limit(int $start, int $length = 20)
   	{
   		$this->startRecord = max($start, 0);
   		$this->fetchLength = max((int) $length, 5);
@@ -87,7 +87,7 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function select(string $syntax, $column = '', $subquery = [])
+  	public function select(string $syntax, string $column = '', array $subquery = [])
   	{
   		if (!$column || !is_string($column)) {
   			$column = '*';
@@ -105,17 +105,17 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function lazy($parameters = [])
+  	public function lazy(array $parameters = [])
   	{
   		return $this->dbObject->lazy($this, $parameters);
   	}
 
-  	public function query($parameters = [])
+  	public function query(array $parameters = [])
   	{
   		return $this->dbObject->query($this, $parameters);
   	}
 
-  	public function prepare($parameters = [])
+  	public function prepare(array $parameters = [])
   	{
   		return $this->dbObject->prepare($this, $parameters);
   	}
@@ -191,7 +191,7 @@ namespace RazyFramework
   		return $this->resourceId;
   	}
 
-  	private function searchParameters($sql = '')
+  	private function searchParameters(string $sql = '')
   	{
   		$this->parameters = [];
   		if ($sql) {
@@ -296,7 +296,7 @@ namespace RazyFramework
   		return $joinType;
   	}
 
-  	private function parseSelectSyntax(array $parsedStatement, $subquery = [])
+  	private function parseSelectSyntax(array $parsedStatement, array $subquery = [])
   	{
   		$result      = [];
   		$syntaxEnded = false;

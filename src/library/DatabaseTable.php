@@ -66,7 +66,7 @@ namespace RazyFramework
   		$this->tableName = $tableName;
   	}
 
-  	public function createColumn(string $name, $type = Database::COLUMN_TEXT, $setting = [])
+  	public function createColumn(string $name, int $type = Database::COLUMN_TEXT, array $setting = [])
   	{
   		$name = trim($name);
 

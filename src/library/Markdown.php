@@ -30,32 +30,30 @@ namespace RazyFramework
   		}
   	}
 
-  	public function allowStripTags($enable = false)
+  	public function allowStripTags(bool $enable = false)
   	{
   		$this->allowStripTags = (bool) $enable;
 
   		return $this;
   	}
 
-  	public function setAllowableTags($taglist)
+  	public function setAllowableTags(string $taglist)
   	{
-  		if (is_string($taglist)) {
-  			$taglist       = explode(',', $taglist);
-  			$allowableTags = [];
+			$taglist       = explode(',', $taglist);
+			$allowableTags = [];
 
-  			$this->allowableTags = '';
-  			foreach ($taglist as $tag) {
-  				if (preg_match('/^\w++$/', $tag)) {
-  					$allowableTags[$tag] = $tag;
-  				}
-  			}
-  			$this->allowableTags = implode('|', $allowableTags);
-  		}
+			$this->allowableTags = '';
+			foreach ($taglist as $tag) {
+				if (preg_match('/^\w++$/', $tag)) {
+					$allowableTags[$tag] = $tag;
+				}
+			}
+			$this->allowableTags = implode('|', $allowableTags);
 
   		return $this;
   	}
 
-  	public function loadFile($path)
+  	public function loadFile(string $path)
   	{
   		if (!file_exists($path)) {
   			new ThrowError('Markdown', '1001', 'Cannot load content from file, file not found.');
@@ -108,7 +106,7 @@ namespace RazyFramework
   		return $content;
   	}
 
-  	private function loadContent($text)
+  	private function loadContent(string $text)
   	{
   		$this->defined = [];
   		$this->content = '';
@@ -173,24 +171,24 @@ namespace RazyFramework
   		}
   	}
 
-  	private function isDefined($variable)
+  	private function isDefined(string $variable)
   	{
   		return isset($this->defined[strtolower($variable)]);
   	}
 
-  	private function getDefined($variable)
+  	private function getDefined(string $variable)
   	{
   		return trim(($this->isDefined($variable)) ? $this->parseURL($this->defined[strtolower($variable)]) : $variable);
   	}
 
-  	private function parseURL($text)
+  	private function parseURL(string $text)
   	{
   		$text = trim($text);
 
   		return (preg_match('/^<(.+)>$/', $text, $matches)) ? $matches[1] : $text;
   	}
 
-  	private function parseVariable($text, $context = false)
+  	private function parseVariable(string $text, bool $context = false)
   	{
   		$parsedVariable = [];
   		$text           = preg_replace_callback(
@@ -252,24 +250,20 @@ namespace RazyFramework
   		return (count($parsedVariable)) ? str_replace(array_keys($parsedVariable), array_values($parsedVariable), $text) : $text;
   	}
 
-  	private function parseModifier($content)
+  	private function parseModifier(string $content)
   	{
   		if (!count(self::$modifiers)) {
   			return $content;
   		}
 
   		// Parse Markdown Modifier
-  		$content = preg_replace_callback(
-		self::$modifierPattern,
-		function ($matches) {
-			if (isset(self::$modifiers[$matches[1]])) {
-				return call_user_func(self::$modifiers[$matches[1]]->bindTo($this), $matches[2]);
-			}
+  		$content = preg_replace_callback(self::$modifierPattern, function ($matches) {
+  			if (isset(self::$modifiers[$matches[1]])) {
+  				return call_user_func(self::$modifiers[$matches[1]]->bindTo($this), $matches[2]);
+  			}
 
-			return $matches[0];
-		},
-		$content
-	  );
+  			return $matches[0];
+  		}, $content);
 
   		return $content;
   	}

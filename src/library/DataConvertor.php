@@ -13,10 +13,23 @@ namespace RazyFramework
 {
   class DataConvertor
   {
-  	protected $object                      = '';
-  	protected $reflection                  = '';
+  	protected $value;
+  	protected $dataType;
+  	protected $chainable;
+  	private $dataFactory;
+  	private $index                         = '';
   	private static $functions              = [];
   	private static $dynamicFunctions       = [];
+
+  	public function __construct(DataFactory $df, $index)
+  	{
+  		$this->dataFactory = $df;
+  		$this->index       = $index;
+  		$value             = $df[$index] ?? null;
+  		$this->value       = $value;
+  		$this->dataType    = strtolower(gettype($value));
+  		$this->chainable   = false;
+  	}
 
   	public function __call($funcName, $args)
   	{
@@ -47,12 +60,21 @@ namespace RazyFramework
   		}
 
   		// Bind convertor object to closure function
-  		$result = call_user_func_array($closureFunction->bindTo($this->object), $args);
+  		$result = call_user_func_array($closureFunction->bindTo($this, __CLASS__), $args);
 
-      call_user_func($this->reflection, $this->object->value);
+  		$this->dataFactory[$this->index] = $this->value;
 
-      return (!$this->object->chainable) ? $result : $this;
+  		// Obtain the chainable value and reset the setting
+  		$chainable       = $this->chainable;
+  		$this->chainable = false;
+
+  		return (!$chainable) ? $result : $this;
   	}
+
+    public function getValue()
+    {
+      return $this->dataFactory[$this->index];
+    }
 
   	public static function CreateConvertor(string $name, callable $callback)
   	{
@@ -66,21 +88,6 @@ namespace RazyFramework
   				self::$dynamicFunctions[$name] = $callback;
   			}
   		}
-  	}
-
-  	public function setPointer($value, $reflection)
-  	{
-      $self = $this;
-  		// Create an object for closure binding
-  		$this->object = (object) [
-  			'value'     => $value,
-  			'dataType'  => strtolower(gettype($value)),
-  			'chainable' => false
-  		];
-
-  		$this->reflection = $reflection;
-
-  		return $this;
   	}
   }
 }

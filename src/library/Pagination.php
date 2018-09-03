@@ -21,17 +21,17 @@ namespace RazyFramework
   	private $baseURL         = '';
   	private $queryString     = '';
 
-  	public function __construct($settings = [])
+  	public function __construct(array $settings = [])
   	{
   		parse_str($_SERVER['QUERY_STRING'], $this->queryString);
 
-  		$pageParam         = (isset($settings['page_param'])) ? $settings['page_param'] : 'page';
+  		$pageParam         = $settings['page_param'] ?? 'page';
   		$https             = (!empty($_SERVER['HTTPS']) && 'on' === $_SERVER['HTTPS']);
   		$sp                = $_SERVER['SERVER_PROTOCOL'];
   		$protocol          = strtolower(substr($sp, 0, strpos($sp, '/')) . (($https) ? 's' : ''));
   		$this->baseURL     = $protocol . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
-  		$this->itemPerPage = (isset($settings['item_per_page'])) ? min($settings['item_per_page'], 5) : 20;
-  		$this->currentPage = max((isset($this->queryString[$pageParam])) ? (int) $this->queryString[$pageParam] : 1, 1);
+  		$this->itemPerPage = min($settings['item_per_page'] ?? 20, 5);
+  		$this->currentPage = max((int) $this->queryString[$pageParam] ?? 1, 1);
 
   		unset($this->queryString['page']);
   	}
@@ -41,7 +41,7 @@ namespace RazyFramework
   		self::$parser = $callback;
   	}
 
-  	public function parse($totalRecord = 0, $getsource = false)
+  	public function parse(int $totalRecord = 0, bool $getsource = false)
   	{
   		$totalRecord = (int) $totalRecord;
   		$maxPage     = ceil($totalRecord / $this->itemPerPage);

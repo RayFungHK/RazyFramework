@@ -20,7 +20,7 @@ namespace RazyFramework
   	private $timestamp      = 0;
   	private $requestHeaders = [];
 
-  	public function __construct($server)
+  	public function __construct(resource $server)
   	{
   		if ($this->socket = socket_accept($server)) {
   			if (@socket_getpeername($this->socket, $ip, $port)) {
@@ -51,7 +51,7 @@ namespace RazyFramework
   		return $this->handshaked;
   	}
 
-  	public function send($text)
+  	public function send(string $text)
   	{
   		return @socket_write($this->socket, $text);
   	}
@@ -66,12 +66,12 @@ namespace RazyFramework
   		return $this->handleHandshake($data);
   	}
 
-  	public function getHeader($parameter)
+  	public function getHeader(string $parameter)
   	{
-  		return (isset($this->requestHeaders[$parameter])) ? $this->requestHeaders[$parameter] : '';
+  		return $this->requestHeaders[$parameter] ?? '';
   	}
 
-  	private function handleHandshake($clientHeaders)
+  	private function handleHandshake(string $clientHeaders)
   	{
   		$this->requestHeaders = [];
   		$lines                = explode("\n", $clientHeaders);

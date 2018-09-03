@@ -25,13 +25,13 @@ namespace RazyFramework
   	private $attributeList = [];
   	private $date;
 
-  	public function __construct($type, $data = null)
+  	public function __construct(string $type, $data = null)
   	{
   		$this->type = trim($type);
   		$this->data = $data;
   	}
 
-  	public function attribute($attr, $value = '')
+  	public function attribute(string $attr, $value = '')
   	{
   		if (is_array($attr)) {
   			foreach ($attr as $attribute => $value) {

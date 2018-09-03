@@ -36,7 +36,7 @@ namespace RazyFramework
   		$this->load          = new Loader($module);
   	}
 
-  	private function __methodExists($methodName)
+  	private function __methodExists(string $methodName)
   	{
   		if (!isset($this->methodList[$methodName])) {
   			// Search method is exists in method list or not

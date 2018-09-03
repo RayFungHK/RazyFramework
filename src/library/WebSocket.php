@@ -20,7 +20,7 @@ namespace RazyFramework
   	private $tickDuration    = 1000;
   	private $serverStartTick = 0;
 
-  	public function __construct($address, $port = 8080, $maxClient = 100)
+  	public function __construct(string $address, int $port = 8080, int $maxClient = 100)
   	{
   		$this->maxClient = $maxClient;
   		$this->master    = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -52,7 +52,7 @@ namespace RazyFramework
   		return $this;
   	}
 
-  	public function registerEvent($eventName, callable $callback)
+  	public function registerEvent(string $eventName, callable $callback)
   	{
   		$this->eventList[$eventName] = $callback;
 

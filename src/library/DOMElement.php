@@ -42,7 +42,7 @@ namespace RazyFramework
 
   		$this->nodeName = strtolower($nodeName);
   		$this->nodeType = $nodeType;
-  		$this->guid     = sprintf('%04x%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
+  		$this->guid     = bin2hex(random_bytes(8));
   		$this->parent   = $parent;
   	}
 
@@ -356,7 +356,7 @@ namespace RazyFramework
   							$offset     = ('even' === $matches[1]) ? 0 : 1;
   						} else {
   							$multiplier = (isset($matches[2]) && $matches[2]) ? $matches[2] : 1;
-  							$offset     = (isset($matches[3])) ? (int) ($matches[3]) : 0;
+  							$offset     = (int) $matches[3] ?? 0;
   						}
   						$n = 0;
 

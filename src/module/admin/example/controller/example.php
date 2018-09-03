@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -23,7 +23,7 @@ namespace RazyFramework
   		DataConvertor::CreateConvertor('appendBold', function () {
   			$this->chainable = true;
 
-  			return '<b>' . $this->value . '</b>';
+  			$this->value = '<b>' . $this->value . '</b>';
   		});
 
   		TemplateBlockSet::CreateFilter('odd-filter', function () {
@@ -41,17 +41,17 @@ namespace RazyFramework
   				echo "\n${param}:" . str_repeat(' ', 12 - strlen($param)) . $value;
   			}
   		} else {
-        // Autoloader, load the class file from module folder
+  			// Autoloader, load the class file from module folder
   			$sampleClass   = new \sampleClass();
   			$sampleClassNS = new \Custom\objectClass();
 
-        // loader, a bundle of preset function
-  			$config     = $this->load->config('general');
-        $config['parameter'] = '123';
-        $config->commit();
-   			$tplmanager = $this->load->view('main');
+  			// loader, a bundle of preset function
+  			$config              = $this->load->config('general');
+  			$config['parameter'] = '123';
+  			$config->commit();
+  			$tplmanager = $this->load->view('main');
 
-        // Markdown library
+  			// Markdown library
   			$md = new Markdown();
   			$md->loadFile($this->module->getViewPath() . \DIRECTORY_SEPARATOR . 'markdown-sample.txt');
 
@@ -82,24 +82,25 @@ namespace RazyFramework
   				return $value . ' (Found)';
   			});
 
-        $elements = DOMElement::ParseFromURL('https://www.w3schools.com/css/css_syntax.asp');
-        foreach (['p', 'h2+p', 'h2~p', '.notranslate', '[class*="sidesection"]', '[name]', 'p:nth-child(2n+1)', 'p:nth-child(odd)', 'p:nth-child(even)'] as $selector) {
-          $selectorBlock = $root->newBlock('selector');
-          $selectorBlock->assign([
-            'selector' => $selector
-          ]);
-          foreach ($elements($selector) as $dom) {
-            $selectorBlock->newBlock('element', $dom->nodeName)->assign([
-              'name' => $dom->nodeName,
-              'count' => function($value) {
-                $value = $value ?? 0;
-                return ++$value;
-              }
-            ]);
-          }
-        }
+  			$elements = DOMElement::ParseFromURL('https://www.w3schools.com/css/css_syntax.asp');
+  			foreach (['p', 'h2+p', 'h2~p', '.notranslate', '[class*="sidesection"]', '[name]', 'p:nth-child(2n+1)', 'p:nth-child(odd)', 'p:nth-child(even)'] as $selector) {
+  				$selectorBlock = $root->newBlock('selector');
+  				$selectorBlock->assign([
+  					'selector' => $selector,
+  				]);
+  				foreach ($elements($selector) as $dom) {
+  					$selectorBlock->newBlock('element', $dom->nodeName)->assign([
+  						'name'  => $dom->nodeName,
+  						'count' => function ($value) {
+  							$value = $value ?? 0;
 
-        $tplmanager->output();
+  							return ++$value;
+  						},
+  					]);
+  				}
+  			}
+
+  			$tplmanager->output();
   		}
   	}
 
