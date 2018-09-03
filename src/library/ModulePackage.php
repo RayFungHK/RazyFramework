@@ -223,7 +223,8 @@ namespace RazyFramework
 
   	public function getRoute()
   	{
-  		$path = preg_replace('/[\\\\\/]+/', '/', '/' . trim(REQUEST_ROUTE) . '/');
+      $moduleManager = ModuleManager::GetInstance();
+  		$path = preg_replace('/[\\\\\/]+/', '/', '/' . trim($moduleManager->getURLQuery()) . '/');
   		if (0 === strpos($path, $this->remapPath)) {
   			// Get the relative path and remove the last slash
   			$argsString = preg_replace('/\/*$/', '', substr($path, strlen($this->remapPath)));

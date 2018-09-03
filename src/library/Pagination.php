@@ -31,7 +31,7 @@ namespace RazyFramework
   		$protocol          = strtolower(substr($sp, 0, strpos($sp, '/')) . (($https) ? 's' : ''));
   		$this->baseURL     = $protocol . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
   		$this->itemPerPage = min($settings['item_per_page'] ?? 20, 5);
-  		$this->currentPage = max((int) $this->queryString[$pageParam] ?? 1, 1);
+  		$this->currentPage = max((int) ($this->queryString[$pageParam] ?? 1), 1);
 
   		unset($this->queryString['page']);
   	}
