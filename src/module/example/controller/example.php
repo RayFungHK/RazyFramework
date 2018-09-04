@@ -15,6 +15,7 @@ namespace RazyFramework
   {
   	public function main()
   	{
+    $config              = $this->load->config('general');
       $tplManager = $this->load->view('main')->addToQueue();
       $tplManager->output();
   	}

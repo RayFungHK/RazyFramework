@@ -321,6 +321,11 @@ namespace RazyFramework
   		self::$moduleFolder = $path;
   	}
 
+    public static function GetDistribution()
+    {
+      return self::$distribution;
+    }
+
   	public static function SetModuleDistribution(array $distributions)
   	{
   		foreach ($distributions as $route => $modulePath) {
