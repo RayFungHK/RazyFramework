@@ -76,8 +76,8 @@ namespace RazyFramework
 
   			$tplManager = new TemplateManager($root . $filepath, $this->getCode());
   			$tplManager->globalAssign([
-  				'url_base'       => URL_BASE,
-  				'module_root'    => URL_BASE . $this->getRemapPath(),
+  				'url_base'       => DISTRIBUTION_BASE,
+  				'module_root'    => DISTRIBUTION_BASE . $this->getRemapPath(),
   				'view_path'      => $viewUrl,
   				'root_view_path' => VIEW_PATH_URL . '/',
   			]);
@@ -167,8 +167,12 @@ namespace RazyFramework
 
   	public function locate(string $path)
   	{
-  		$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
-  		header('location: ' . URL_BASE . $path);
+  		if (preg_match('/^https?\:\/\//', $path)) {
+  			header('location: ' . $path);
+  		} else {
+  			$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
+  			header('location: ' . URL_BASE . $path);
+  		}
   		die();
   	}
 
@@ -321,10 +325,10 @@ namespace RazyFramework
   		self::$moduleFolder = $path;
   	}
 
-    public static function GetDistribution()
-    {
-      return self::$distribution;
-    }
+  	public static function GetDistribution()
+  	{
+  		return self::$distribution;
+  	}
 
   	public static function SetModuleDistribution(array $distributions)
   	{
@@ -341,10 +345,6 @@ namespace RazyFramework
   			// Tidy route and module path
   			$route      = preg_replace('/[\/\\\\]+/', '/', '/' . trim($route) . '/');
   			$modulePath = preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $modulePath . \DIRECTORY_SEPARATOR);
-
-  			if (!$modulePath || !file_exists($modulePath) || !is_dir($modulePath)) {
-  				new ThrowError('ModuleManager', '4002', $path . ' does not exist or not a directory.');
-  			}
 
   			// Add distribution and ignore path
   			self::$moduleDistributions[$route] = $modulePath;

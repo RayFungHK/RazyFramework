@@ -206,9 +206,15 @@ namespace RazyFramework
   					unset($column['length']);
   				} else {
   					if (preg_match('/(REAL|DOUBLE|FLOAT|DEC(IMAL)?|NUMERIC|FIXED)/i', $column['datatype'])) {
-  						$column['length'] = max((float) ($column['length']), 1);
+  						list($integer, $decimal) = explode('.', $column['length']);
+  						$integer                 = (int) $integer;
+  						$decimal                 = (int) $decimal;
+  						if ($decimal >= $integer) {
+  							$decimal = 0;
+  						}
+  						$column['length'] = max((int) $integer, 1) . ',' . max((int) $decimal, 0);
   					} else {
-  						$column['length'] = max((int) ($column['length']), 0);
+  						$column['length'] = max((int) $column['length'], 0);
   						if ('YEAR' === $column['datatype']) {
   							if (2 !== $column['length'] && 4 !== $column['length']) {
   								$column['length'] = 4;
@@ -248,7 +254,7 @@ namespace RazyFramework
   			}
   		}
 
-  		$output .= implode(', ', $commands) . ') ENGINE InnoDB;';
+  		$output .= implode(', ', $commands) . ') ENGINE InnoDB CHARSET=utf8 COLLATE utf8_unicode_ci;';
 
   		return $output;
   	}

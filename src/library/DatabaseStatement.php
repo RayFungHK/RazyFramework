@@ -14,8 +14,9 @@ namespace RazyFramework
   class DatabaseStatement
   {
   	private static $lastResourceId = 0;
-    private const REGEX_WHERE = '([|,])?(!)?((:?[\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.(?4))?|\{\$(?:[^{}\\\\]++|\\\\.)*\}|\"(?:[^"\\\\]++|\\\\.)*\"|\?|(?:-?\d+(?:\.\d+)?)|\{\?(?:[^{}\\\\]++|\\\\.)*\})(?(2)|(?:(!=|[<>]=?|=\*|=)((?3))))?(?(1)|([|,])?)';
-    private const REGEX_SELECT = '([><+\-\*]|\G)?(?:(?:(([\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.((?3)))?)|\{\$([\w-]+) ((?3))\})(?:\[(?:({\?(?:[^{}\\\\]++|\\\\.)*}|(?2)|"(?:[^"\\\\]++|\\\\.)*"|(?:-?\d+(?:\.\d+)?)|:[\w]+)(?:(!=|=\||=\*|=)((?5)))?|\?((?:[^\[\]\\\\]++|\\\\.)+))\])?)(?(1)|([><+\-\*])?)';
+    private const REGEX_WHERE = '([|,])?(!)?((:?[\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.(?4))?|\{\$(?:[^{}\\\\]++|\\\\.)*\}|\"(?:[^"\\\\]++|\\\\.)*\"|\?|(?:-?\d+(?:\.\d+)?)|\{\?(?:[^{}\\\\]++|\\\\.)*\})(?(R2)|(?:(!=|[<>]=?|=\*|=)((?3))))?(?(R1)|([|,])?)';
+    private const REGEX_SELECT = '([><+\-\*]|\G)?(?:(?:(([\w]+|`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*`)(?:\.((?3)))?)|\{\$([\w-]+) ((?3))\})(?:\[(?:({\?(?:[^{}\\\\]++|\\\\.)*}|(?2)|"(?:[^"\\\\]++|\\\\.)*"|(?:-?\d+(?:\.\d+)?)|:[\w]+)(?:(!=|=\||=\*|=)((?7)))?|\?((?:[^\[\]\\\\]++|\\\\.)+))\])?)(?(1)|([><+\-\*])?)';
+    private const REGEX_EXTRA = '/^(?:(["`])?|\().++(?(R1)\1|\))(*SKIP)(*FAIL)|(?:(?:(?:GROUP|ORDER)\s+BY|HAVING|WINDOW).+)+$/i';
 
   	private $dbObject;
   	private $parameters        = [];
@@ -27,6 +28,7 @@ namespace RazyFramework
   	private $fetchLength       = '';
   	private $selectSyntax      = '';
   	private $whereSyntax       = '';
+  	private $extraSyntax       = '';
 
   	public function __construct(Database $dbObject, string $sql = '')
   	{
@@ -83,6 +85,17 @@ namespace RazyFramework
   	{
   		$this->startRecord = max($start, 0);
   		$this->fetchLength = max((int) $length, 5);
+
+  		return $this;
+  	}
+
+  	public function extra(string $syntax)
+  	{
+  		$syntax = trim($syntax);
+      if (!preg_match(self::REGEX_EXTRA, $syntax)) {
+        new ThrowError('DatabaseStatement', 5001, 'Exta syntax only allowed ORDER BY, GROUP BY, HAVING and WINDOW.');
+      }
+      $this->extraSyntax = $syntax;
 
   		return $this;
   	}
@@ -152,6 +165,10 @@ namespace RazyFramework
   					$sql = 'SELECT ' . ((count($this->columns)) ? implode(', ', $this->columns) : '*') . ' FROM ' . $this->selectSyntax;
   					if ($this->whereable && $this->whereSyntax) {
   						$sql .= ' WHERE ' . $this->whereSyntax;
+
+              if ($this->extraSyntax) {
+                $sql .= ' ' . $this->extraSyntax;
+              }
   					}
 
   					if ($this->startRecord > 0) {
@@ -359,7 +376,7 @@ namespace RazyFramework
   							$condition = '';
   							if (isset($clip[10]) && $clip[10]) {
   								$condition = $this->parseWhereSyntax($this->parseBracket($clip[10]));
-  							} elseif ($clip[7]) {
+  							} elseif (isset($clip[7])) {
   								$left = $this->parseField($clip[7]);
 
   								if (isset($clip[8])) {

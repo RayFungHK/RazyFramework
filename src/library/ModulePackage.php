@@ -190,7 +190,7 @@ namespace RazyFramework
 
   	public function getModuleRootURL()
   	{
-  		return URL_BASE . $this->getRemapPath();
+  		return DISTRIBUTION_BASE . $this->getRemapPath();
   	}
 
   	public function getViewPath()
@@ -200,7 +200,7 @@ namespace RazyFramework
 
   	public function getViewPathURL()
   	{
-  		return URL_BASE . preg_replace('/\\+/', '/', $this->moduleRoot) . 'view';
+  		return URL_BASE . preg_replace('/\/+/', '/', $this->moduleRoot) . 'view';
   	}
 
   	public function getRemapPath()
@@ -429,7 +429,7 @@ namespace RazyFramework
   			// Error: Controller's class not found
   			new ThrowError('ModulePackage', '1001', 'Controller\'s class not exists');
   		} else {
-  			new ThrowError('ModulePackage', '1004', 'Controller\'s class file not found');
+  			new ThrowError('ModulePackage', '1004', 'Controller\'s class ' . $className . ' file not found');
   		}
 
   		return null;

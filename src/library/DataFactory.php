@@ -78,7 +78,8 @@ namespace RazyFramework
   			return $this->iterator[$index];
   		}
 
-  		return null;
+      $refer = null;
+  		return $refer;
   	}
   }
 }
