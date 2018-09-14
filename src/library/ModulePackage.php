@@ -48,7 +48,7 @@ namespace RazyFramework
   		}
 
   		if (!$this->moduleCode) {
-  			new ThrowError('ModulePackage', '3001', 'Module code is required.');
+  			new ThrowError('Module code is required.');
   		}
 
   		if (array_key_exists('author', $settings)) {
@@ -67,7 +67,7 @@ namespace RazyFramework
   				foreach ($settings['callable'] as $commandName => $namespace) {
   					$commandName = trim($commandName);
   					if (!$commandName || !$this->isValidNamespace($namespace)) {
-  						new ThrowError('ModulePackage', '3002', 'Cannot add ' . $method . ' to whitelist.');
+  						new ThrowError('Cannot add ' . $method . ' to whitelist.');
   					}
   					$this->callableList[$commandName] = $namespace;
   				}
@@ -81,7 +81,7 @@ namespace RazyFramework
   				foreach ($settings['event'] as $eventName => $namespace) {
   					$eventName = trim($eventName);
   					if (!$eventName || !$this->isValidNamespace($namespace)) {
-  						new ThrowError('ModulePackage', '3003', 'Cannot add ' . $method . ' event listener.');
+  						new ThrowError('Cannot add ' . $method . ' event listener.');
   					}
   					$this->eventListner[$eventName] = $namespace;
   				}
@@ -105,7 +105,7 @@ namespace RazyFramework
   				foreach ($settings['route'] as $routeName => $namespace) {
   					$routeName = trim($routeName);
   					if (!$routeName || (!$namespace || (!is_callable($namespace) && !is_string($namespace)))) {
-  						new ThrowError('ModulePackage', '3004', 'Invalid route\'s class mapping format');
+  						new ThrowError('Invalid route\'s class mapping format');
   					}
   					$this->routeMapping[$routeName] = $namespace;
   				}
@@ -122,7 +122,7 @@ namespace RazyFramework
   			if (is_array($settings['require'])) {
   				foreach ($settings['require'] as $moduleName => $version) {
   					if (!preg_match('/^[\w-]+$/i', $moduleName)) {
-  						new ThrowError('ModulePackage', '3005', $moduleName . ' is not a valid module name.');
+  						new ThrowError($moduleName . ' is not a valid module name.');
   					}
   					$this->require[$moduleName] = $version;
   				}
@@ -135,7 +135,7 @@ namespace RazyFramework
   		// Preload module core controller
   		$this->coreController  = $this->getController($this->moduleCode);
   		if (!$this->coreController) {
-  			new ThrowError('ModulePackage', '3004', $this->moduleCode . ' core controller not declared');
+  			new ThrowError($this->moduleCode . ' core controller not declared');
   		}
   		$this->preloadStatus   = ($this->coreController->moduleLoaded) ? self::MODULE_STATUS_LOADED : self::MODULE_STATUS_UNLOADED;
   	}
@@ -255,10 +255,10 @@ namespace RazyFramework
   	{
   		if (self::MODULE_STATUS_ROUTABLE !== $this->preloadStatus) {
   			if (self::MODULE_STATUS_NOT_ROUTABLE === $this->preloadStatus) {
-  				new ThrowError('ModulePackage', '4001', 'The module is denied to routing in.');
+  				new ThrowError('The module is denied to routing in.');
   			}
 
-  			new ThrowError('ModulePackage', '4002', 'System is not ready, you cannot route in preload stage.');
+  			new ThrowError('System is not ready, you cannot route in preload stage.');
   		}
 
   		$moduleController = null;
@@ -293,7 +293,7 @@ namespace RazyFramework
   			$reflection = new \ReflectionMethod($moduleController, $method);
   			if (!$reflection->isPublic()) {
   				// Error: Controller function not callable
-  				new ThrowError('ModulePackage', '4002', 'Cannot execute the method, maybe it is not a public method');
+  				new ThrowError('Cannot execute the method, maybe it is not a public method');
   			}
   		}
 
@@ -322,7 +322,7 @@ namespace RazyFramework
   	public function trigger(string $mapping, array $args)
   	{
   		if ($this->preloadStatus <= 1) {
-  			new ThrowError('ModulePackage', '4006', 'System is not ready, you cannot trigger in preload stage.');
+  			new ThrowError('System is not ready, you cannot trigger in preload stage.');
   		}
 
   		if (isset($this->eventListner[$mapping])) {
@@ -330,7 +330,7 @@ namespace RazyFramework
 
   			if (!($moduleController = $this->getController($className))) {
   				// Error: Controller Not Found
-  				new ThrowError('ModulePackage', '4004', 'Controller Not Found');
+  				new ThrowError('Controller Not Found');
   			}
 
   			// Check the methed is callable or not, protected and private method is not executable
@@ -339,7 +339,7 @@ namespace RazyFramework
   				$reflection = new \ReflectionMethod($moduleController, $method);
   				if (!$reflection->isPublic()) {
   					// Error: Controller function not callable
-  					new ThrowError('ModulePackage', '4005', 'Cannot trigger the event, maybe it is not a public method');
+  					new ThrowError('Cannot trigger the event, maybe it is not a public method');
   				}
   			}
 
@@ -352,7 +352,7 @@ namespace RazyFramework
   	public function execute(string $mapping, array $args)
   	{
   		if ($this->preloadStatus <= 1) {
-  			new ThrowError('ModulePackage', '4007', 'System is not ready, you cannot execute in preload stage.');
+  			new ThrowError('System is not ready, you cannot execute in preload stage.');
   		}
 
   		if (isset($this->callableList[$mapping])) {
@@ -360,7 +360,7 @@ namespace RazyFramework
 
   			if (!($moduleController = $this->getController($className))) {
   				// Error: Controller Not Found
-  				new ThrowError('ModulePackage', '4002', 'Controller Not Found');
+  				new ThrowError('Controller Not Found');
   			}
 
   			// Check the methed is callable or not, protected and private method is not executable
@@ -369,7 +369,7 @@ namespace RazyFramework
   				$reflection = new \ReflectionMethod($moduleController, $method);
   				if (!$reflection->isPublic()) {
   					// Error: Controller function not callable
-  					new ThrowError('ModulePackage', '4003', 'Cannot execute the method, maybe it is not a public method');
+  					new ThrowError('Cannot execute the method, maybe it is not a public method');
   				}
   			}
 
@@ -412,7 +412,7 @@ namespace RazyFramework
   			$_className = end($_className);
 
   			if ($_className !== $className) {
-  				new ThrowError('ModulePackage', '1003', 'Controller\'s class ' . $className . ' not found, or the declared class name not match as the file name.');
+  				new ThrowError('Controller\'s class ' . $className . ' not found, or the declared class name not match as the file name.');
   			}
   			if (class_exists($declaredClass)) {
   				// Create controller object and put into controller list
@@ -421,15 +421,15 @@ namespace RazyFramework
   				// Check the controller class has inherit IController class or not
   				if (!is_subclass_of($this->controllerList[$className], 'RazyFramework\IController')) {
   					// Error: Controller's class should inherit IController
-  					new ThrowError('ModulePackage', '1002', 'Controller\'s class should inherit IController');
+  					new ThrowError('Controller\'s class should inherit IController');
   				}
 
   				return $this->controllerList[$className];
   			}
   			// Error: Controller's class not found
-  			new ThrowError('ModulePackage', '1001', 'Controller\'s class not exists');
+  			new ThrowError('Controller\'s class not exists');
   		} else {
-  			new ThrowError('ModulePackage', '1004', 'Controller\'s class ' . $className . ' file not found');
+  			new ThrowError('Controller\'s class ' . $className . ' file not found');
   		}
 
   		return null;

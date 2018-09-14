@@ -34,7 +34,7 @@ namespace RazyFramework
   	{
   		$sql = trim($sql);
   		if (preg_match('/^\(/', $sql)) {
-  			new ThrowError('DatabaseStatement', 1001, 'Invalid SQL syntax, it cannot start with parentheses.');
+  			new ThrowError('Invalid SQL syntax, it cannot start with parentheses.');
   		}
 
   		if ($sql) {
@@ -46,7 +46,7 @@ namespace RazyFramework
   				$this->whereSyntax = $splitted[1] ?? '';
   				if (preg_match('/^((?:[\'"`])|(\()).+?(?(2)\)|\1)(*SKIP)(*FAIL)|SELECT\s+(.+?)\s+FROM\s+(.++)/i', $this->sql, $matches)) {
   					if (!isset($matches[3])) {
-  						new ThrowError('DatabaseStatement', 1003, 'SELECT syntax does not contain any column.');
+  						new ThrowError('SELECT syntax does not contain any column.');
   					}
   					$this->columns           = preg_split('/((?:[\'"`])|(\()).+?(?(2)\)|\1)(*SKIP)(*FAIL)|\s*,\s*/', $matches[3]);
   					$this->selectSyntax      = trim($matches[4]);
@@ -61,7 +61,7 @@ namespace RazyFramework
   		}
 
   		if (null === $dbObject->getAdapter()) {
-  			new ThrowError('DatabaseStatement', 1004, 'Database adapter is null or it does not connect to databse.');
+  			new ThrowError('Database adapter is null or it does not connect to databse.');
   		}
 
   		$this->dbObject   = $dbObject;
@@ -93,7 +93,7 @@ namespace RazyFramework
   	{
   		$syntax = trim($syntax);
       if (!preg_match(self::REGEX_EXTRA, $syntax)) {
-        new ThrowError('DatabaseStatement', 5001, 'Exta syntax only allowed ORDER BY, GROUP BY, HAVING and WINDOW.');
+        new ThrowError('Exta syntax only allowed ORDER BY, GROUP BY, HAVING and WINDOW.');
       }
       $this->extraSyntax = $syntax;
 
@@ -294,14 +294,14 @@ namespace RazyFramework
   			} elseif ('+' === $flag) {
   				$joinType = ' FULL JOIN ';
   				if ($isNaturalJoin) {
-  					new ThrowError('Database', 3005, 'Full join does not allow natural join.');
+  					new ThrowError('Full join does not allow natural join.');
   				}
   			} elseif ('-' === $flag) {
   				$joinType = ' JOIN ';
   			} elseif ('*' === $flag) {
   				$joinType = ' CROSS JOIN ';
   				if (!$isNaturalJoin) {
-  					new ThrowError('Database', 3006, 'Cross join does not allow condition syntax.');
+  					new ThrowError('Cross join does not allow condition syntax.');
   				}
   			}
 
@@ -324,7 +324,7 @@ namespace RazyFramework
   				$result[] = $this->parseSyntax($statement);
   			} else {
   				if (!preg_match('/^(?:' . self::REGEX_SELECT . ')+?$/', $statement)) {
-  					new ThrowError('Database', 4001, 'Invalid Select-Syntax format.');
+  					new ThrowError('Invalid Select-Syntax format.');
   				} else {
   					if (preg_match_all('/' . self::REGEX_SELECT . '/', $statement, $matches, PREG_SET_ORDER)) {
   						$firstTable = null;
@@ -343,7 +343,7 @@ namespace RazyFramework
 
   							if (isset($clip[5]) && $clip[5]) {
   								if (!isset($subquery[$clip[5]]) || !($subquery[$clip[5]] instanceof self)) {
-  									new ThrowError('Database', 4002, $clip[5] . ' is not a DatabaseStatement object.');
+  									new ThrowError($clip[5] . ' is not a DatabaseStatement object.');
   								}
   								$subquerySQL   = $subquery[$clip[5]]->getStatement()->queryString;
   								$tableName     = $clip[6];
@@ -417,7 +417,7 @@ namespace RazyFramework
   				$result[] = $this->parseWhereSyntax($statement);
   			} else {
   				if (!preg_match('/^(?:' . self::REGEX_WHERE . ')+?$/', $statement)) {
-  					new ThrowError('DatabaseStatement', 3001, 'Invalid Where-Syntax format.');
+  					new ThrowError('Invalid Where-Syntax format.');
   				} else {
   					if (preg_match_all('/' . self::REGEX_WHERE . '/', $statement, $matches, PREG_SET_ORDER)) {
   						foreach ($matches as $clip) {
@@ -435,11 +435,11 @@ namespace RazyFramework
   							if ('?' === $left || '?' === $right) {
   								// If there is still have another syntax but the flag is marked ended, throw an error.
   								if ($left === $right) {
-  									new ThrowError('DatabaseStatement', 3002, 'Missing column name.');
+  									new ThrowError('Missing column name.');
   								}
 
   								if (!preg_match('/^(?|([\w]+)|`((?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*)`)(?:\.(?|([\w]+)|`((?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\`])*)`))?$/', ('?' === $right) ? $left : $right, $columnMatches)) {
-  									new ThrowError('DatabaseStatement', 3003, 'Column-Parameter only support column name.');
+  									new ThrowError('Column-Parameter only support column name.');
   								}
 
   								$parameter = ':' . ((isset($columnMatches[2])) ? $columnMatches[2] : $columnMatches[1]);

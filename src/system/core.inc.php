@@ -67,7 +67,6 @@ namespace RazyFramework
 
 	define('VIEW_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view');
 	define('VIEW_PATH_URL', URL_BASE . '/view');
-	define('MATERIAL_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'material');
 
 	// Register Autoloader
 	spl_autoload_register(function ($class) use ($configuration) {
@@ -107,7 +106,13 @@ namespace RazyFramework
 		$manager = ModuleManager::GetInstance();
 
 		return $manager->loadLibrary($class);
+	});
 
-		return false;
+	if (isset($configuration['debug'])) {
+		ThrowError::SetDebugMode(!!$configuration['debug']);
+	}
+
+	set_exception_handler(function($exception) {
+		new ThrowError($exception);
 	});
 }

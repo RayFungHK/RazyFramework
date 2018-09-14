@@ -87,7 +87,7 @@ namespace RazyFramework
 				  ]);
 				  if ($setting['auto_increment'] && $this->aiDeclared) {
 				  	// Error: Only allow one Auto Increment Column
-				  	new ThrowError('Database', '2001', 'One table only allowed to have one Auto Increment Column');
+				  	new ThrowError('One table only allowed to have one Auto Increment Column');
 				  }
 				  $this->aiDeclared     = true;
 
@@ -169,7 +169,7 @@ namespace RazyFramework
 			  case Database::COLUMN_CUSTOM:
 			  default:
 					if (!array_key_exists('datatype', $setting) || !preg_match('/^(BIT|(TINY|MEDIUM)(TEXT|BLOB|INT)|(SMALL|BIG)?INT|REAL|DOUBLE|FIXED|FLOAT|DEC(IMAL)?|NUMERIC|DATE|TIME(STAMP)?|DATETIME|YEAR|(VAR)?(CHAR|BINARY)|(LONG)?(TEXT|BLOB)|ENUM|SET|JSON|BOOL(EAN)?)$/i', $setting['datatype'])) {
-						new ThrowError('Database', '2002', $setting['datatype'] . ' is not a valid data type.');
+						new ThrowError($setting['datatype'] . ' is not a valid data type.');
 					}
 					$this->presetSetting($setting, [
 						'length'        => '255',

@@ -113,7 +113,7 @@ namespace RazyFramework
   		} elseif (is_string($sql)) {
   			$dbs = $this->createStatement($sql);
   		} else {
-        new ThrowError('Database', 1001, 'Invalid SQL statement object, it should be a DatabaseTable, DatabaseStatement or string.');
+        new ThrowError('Invalid SQL statement object, it should be a DatabaseTable, DatabaseStatement or string.');
       }
 
       $dbs->setParameter($parameters);
@@ -135,7 +135,7 @@ namespace RazyFramework
   					if ($rollback) {
   						$this->dba->rollBack();
   					}
-  					new ThrowError('Database', '1001', $e->getMessage());
+  					new ThrowError($e->getMessage());
   				}
   			}
   			$this->dba->commit();
@@ -152,8 +152,8 @@ namespace RazyFramework
 
   		try {
   			$statement->execute();
-  		} catch (\PDOException $e) {
-  			new ThrowError('Database', '1002', $e->getMessage());
+  		} catch (\PDOException $exception) {
+  			new ThrowError($exception);
   		}
 
   		unset($this->prepareList[$dbs->getResourceId()]);
@@ -165,11 +165,11 @@ namespace RazyFramework
   	{
   		$tableName = trim($tableName);
   		if (!$tableName) {
-  			new ThrowError('Database', '4003', 'Table name should not be empty');
+  			new ThrowError('Table name should not be empty');
   		}
 
   		if (!count($dataset)) {
-  			new ThrowError('Database', '4004', 'Dataset should not be empty');
+  			new ThrowError('Dataset should not be empty');
   		}
 
   		return $this->prepare('INSERT INTO ' . $tableName . ' (' . implode(', ', $dataset) . ') VALUES (:' . implode(", :", $dataset) . ')');
@@ -179,11 +179,11 @@ namespace RazyFramework
   	{
   		$tableName = trim($tableName);
   		if (!$tableName) {
-  			new ThrowError('Database', '4003', 'Table name should not be empty');
+  			new ThrowError('Table name should not be empty');
   		}
 
   		if (!count($dataset)) {
-  			new ThrowError('Database', '4004', 'Dataset should not be empty');
+  			new ThrowError('Dataset should not be empty');
   		}
 
   		$updateSet = [];

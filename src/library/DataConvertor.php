@@ -55,7 +55,7 @@ namespace RazyFramework
   			if (isset(self::$dynamicFunctions[$funcName])) {
   				$closureFunction = self::$dynamicFunctions[$funcName];
   			} else {
-  				new ThrowError('DataFactory', '1001', 'Cannot load [' . $funcName . '] convertor function.');
+  				new ThrowError('Cannot load [' . $funcName . '] convertor function.');
   			}
   		}
 

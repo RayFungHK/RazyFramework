@@ -1,5 +1,5 @@
 # Razy
-- Supports PHP5+
+- Supports PHP 7
 - Fast & easy way to build a website
 - Lightweight, clean structure
 - Separated module folder, you can clone the module to another Razy framework without any modification
@@ -13,15 +13,13 @@
 To install/update Module Package automatically via CLI or WebUI. You can add repository (default Razy official) to get more module package.
 - **Template and Module Cache**:
 To improve Razy Framework performance, increase OPS
-- (Done) <strike>**Global Configration and Configuration library**:
-You can use global config file to change the library or module folder location, or force to use https. Also, you can use Configuration library to create and read module config file in /configuration folder.</strike>
-- (Done) <strike>**Redesign database library**:
-More powerful database library, provides single record operation flow and object-oriented with chainable query.</strike>
 
 # Task List
 - Preload and Ready event (Done)
 - New CLI Mode (Done)
 - Markdown library, Class (Done)
+- Rewrite Database Class (Done)
+- Rewrite ThrowError Class (Processing, Drafted)
 - FTP library, Class
 - HTTP library, Class
 - Image Manipulation Library, Class
@@ -35,6 +33,7 @@ More powerful database library, provides single record operation flow and object
 ```
 - .
  - library/
+ - configuration/
  - module/
   - your_module_name/
    - controller/ (Place your controller here)
@@ -43,9 +42,8 @@ More powerful database library, provides single record operation flow and object
    - config.php (Module configuration)
  - view/ (Global view folder)
  - system/
- - material/
 ```
-# Configuration File
+# Module Configuration File
 Razy will deep scan the module folder for a file called **config.php**, Razy will assume it is a module. **config.php** is an array-return file, example:
 
 ```

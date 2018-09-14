@@ -159,7 +159,7 @@ namespace RazyFramework
   				return new self($blockCollection);
   			}
   		} else {
-  			new ThrowError('TemplateBlockSet', '1001', 'Invalid selector');
+  			new ThrowError('Invalid selector');
   		}
   	}
 
@@ -172,7 +172,7 @@ namespace RazyFramework
   				}
   			}
   		} else {
-  			new ThrowError('TemplateBlockSet', '2001', 'Invalid callback function for each method');
+  			new ThrowError('Invalid callback function for each method');
   		}
 
   		return $this;
@@ -200,7 +200,7 @@ namespace RazyFramework
   				}
   			}
   		} else {
-  			new ThrowError('TemplateBlockSet', '2001', 'Invalid callback function for each method');
+  			new ThrowError('Invalid callback function for each method');
   		}
 
   		return $this;
@@ -247,7 +247,7 @@ namespace RazyFramework
   	private static function CallFilter(string $filterName, object $bindObject)
   	{
   		if (!($filter = self::GetFilter($filterName))) {
-  			new ThrowError('TemplateBlockSet', '3001', 'Cannot load [' . $filterName . '] filter function.');
+  			new ThrowError('Cannot load [' . $filterName . '] filter function.');
   		}
 
   		return call_user_func(\Closure::bind($filter, $bindObject), $bindObject->parameter);

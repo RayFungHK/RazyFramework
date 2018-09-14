@@ -45,7 +45,7 @@ namespace RazyFramework
   		}
 
   		if (!isset(self::$functionMapping[$funcName])) {
-  			new ThrowError('DataFactory', '1001', 'Cannot load [' . $funcName . '] factory function.');
+  			new ThrowError('Cannot load [' . $funcName . '] factory function.');
   		}
 
   		return call_user_func_array(self::$functionMapping[$funcName]->bindTo($this), $args);
@@ -55,7 +55,7 @@ namespace RazyFramework
   	{
   		$index = trim($index);
   		if (!$index) {
-  			new ThrowError('DataFactory', '2001', 'The invoke index cannot be empty.');
+  			new ThrowError('The invoke index cannot be empty.');
   		}
 
   		return new DataConvertor($this, $index);

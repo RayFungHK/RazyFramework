@@ -49,7 +49,7 @@ namespace RazyFramework
   	public function __invoke(string $selector)
   	{
   		if (!preg_match('/(?:' . self::SELECTOR_REGEX . ')+/', $selector)) {
-  			new ThrowError('DOMElement', 3001, 'Invalid selector syntax.');
+  			new ThrowError('Invalid selector syntax.');
   		}
 
   		$elements = [$this];
@@ -58,7 +58,7 @@ namespace RazyFramework
 
   			foreach ($matches as $clip) {
   				if (!isset($clip[4]) && !$clip[5]) {
-  					new ThrowError('DOMElement', 4001, 'Invalid Selector syntax');
+  					new ThrowError('Invalid Selector syntax');
   				}
 
   				$tagname   = '';
@@ -247,7 +247,7 @@ namespace RazyFramework
   				$this->append($domELement);
   			}
   		} else {
-  			new ThrowError('DOMElement', 2001, 'The object is not a valid DOMElement');
+  			new ThrowError('The object is not a valid DOMElement');
   		}
 
   		return $this;

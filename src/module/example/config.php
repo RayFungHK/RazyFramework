@@ -17,5 +17,6 @@ return [
 	'route'       => [
 		'/'           => 'example.main',
 		'dataFactory' => 'example.dataFactory',
+		'throwerror'  => 'example.throwerror',
 	],
 ];

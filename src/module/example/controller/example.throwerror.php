@@ -11,13 +11,7 @@
 
 namespace RazyFramework
 {
-  class example extends IController
-  {
-  	public function main()
-  	{
-  		$config     = $this->load->config('general');
-  		$tplManager = $this->load->view('main')->addToQueue();
-  		$tplManager->output();
-  	}
-  }
+  return function () {
+    new ThrowError('Error message will display here. If the parameters `debug` has set to `true` in global configuration, the backtrace will be listed as below.');
+  };
 }

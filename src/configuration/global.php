@@ -26,6 +26,9 @@ return [
 	// Force Razy Frameworks use https protocal
 	'force_ssl' => false,
 
+	// Set the debug as true will list the backtrace if the ThrowError has been called
+	'debug' => true,
+
 	'module_distribution' => [
 		'/'      => SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module',
 		'/admin' => function () {

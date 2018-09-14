@@ -45,7 +45,7 @@ namespace RazyFramework
   			self::$instance = $this;
   		} else {
   			// Error: Loaded Twice
-  			new ThrowError('ModuleManager', '1001', 'ModuleManager has loaded already');
+  			new ThrowError('ModuleManager has loaded already');
   		}
 
   		// Obtain the URL request query string
@@ -117,7 +117,7 @@ namespace RazyFramework
   		}
 
   		if (count($this->moduleInRequire)) {
-  			new ThrowError('ModuleManager', '1002', 'The following module is required but load failed: ' . implode(', ', array_keys($this->moduleInRequire)));
+  			new ThrowError('The following module is required but load failed: ' . implode(', ', array_keys($this->moduleInRequire)));
   		}
 
   		// If all module ready, change to ready stage
@@ -144,7 +144,7 @@ namespace RazyFramework
   						$paramName                      = '';
   					} else {
   						if (count($this->scriptParams)) {
-  							new ThrowError('ModuleManager', '3001', 'Invalid command syntax.');
+  							new ThrowError('Invalid command syntax.');
   						}
   						$args[] = $value;
   					}
@@ -319,7 +319,7 @@ namespace RazyFramework
   	{
   		$path = realpath(preg_replace('/[\/\\\\]+/', \DIRECTORY_SEPARATOR, \DIRECTORY_SEPARATOR . trim($path) . \DIRECTORY_SEPARATOR));
   		if (!$path || !file_exists($modulePath) || !is_dir($modulePath)) {
-  			new ThrowError('ModuleManager', '5001', 'The default module path does not exist or not a directory.');
+  			new ThrowError('The default module path does not exist or not a directory.');
   		}
 
   		self::$moduleFolder = $path;
@@ -339,7 +339,7 @@ namespace RazyFramework
   			}
 
   			if (!is_string($modulePath)) {
-  				new ThrowError('ModuleManager', '4001', $route . ' is not a valid path string.');
+  				new ThrowError($route . ' is not a valid path string.');
   			}
 
   			// Tidy route and module path
@@ -398,7 +398,7 @@ namespace RazyFramework
   			if (count($require)) {
   				foreach ($require as $requireModuleName => $version) {
   					if ($requireModuleName === $module->getCode()) {
-  						new ThrowError('ModuleManager', '1004', 'You cannot require module itself');
+  						new ThrowError('You cannot require module itself');
   					}
 
   					// If the module is ready, skip require
@@ -454,7 +454,7 @@ namespace RazyFramework
   		if ($remapPath = $module->getRemapPath()) {
   			if (isset($this->remapMapping[$remapPath])) {
   				// Error: Remap path registered
-  				new ThrowError('ModuleManager', '1003', 'Remap path [' . $remapPath . '] was registered.');
+  				new ThrowError('Remap path [' . $remapPath . '] was registered.');
   			}
   			$this->remapMapping[$remapPath] = $module;
   		}
@@ -493,16 +493,16 @@ namespace RazyFramework
   									$this->moduleLoaded[$modulePackage->getCode()] = $modulePackage;
   								} else {
   									// Error: Duplicated Module
-  									new ThrowError('ModuleManaer', '1004', 'Duplicated Module Code');
+  									new ThrowError('Duplicated Module Code');
   								}
   							} else {
   								// Error: Invalid Class
-  								new ThrowError('ModuleManaer', '1005', 'Invalid Module File');
+  								new ThrowError('Invalid Module File');
   							}
   						}
   					} catch (Exception $e) {
   						// Error: Fail to load module file
-  						new ThrowError('ModuleManager', '2001', 'Fail to load module, maybe the setting file was corrupted');
+  						new ThrowError('Fail to load module, maybe the setting file was corrupted');
   					}
   				} else {
   					$this->loadModule($subModuleFolder);

@@ -26,6 +26,7 @@
     <ul>
       <li><a href="{$url_base}/admin/">Second Module Distribution</a></li>
       <li><a href="{$url_base}/dataFactory">DataFactory Test</a></li>
+      <li><a href="{$url_base}/throwerror">ThrowError</a></li>
     </ul>
   </article>
 </body>

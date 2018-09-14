@@ -63,7 +63,7 @@ namespace RazyFramework
   				$this->blockList[$blockName][] = $templateBlock;
   			}
   		} else {
-  			new ThrowError('TemplateBlock', '2001', 'Block [' . $blockName . '] not found.');
+  			new ThrowError('Block [' . $blockName . '] not found.');
   		}
 
   		return $templateBlock;
@@ -383,7 +383,7 @@ namespace RazyFramework
   	{
   		$modifierName = $type . '.' . $modifier;
   		if (!($modifier = self::GetModifier($modifierName))) {
-  			new ThrowError('TemplateBlock', '3001', 'Cannot load [' . $modifierName . '] modifier function.');
+  			new ThrowError('Cannot load [' . $modifierName . '] modifier function.');
   		}
 
   		return call_user_func_array(

@@ -68,11 +68,11 @@ namespace RazyFramework
   			mkdir($pathParts['dirname'], 0755, true);
   		} elseif (!is_dir($pathParts['dirname'])) {
   			// If the path does exist but not a directory, throw an error
-  			new ThrowError('1003', 'Configuration', $pathParts['dirname'] . ' is not a directory.');
+  			new ThrowError($pathParts['dirname'] . ' is not a directory.');
   		}
 
   		if (!($handle = fopen($this->configFile, 'w'))) {
-  			new ThrowError('1004', 'Configuration', 'Cannot open file: ' . $this->configFile);
+  			new ThrowError('Cannot open file: ' . $this->configFile);
   		}
 
   		fwrite($handle, "<?php\nreturn " . var_export($this->getArrayCopy(), true) . ";\n?>");

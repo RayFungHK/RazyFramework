@@ -55,7 +55,7 @@ namespace RazyFramework
 
   					break;
   				} else {
-  					new ThrowError('TemplateStructure', '1001', 'Invalid End Tag [' . $matches[3] . '] in current block section [' . $blockName . '].');
+  					new ThrowError('Invalid End Tag [' . $matches[3] . '] in current block section [' . $blockName . '].');
   				}
   			} else {
   				// Put current line into content pool
@@ -64,7 +64,7 @@ namespace RazyFramework
   		}
 
   		if (!$blockClosed && !$this->isRoot) {
-  			new ThrowError('TemplateStructure', '1002', 'Block [' . $blockName . '] has not closed.');
+  			new ThrowError('Block [' . $blockName . '] has not closed.');
   		}
   	}
 

@@ -46,12 +46,12 @@ namespace RazyFramework
   				try {
   					$closure = require $controllerPath;
   					if (!is_callable($closure)) {
-  						new ThrowError('IController', '2001', 'The object was not a function');
+  						new ThrowError('The object was not a function');
   					}
   					$this->methodList[$methodName] = $closure;
   				} catch (Exception $e) {
   					// Error: The object was not callable
-  					new ThrowError('IController', '2002', 'Cannot load method file, maybe the method file was corrupted');
+  					new ThrowError('Cannot load method file, maybe the method file was corrupted');
   				}
   			} else {
   				return false;
@@ -65,7 +65,7 @@ namespace RazyFramework
   	{
   		if (!$this->__methodExists($method)) {
   			// Error: ControllerClosure not found
-  			new ThrowError('IController', '3001', '[' . $method . '] ControllerClosure not found');
+  			new ThrowError('[' . $method . '] ControllerClosure not found');
   		}
   		$closure = $this->methodList[$method];
 

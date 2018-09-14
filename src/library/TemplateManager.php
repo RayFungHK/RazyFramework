@@ -27,7 +27,7 @@ namespace RazyFramework
   	{
   		// Read file content
   		if (!file_exists($tplPath)) {
-  			new ThrowError('TemplateManager', '1001', 'Template file not exists');
+  			new ThrowError('Template file not exists');
   		}
 
   		$tplContent = file($tplPath);
@@ -60,7 +60,7 @@ namespace RazyFramework
   		// Remove repeatly slash
   		$selector = trim(preg_replace('/\/+/', '/', $selector));
   		if (!$selector) {
-  			new ThrowError('TemplateManager', '3001', 'Selector cannot not be empty');
+  			new ThrowError('Selector cannot not be empty');
   		}
 
   		$blockSet = new TemplateBlockSet($this->blockTree);
@@ -91,10 +91,10 @@ namespace RazyFramework
   				return $this;
   			}
   		} else {
-  			new ThrowError('TemplateManager', '2001', 'Block Name cannot be empty.');
+  			new ThrowError('Block Name cannot be empty.');
   		}
 
-  		new ThrowError('TemplateManager', '2002', 'Block [' . $blockName . '] not found.');
+  		new ThrowError('Block [' . $blockName . '] not found.');
   	}
 
   	public function getRootBlock()

@@ -56,7 +56,7 @@ namespace RazyFramework
   	public function loadFile(string $path)
   	{
   		if (!file_exists($path)) {
-  			new ThrowError('Markdown', '1001', 'Cannot load content from file, file not found.');
+  			new ThrowError('Cannot load content from file, file not found.');
   		} else {
   			$this->loadContent(file_get_contents($path));
   		}
