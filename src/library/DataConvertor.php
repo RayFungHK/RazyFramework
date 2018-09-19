@@ -17,9 +17,9 @@ namespace RazyFramework
   	protected $dataType;
   	protected $chainable;
   	private $dataFactory;
-  	private $index                         = '';
-  	private static $functions              = [];
-  	private static $dynamicFunctions       = [];
+  	private $index                   = '';
+  	private static $functions        = [];
+  	private static $dynamicFunctions = [];
 
   	public function __construct(DataFactory $df, $index)
   	{
@@ -71,10 +71,10 @@ namespace RazyFramework
   		return (!$chainable) ? $result : $this;
   	}
 
-    public function getValue()
-    {
-      return $this->dataFactory[$this->index];
-    }
+  	public function getValue()
+  	{
+  		return $this->dataFactory[$this->index];
+  	}
 
   	public static function CreateConvertor(string $name, callable $callback)
   	{

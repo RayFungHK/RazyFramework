@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of RazyFramwork.
+ * This file is part of RazyFramework.
  *
  * (c) Ray Fung <hello@rayfung.hk>
  *
@@ -14,14 +14,14 @@ namespace RazyFramework
   class Configuration extends \ArrayObject
   {
   	private $configFile = '';
-  	private $filename = '';
-  	private $loaded         = false;
+  	private $filename   = '';
+  	private $loaded     = false;
   	private $module;
   	private $iterator;
 
   	public function __construct(ModulePackage $module, string $filename)
   	{
-      $distribution = str_replace('/', \DIRECTORY_SEPARATOR, ModuleManager::GetDistribution());
+  		$distribution     = str_replace('/', \DIRECTORY_SEPARATOR, ModuleManager::GetDistribution());
   		$this->configFile = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'configuration' . $distribution . $module->getCode() . \DIRECTORY_SEPARATOR;
 
   		$this->filename = trim($filename);
@@ -29,7 +29,7 @@ namespace RazyFramework
   			new ThrowError('1001', 'Configuration', 'Config file name cannot be empty.');
   		}
 
-      $this->configFile .= $this->filename . '.php';
+  		$this->configFile .= $this->filename . '.php';
   		if (file_exists($this->configFile)) {
   			// If the config file path is a directory, throw an error
   			if (is_dir($this->configFile)) {
