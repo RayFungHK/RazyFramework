@@ -15,6 +15,11 @@ namespace RazyFramework
   {
   	public function main()
   	{
+      $dba = Database::GetConnection('local');
+      Profiler::AddStatistic('mysql_query', function() use ($dba) {
+        return $dba->getQueried();
+      });
+
       $profiler = new Profiler();
       $profiler->addStep('start');
 

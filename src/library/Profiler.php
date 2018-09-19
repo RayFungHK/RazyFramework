@@ -13,12 +13,22 @@ namespace RazyFramework
 {
   class Profiler
   {
-  	private $init  = [];
-  	private $steps = [];
+  	private static $customStatistic = [];
+  	private $init                   = [];
+  	private $steps                  = [];
 
   	public function __construct()
   	{
   		$this->init = $this->createStats();
+  	}
+
+  	public static function AddStatistic(string $parameter, callable $callback)
+  	{
+  		$parameter = trim($parameter);
+  		if (!$parameter) {
+  			new ThrowError('Statistic parameter cannot be empty.');
+  		}
+  		self::$customStatistic[$parameter] = $callback;
   	}
 
   	public function addStep(string $label = null)
@@ -34,7 +44,7 @@ namespace RazyFramework
   		$ru                = getrusage();
   		$defined_functions = get_defined_functions(true);
 
-  		return [
+  		$stats = [
   			'index'             => count($this->steps),
   			'memory_usage'      => memory_get_usage(),
   			'memory_allocated'  => memory_get_usage(true),
@@ -43,6 +53,14 @@ namespace RazyFramework
   			'defined_functions' => $defined_functions['user'] ?? [],
   			'declared_classes'  => get_declared_classes(),
   		];
+
+  		if (count(self::$customStatistic)) {
+  			foreach (self::$customStatistic as $parameter => $callback) {
+  				$stats[$parameter] = $callback();
+  			}
+  		}
+
+  		return $stats;
   	}
 
   	public function report(string ...$labels)
@@ -72,7 +90,7 @@ namespace RazyFramework
   				$report = [];
 
   				foreach ($this->init as $parameter => $value) {
-  					if ('index' === $parameter) {
+  					if ('index' === $parameter || !array_key_exists($parameter, $stats)) {
   						continue;
   					}
 
@@ -90,9 +108,9 @@ namespace RazyFramework
   		}
 
   		$compare = (0 === count($this->steps)) ? $this->createStats() : end($this->steps);
-  		$report = [];
+  		$report  = [];
   		foreach ($this->init as $parameter => $value) {
-  			if ('index' === $parameter) {
+  			if ('index' === $parameter || !array_key_exists($parameter, $compare)) {
   				continue;
   			}
 
