@@ -35,10 +35,10 @@ namespace RazyFramework
   			if (isset($implemented['Throwable'])) {
   				echo '<div class="error-message">' . $message->getMessage() . '</div>';
   				$backtraces = $message->getTrace();
-  				$caller     = [
+          array_unshift($backtraces, [
   					'file' => $message->getFile(),
   					'line' => $message->getLine(),
-  				];
+          ]);
   			}
   		}
 
@@ -54,18 +54,22 @@ namespace RazyFramework
   				echo '<div class="debug"><div>';
 
   				echo '<div class="caller"><span class="stack">' . $index . '</span>';
-  				// Print class and function caller
-  				if (isset($backtrace['class'])) {
-  					echo $backtrace['class'] . $backtrace['type'];
-  				}
-  				echo $backtrace['function'] . '(';
-  				$arguments = [];
-  				if (isset($backtrace['args'])) {
-  					foreach ($backtrace['args'] as $args) {
-  						$arguments[] = gettype($args);
-  					}
-  				}
-  				echo implode(', ', $arguments) . ')</div>';
+          if (isset($backtrace['function'])) {
+    				// Print class and function caller
+    				if (isset($backtrace['class'])) {
+    					echo $backtrace['class'] . $backtrace['type'];
+    				}
+    				echo $backtrace['function'] . '(';
+    				$arguments = [];
+    				if (isset($backtrace['args'])) {
+    					foreach ($backtrace['args'] as $args) {
+    						$arguments[] = gettype($args);
+    					}
+    				}
+    				echo implode(', ', $arguments) . ')</div>';
+          } else {
+            echo '<i>Internal Code</i></div>';
+          }
 
   				echo '<pre><code>';
   				echo 'File: ' . ((isset($backtrace['file'])) ? $backtrace['file'] : $caller['file']) . "\n";

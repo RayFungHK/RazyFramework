@@ -15,8 +15,10 @@ return [
 	'remap'       => '/',
 	'version'     => '1.0.0',
 	'route'       => [
-		'/'           => 'example.main',
-		'dataFactory' => 'example.dataFactory',
-		'throwerror'  => 'example.throwerror',
+		'/'                    => 'example.main',
+		'dataFactory'          => 'example.dataFactory',
+		'throwerror'           => 'example.throwerror',
+		'throwerror-thowable'  => 'example.throwerror_thowable',
+		'profiler'             => 'example.profiler',
 	],
 ];

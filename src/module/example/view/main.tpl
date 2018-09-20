@@ -26,7 +26,9 @@
     <ul>
       <li><a href="{$url_base}/admin/">Second Module Distribution</a></li>
       <li><a href="{$url_base}/dataFactory">DataFactory Test</a></li>
-      <li><a href="{$url_base}/throwerror">ThrowError</a></li>
+      <li><a href="{$url_base}/throwerror">ThrowError (Custom Throw Error)</a></li>
+      <li><a href="{$url_base}/throwerror-thowable">ThrowError (Throwable)</a></li>
+      <li><a href="{$url_base}/profiler">Profiler</a></li>
     </ul>
   </article>
 </body>

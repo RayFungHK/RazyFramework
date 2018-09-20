@@ -20,21 +20,9 @@ namespace RazyFramework
         return $dba->getQueried();
       });
 
-      $profiler = new Profiler();
-      $profiler->addStep('start');
-
   		$config     = $this->load->config('general');
   		$tplManager = $this->load->view('main')->addToQueue();
   		$tplManager->output();
-      $profiler->addStep('a');
-      $a = str_repeat(' ', 10240 * 10240);
-      $profiler->addStep('b');
-      $a = str_repeat(' ', 1024 * 1024);
-      $profiler->addStep('c');
-      $a = str_repeat(' ', 1024 * 1024);
-      $profiler->addStep('end');
-      $r = $profiler->report('b', 'c', 'a');
-      print_r($r['report']);
   	}
   }
 }
