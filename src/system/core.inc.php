@@ -28,6 +28,7 @@ namespace RazyFramework
   	}
   }
 
+	define('NEW_LINE', "\n");
 	if (\PHP_SAPI === 'cli' || defined('STDIN')) {
 		define('CLI_MODE', true);
 	} else {
@@ -63,10 +64,10 @@ namespace RazyFramework
 				header('location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
 			}
 		}
-	}
 
-	define('VIEW_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view');
-	define('VIEW_PATH_URL', URL_BASE . '/view');
+		define('VIEW_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view');
+		define('VIEW_PATH_URL', URL_BASE . '/view');
+	}
 
 	// Register Autoloader
 	spl_autoload_register(function ($class) use ($configuration) {

@@ -56,6 +56,7 @@ namespace RazyFramework
   			$this->urlQuery = rtrim($pathInfo['path'], '/') . '/';
   			$this->urlQuery = preg_replace('/^\/index.php/', '', $this->urlQuery);
   		} else {
+  			$argv = $_SERVER['argv'];
   			if (count($argv)) {
   				$this->urlQuery = array_shift($argv);
   			}
@@ -133,6 +134,7 @@ namespace RazyFramework
   			$argv             = $_SERVER['argv'];
   			$this->scriptPath = array_shift($argv);
   			$paramName        = '';
+  			$args             = [];
 
   			foreach ($argv as $key => $value) {
   				if (preg_match('/^(-){1,2}([^\s]+)$/', $value, $matches, PREG_OFFSET_CAPTURE)) {
@@ -151,7 +153,12 @@ namespace RazyFramework
   				}
   			}
 
-  			$this->scriptRoute = preg_replace('/\/+/', '/', '/' . implode('/', $args) . '/');
+        // Console line mode
+        if (isset($this->scriptParams['console'])) {
+          new Console();
+        } else {
+          $this->scriptRoute = preg_replace('/\/+/', '/', '/' . implode('/', $args) . '/');
+        }
   		}
   	}
 

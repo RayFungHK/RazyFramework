@@ -15,10 +15,12 @@ return [
 	'remap'       => '/',
 	'version'     => '1.0.0',
 	'route'       => [
-		'/'                    => 'example.main',
-		'dataFactory'          => 'example.dataFactory',
-		'throwerror'           => 'example.throwerror',
-		'throwerror-thowable'  => 'example.throwerror_thowable',
-		'profiler'             => 'example.profiler',
+		'/'                   => 'example.main',
+		'dataFactory'         => 'example.dataFactory',
+		'throwerror'          => 'example.throwerror',
+		'throwerror-thowable' => 'example.throwerror_thowable',
+		'profiler'            => 'example.profiler',
+	],
+	'console' => [
 	],
 ];
