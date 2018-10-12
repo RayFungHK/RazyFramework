@@ -190,7 +190,7 @@ namespace RazyFramework
 
   	public function getModuleRootURL()
   	{
-  		return DISTRIBUTION_BASE . $this->getRemapPath();
+  		return SYSTEM_ROOT_URL . ltrim($this->getRemapPath(), '/');
   	}
 
   	public function getViewPath()
@@ -200,7 +200,7 @@ namespace RazyFramework
 
   	public function getViewPathURL()
   	{
-  		return URL_BASE . preg_replace('/\/+/', '/', $this->moduleRoot) . 'view';
+  		return CORE_BASE_URL . preg_replace('/\/+/', '/', $this->moduleRoot) . 'view';
   	}
 
   	public function getRemapPath()

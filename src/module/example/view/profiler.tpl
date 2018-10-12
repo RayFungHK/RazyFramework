@@ -23,7 +23,7 @@
 <body>
   <article class="markdown-body">
     <h1>Profiler</h1>
-    <a href="{$url_base}">Back to Index</a>
+    <a href="{$system_root_url}">Back to Index</a>
     <h2>Multiple Sample</h2>
     <!-- START BLOCK: sample -->
     <h3>{$label}</h3>

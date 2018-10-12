@@ -54,9 +54,9 @@ namespace RazyFramework
 			define('HTTPS', (isset($_SERVER['HTTPS']) && 'on' === $_SERVER['HTTPS']) || PORT === '443');
 		}
 
-		// Declare `URL_BASE`
+		// Declare `CORE_BASE_URL`
 		// The full URL path of Razy Framework, combined with http/https protocal, HOSTNAME and URL_ROOT
-		define('URL_BASE', ((HTTPS) ? 'https://' : 'http://') . HOSTNAME . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT);
+		define('CORE_BASE_URL', ((HTTPS) ? 'https://' : 'http://') . HOSTNAME . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT);
 
 		// Force using HTTPS if global config declared parameter `force_ssl` as true
 		if (isset($configuration['force_ssl']) && $configuration['force_ssl']) {
@@ -65,8 +65,8 @@ namespace RazyFramework
 			}
 		}
 
-		define('VIEW_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view');
-		define('VIEW_PATH_URL', URL_BASE . '/view');
+		define('SHARED_VIEW_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view');
+		define('SHARED_VIEW_URL', CORE_BASE_URL . '/view');
 	}
 
 	// Register Autoloader

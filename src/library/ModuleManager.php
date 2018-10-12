@@ -53,7 +53,7 @@ namespace RazyFramework
   			$urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
 
   			$pathInfo       = parse_url($urlQuery);
-  			$this->urlQuery = rtrim($pathInfo['path'], '/') . '/';
+  			$this->urlQuery = (isset($pathInfo['path'])) ? rtrim($pathInfo['path'], '/') . '/' : '/';
   			$this->urlQuery = preg_replace('/^\/index.php/', '', $this->urlQuery);
   		} else {
   			$argv = $_SERVER['argv'];
@@ -66,21 +66,18 @@ namespace RazyFramework
 
   		// Creating Loader method in preload stage
   		// Loader: view
-  		Loader::CreateMethod('view', function (string $filepath, $rootview = false) {
+  		Loader::CreateMethod('view', function (string $filepath, bool $useSharedView = false) {
   			// If there is no extension provided, default as .tpl
   			if (!preg_match('/\.[a-z]+$/i', $filepath)) {
   				$filepath .= '.tpl';
   			}
 
-  			$root = (($rootview) ? VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR;
-  			$viewUrl = (($rootview) ? VIEW_PATH : $this->getViewPathURL()) . \DIRECTORY_SEPARATOR;
-
-  			$tplManager = new TemplateManager($root . $filepath, $this->getCode());
+  			$tplManager = new TemplateManager((($useSharedView) ? SHARED_VIEW_PATH : $this->getViewPath()) . \DIRECTORY_SEPARATOR . $filepath, $this->getCode());
   			$tplManager->globalAssign([
-  				'url_base'       => DISTRIBUTION_BASE,
-  				'module_root'    => DISTRIBUTION_BASE . $this->getRemapPath(),
-  				'view_path'      => $viewUrl,
-  				'root_view_path' => VIEW_PATH_URL . '/',
+  				'system_root_url' => SYSTEM_ROOT_URL,
+  				'module_root_url' => $this->getModuleRootURL(),
+  				'module_view_url' => (($useSharedView) ? SHARED_VIEW_URL : $this->getViewPathURL()) . \DIRECTORY_SEPARATOR,
+  				'shared_view_url' => SHARED_VIEW_URL . '/',
   			]);
 
   			return $tplManager;
@@ -101,9 +98,15 @@ namespace RazyFramework
   			// If there is distribution matched, start load module
   			// If no distribution matched, no module will be loaded
   			if ($this->matchDistribution()) {
+					// Declare `SYSTEM_ROOT_URL`
+					define('SYSTEM_ROOT_URL', CORE_BASE_URL . self::$distribution);
+
   				$this->loadModule(self::$moduleFolder);
   			}
   		} else {
+				// Declare `SYSTEM_ROOT_URL`
+				define('SYSTEM_ROOT_URL', CORE_BASE_URL);
+
   			// If no distribution declared, load default module folder
   			$this->loadModule(self::$moduleFolder);
   		}
@@ -153,12 +156,12 @@ namespace RazyFramework
   				}
   			}
 
-        // Console line mode
-        if (isset($this->scriptParams['console'])) {
-          new Console();
-        } else {
-          $this->scriptRoute = preg_replace('/\/+/', '/', '/' . implode('/', $args) . '/');
-        }
+  			// Console line mode
+  			if (isset($this->scriptParams['console'])) {
+  				new Console();
+  			} else {
+  				$this->scriptRoute = preg_replace('/\/+/', '/', '/' . implode('/', $args) . '/');
+  			}
   		}
   	}
 
@@ -178,7 +181,7 @@ namespace RazyFramework
   			header('location: ' . $path);
   		} else {
   			$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
-  			header('location: ' . URL_BASE . $path);
+  			header('location: ' . CORE_BASE_URL . $path);
   		}
   		die();
   	}
@@ -301,7 +304,7 @@ namespace RazyFramework
 
   					if ($this->routeModule) {
   						// If Razy has routed already, redirect it
-  						header('location: ' . URL_BASE . $path);
+  						header('location: ' . CORE_BASE_URL . $path);
   					} else {
   						// Save the current route module and arguments for internal use
   						$this->routeArguments = $args;
@@ -350,7 +353,7 @@ namespace RazyFramework
   			}
 
   			// Tidy route and module path
-  			$route      = preg_replace('/[\/\\\\]+/', '/', '/' . trim($route) . '/');
+  			$route      = preg_replace('/[\\\\\/]+/', '/', '/' . trim($route) . '/');
   			$modulePath = preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $modulePath . \DIRECTORY_SEPARATOR);
 
   			// Add distribution and ignore path
@@ -377,9 +380,15 @@ namespace RazyFramework
   		if (count(self::$moduleDistributions)) {
   			foreach (self::$moduleDistributions as $route => $path) {
   				if (0 === strpos($this->urlQuery, $route)) {
+  					if (is_callable($path)) {
+  						$path = $path();
+  					}
+
   					// If module distribution is found
-  					self::$moduleFolder = $path;
-  					self::$distribution = $route;
+  					if (is_string($path)) {
+  						self::$distribution = $route;
+  						self::$moduleFolder = $path;
+  					}
 
   					// Update the URL query
   					$this->urlQuery = substr($this->urlQuery, strlen($route) - 1);

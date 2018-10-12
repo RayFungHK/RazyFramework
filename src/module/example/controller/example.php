@@ -15,10 +15,10 @@ namespace RazyFramework
   {
   	public function main()
   	{
-      $dba = Database::GetConnection('local');
-      Profiler::AddStatistic('mysql_query', function() use ($dba) {
-        return $dba->getQueried();
-      });
+  		$dba = Database::GetConnection('local');
+  		Profiler::AddStatistic('mysql_query', function () use ($dba) {
+  			return $dba->getQueried();
+  		});
 
   		$config     = $this->load->config('general');
   		$tplManager = $this->load->view('main')->addToQueue();

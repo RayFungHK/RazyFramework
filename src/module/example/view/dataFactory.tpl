@@ -23,7 +23,7 @@
 <body>
   <article class="markdown-body">
     <h1>DataFactory and DataConvertor Test</h1>
-    <a href="{$url_base}">Back to Index</a>
+    <a href="{$system_root_url}">Back to Index</a>
     <h2>Example Data</h2>
     <pre>$data = [
   'Country' => [

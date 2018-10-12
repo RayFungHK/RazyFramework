@@ -44,10 +44,6 @@ namespace RazyFramework
   	$moduleManager = new ModuleManager();
   	define('REQUEST_ROUTE', $moduleManager->getURLQuery());
 
-		// Declare `DISTRIBUTION_BASE`
-		$distribution = rtrim(ModuleManager::GetDistribution(), '/');
-		define('DISTRIBUTION_BASE', ((HTTPS) ? 'https://' : 'http://') . HOSTNAME . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT . $distribution);
-
   	if (!$moduleManager->route(REQUEST_ROUTE)) {
   		header('HTTP/1.0 404 Not Found');
   		die();
