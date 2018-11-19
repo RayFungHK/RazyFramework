@@ -206,7 +206,7 @@ namespace RazyFramework
   					unset($column['length']);
   				} else {
   					if (preg_match('/(REAL|DOUBLE|FLOAT|DEC(IMAL)?|NUMERIC|FIXED)/i', $column['datatype'])) {
-  						list($integer, $decimal) = explode('.', $column['length']);
+  						list($integer, $decimal) = explode(',', $column['length']);
   						$integer                 = (int) $integer;
   						$decimal                 = (int) $decimal;
   						if ($decimal >= $integer) {

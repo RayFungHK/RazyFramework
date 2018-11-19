@@ -53,7 +53,7 @@ namespace RazyFramework
   			$urlQuery = (URL_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], URL_ROOT) + strlen(URL_ROOT)) : $_SERVER['REQUEST_URI'];
 
   			$pathInfo       = parse_url($urlQuery);
-  			$this->urlQuery = (isset($pathInfo['path'])) ? rtrim($pathInfo['path'], '/') . '/' : '/';
+  			$this->urlQuery = rtrim($pathInfo['path'], '/') . '/';
   			$this->urlQuery = preg_replace('/^\/index.php/', '', $this->urlQuery);
   		} else {
   			$argv = $_SERVER['argv'];
@@ -181,7 +181,7 @@ namespace RazyFramework
   			header('location: ' . $path);
   		} else {
   			$path = rtrim(preg_replace('/[\\\\\/]+/', '/', '/' . $path), '/');
-  			header('location: ' . CORE_BASE_URL . $path);
+  			header('location: ' . SYSTEM_ROOT_URL . $path);
   		}
   		die();
   	}

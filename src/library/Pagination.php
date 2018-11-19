@@ -30,7 +30,7 @@ namespace RazyFramework
   		$sp                = $_SERVER['SERVER_PROTOCOL'];
   		$protocol          = strtolower(substr($sp, 0, strpos($sp, '/')) . (($https) ? 's' : ''));
   		$this->baseURL     = $protocol . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
-  		$this->itemPerPage = min($settings['item_per_page'] ?? 20, 5);
+  		$this->itemPerPage = max($settings['item_per_page'] ?? 20, 5);
   		$this->currentPage = max((int) ($this->queryString[$pageParam] ?? 1), 1);
 
   		unset($this->queryString[$pageParam]);
@@ -57,6 +57,7 @@ namespace RazyFramework
   				$lastPageTag  = min($maxPage, $firstPageTag + ($this->maxDisplay - 1));
   			}
 
+        $queryString = $this->queryString;
   			$result = [
   				'start'        => $firstPageTag,
   				'end'          => $lastPageTag,
@@ -67,7 +68,6 @@ namespace RazyFramework
   				'tags'         => [],
   			];
 
-  			$queryString = $this->queryString;
   			for (; $firstPageTag <= $lastPageTag; ++$firstPageTag) {
   				$queryString['page'] = $firstPageTag;
 

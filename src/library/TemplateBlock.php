@@ -216,7 +216,7 @@ namespace RazyFramework
   									} else {
   										// If the parameter quoted by double quote, the string with backslashes
   										// that recognized by C-like \n, \r ..., octal and hexadecimal representation will be stripped off
-  										$bindObject->arguments[] = stripcslashes($match[1]);
+                      $bindObject->arguments[] = stripcslashes($match[1]);
   									}
   								} else {
   									$bindObject->arguments[] = '';
@@ -259,7 +259,7 @@ namespace RazyFramework
   					if (array_key_exists(2, $clip)) {
   						$value = stripcslashes($clip[2]);
   					}
-  					$bindObject->parameters[$clip[1]] = $value;
+  					$bindObject->parameters[$clip[1]] = $this->parseTag($value);
   				}
   			}
 
