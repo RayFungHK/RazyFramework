@@ -17,6 +17,8 @@ namespace RazyFramework
   	const STATUS_READY_STAGE   = 2;
   	const STATUS_ROUTING_STAGE = 3;
 
+  	const REGEX_WILDCARD = '/\{(?::(any|digi|word|alpha)|:\\?((?>[^{}\\\\]|\\\\.)+))\}/';
+
   	private static $instance            = null;
   	private static $moduleFolder        = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR;
   	private static $moduleDistributions = [];
@@ -98,14 +100,14 @@ namespace RazyFramework
   			// If there is distribution matched, start load module
   			// If no distribution matched, no module will be loaded
   			if ($this->matchDistribution()) {
-					// Declare `SYSTEM_ROOT_URL`
-					define('SYSTEM_ROOT_URL', CORE_BASE_URL . self::$distribution);
+  				// Declare `SYSTEM_ROOT_URL`
+  				define('SYSTEM_ROOT_URL', CORE_BASE_URL . self::$distribution);
 
   				$this->loadModule(self::$moduleFolder);
   			}
   		} else {
-				// Declare `SYSTEM_ROOT_URL`
-				define('SYSTEM_ROOT_URL', CORE_BASE_URL);
+  			// Declare `SYSTEM_ROOT_URL`
+  			define('SYSTEM_ROOT_URL', CORE_BASE_URL);
 
   			// If no distribution declared, load default module folder
   			$this->loadModule(self::$moduleFolder);
@@ -379,7 +381,48 @@ namespace RazyFramework
   	{
   		if (count(self::$moduleDistributions)) {
   			foreach (self::$moduleDistributions as $route => $path) {
-  				if (0 === strpos($this->urlQuery, $route)) {
+  				if (preg_match(self::REGEX_WILDCARD, $route)) {
+  					// If the path is a wildcard selector
+  					$clips = explode('/', $route);
+  					foreach ($clips as &$clip) {
+  						$clip = preg_replace_callback(self::REGEX_WILDCARD, function ($matches) {
+  							if (isset($matches[2])) {
+  								return '(' . $matches[2] . ')';
+  							}
+
+  							if ('any' === $matches[1]) {
+  								return '(.+?)';
+  							}
+
+  							if ('digi' === $matches[1]) {
+  								return '(\d+)';
+  							}
+
+  							if ('alpha' === $matches[1]) {
+  								return '([a-zA-Z]+)';
+  							}
+
+  							if ('word' === $matches[1]) {
+  								return '(\w+)';
+  							}
+  						}, $clip);
+  					}
+            // Join all clip and convert to regex pattern
+  					$route = '/^' . implode('\\/', $clips) . '(.*)/';
+
+  					if (preg_match_all($route, $this->urlQuery, $matches, PREG_SET_ORDER)) {
+    					// Update the URL query
+    					$this->urlQuery = array_pop($matches[0]);
+
+    					// If module distribution is found
+    					if (is_string($path)) {
+    						self::$distribution = $route;
+    						self::$moduleFolder = $path;
+    					}
+
+  						return true;
+  					}
+  				} elseif (0 === strpos($this->urlQuery, $route)) {
   					if (is_callable($path)) {
   						$path = $path();
   					}

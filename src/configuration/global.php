@@ -34,5 +34,6 @@ return [
 		'/admin' => function () {
 			return SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module' . \DIRECTORY_SEPARATOR . 'admin';
 		},
+		'/cn-{:alpha}' => SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'module',
 	],
 ];
