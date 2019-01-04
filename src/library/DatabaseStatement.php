@@ -319,9 +319,9 @@ namespace RazyFramework
   		$syntaxEnded = false;
   		foreach ($parsedStatement as $statement) {
   			if (is_object($statement)) {
-  				$result[] = '(' . $this->parseSyntax($statement->text) . ')' . $statement->joinType;
+  				$result[] = '(' . $this->parseSelectSyntax($statement->text) . ')' . $statement->joinType;
   			} elseif (is_array($statement)) {
-  				$result[] = $this->parseSyntax($statement);
+  				$result[] = $this->parseSelectSyntax($statement);
   			} else {
   				if (!preg_match('/^(?:' . self::REGEX_SELECT . ')+?$/', $statement)) {
   					new ThrowError('Invalid Select-Syntax format.');
