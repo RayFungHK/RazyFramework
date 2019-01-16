@@ -11,9 +11,6 @@
 
 namespace RazyFramework
 {
-	// Prevent Resubmission
-	session_start();
-
 	// Remove useless header
 	header_remove('X-Powered-By');
 
@@ -68,6 +65,10 @@ namespace RazyFramework
 		define('SHARED_VIEW_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view');
 		define('SHARED_VIEW_URL', CORE_BASE_URL . '/view');
 	}
+
+  session_set_cookie_params(0, URL_ROOT . '/', HOSTNAME);
+  session_name(md5(CORE_BASE_URL));
+	session_start();
 
 	// Register Autoloader
 	spl_autoload_register(function ($class) use ($configuration) {
