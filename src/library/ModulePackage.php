@@ -190,7 +190,7 @@ namespace RazyFramework
 
   	public function getModuleRootURL()
   	{
-  		return SYSTEM_ROOT_URL . ltrim($this->getRemapPath(), '/');
+  		return SYSTEM_ROOT_URL . '/' . ltrim($this->getRemapPath(), '/');
   	}
 
   	public function getViewPath()

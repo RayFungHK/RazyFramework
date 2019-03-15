@@ -56,6 +56,12 @@ namespace RazyFramework
   	const FETCH_GROUP    = 2;
   	const FETCH_KEY_PAIR = 3;
 
+  	const PARAM_STRING     = 'string';
+  	const PARAM_CONTAIN    = '*';
+  	const PARAM_START_WITH = '^';
+  	const PARAM_END_WITH   = '$';
+  	const PARAM_SET        = 'set';
+
   	private static $dbConnectionLists = [];
 
   	private $dba;
@@ -104,7 +110,7 @@ namespace RazyFramework
   		return new DatabaseStatement($this, $sql);
   	}
 
-  	public function prepare($sql, array $parameters = [])
+  	public function prepare($sql = null, array $parameters = [])
   	{
   		if ($sql instanceof DatabaseTable) {
   			$dbs = new DatabaseStatement($this, $sql->getSyntax());
@@ -113,7 +119,7 @@ namespace RazyFramework
   		} elseif (is_string($sql)) {
   			$dbs = $this->createStatement($sql);
   		} else {
-        new ThrowError('Invalid SQL statement object, it should be a DatabaseTable, DatabaseStatement or string.');
+        $dbs = new DatabaseStatement($this);
       }
 
       $dbs->setParameter($parameters);

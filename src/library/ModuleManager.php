@@ -193,6 +193,14 @@ namespace RazyFramework
   		return $this->stage;
   	}
 
+    public function getModule(string $moduleCode)
+    {
+      if ($this->moduleisReady($moduleCode)) {
+        return $this->moduleReady[$moduleCode];
+      }
+      new ThrowError('Module ' . $moduleCode . ' is not found.');
+    }
+
   	public function moduleisReady(string $moduleCode)
   	{
   		return isset($this->moduleReady[$moduleCode]);
