@@ -1,0 +1,111 @@
+<html>
+
+<head>
+  <style>
+    body, html {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    body {
+      font-family: sans-serif;
+      color: hsl(215, 10%, 30%);
+      background: hsl(215, 10%, 96%);
+      font-family: "Roboto Mono", "Liberation Mono", Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: -ms-flexbox;
+      display: -webkit-box;
+      display: flex;
+      -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+      -ms-flex-align: center;
+      -webkit-box-align: center;
+      -ms-grid-row-align: center;
+      align-items: center;
+      -ms-flex-pack: center;
+      -webkit-box-pack: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .error-code {
+      transform: skew(-6deg);
+      font-size: 15vmax;
+      text-shadow: .5rem .5rem rgba(0,0,0,.1);
+    }
+
+    .error-code span.animation {
+      display: inline-block;
+      transform-origin: center;
+      -webkit-animation: heartbeat 2.8s 1 forwards;
+      -moz-animation:    heartbeat 2.8s 1 forwards;
+      -o-animation:      heartbeat 2.8s 1 forwards;
+      animation:         heartbeat 2.8s 1 forwards;
+    }
+
+    .error-code span:nth-child(2) {
+      animation-delay: .9s;
+    }
+
+    .error-code span:nth-child(3) {
+      animation-delay: 1.8s;
+    }
+
+    .error-message {
+      letter-spacing: -.1rem;
+      font-size: 2rem;
+      margin-top: 1rem;
+    }
+
+    .error-description {
+      font-family: 'Open Sans', sans-serif;
+      opacity: .8;
+      margin-top: 1rem;
+    }
+
+    @keyframes heartbeat {
+      0% {
+        transform: scale(1);
+        -webkit-transform: scale(1);
+        opacity: 1;
+        text-shadow: .5rem .5rem rgba(0,0,0,.1);
+      }
+      100% {
+        transform: scale(1.2);
+        -webkit-transform: scale(1.2);
+        opacity: .2;
+        text-shadow: .75rem .75rem .25rem rgba(0,0,0,.1);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div>
+      <div class="error-code">404</div>
+      <div class="error-message">Page not found</div>
+      <div class="error-description">Looks like the page you were looking for is no longer here.</div>
+    </div>
+  </div>
+  <script>
+    var code = document.getElementsByClassName('error-code')[0],
+        text = code.innerText;
+
+    code.innerText = '';
+    for (var i = 0; i < text.length; i++) {
+      var span = document.createElement('span');
+      span.innerText = text[i];
+      code.appendChild(span);
+      span.className = 'animation';
+    }
+  </script>
+</body>

@@ -14,107 +14,77 @@ namespace RazyFramework
 	// Remove useless header
 	header_remove('X-Powered-By');
 
-  // Load global config
-  $configuration = [];
-  if (file_exists(SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'configuration' . \DIRECTORY_SEPARATOR . 'global.php')) {
-  	try {
-  		$configuration = require SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'configuration' . \DIRECTORY_SEPARATOR . 'global.php';
-  	} catch (\Exception $e) {
-  		header('HTTP/1.0 500 Internal Server Error');
-  		die();
-  	}
-  }
+	define('PLUGIN_FOLDER', append(SYSTEM_ROOT, 'plugins'));
+	define('SITES_FOLDER', append(SYSTEM_ROOT, 'sites'));
 
-	define('NEW_LINE', "\n");
+	// Register Autoloader
+	spl_autoload_register(function ($class) {
+		$classes = explode('\\', $class);
+		$package = (count($classes) > 1) ? array_shift($classes) : '';
+
+		// Load Razy core library from root library folder
+		if ('RazyFramework' === $package) {
+			$libraryFolder = realpath(append(SYSTEM_ROOT, 'library'));
+			if ($libraryFolder && is_dir($libraryFolder)) {
+				$libraryPath = append($libraryFolder, $classes) . '.php';
+
+				if (is_file($libraryPath)) {
+					include $libraryPath;
+
+					return class_exists($class);
+				}
+			}
+
+			return false;
+		}
+
+		// If the class is not in the RazyFramework namespace, search and load in all registered module
+		return Modular\Manager::SPLAutoload($class);
+	});
+
 	if (\PHP_SAPI === 'cli' || defined('STDIN')) {
 		define('CLI_MODE', true);
 	} else {
 		define('CLI_MODE', false);
 
-		// Declare `URL_ROOT`
-		// The absolute path, if your Razy locate in http://yoursite.com/Razy/Framework, the URL_ROOT will declare as /Razy/Framework
-		define('URL_ROOT', preg_replace('/\\\\+/', '/', substr(SYSTEM_ROOT, strpos(SYSTEM_ROOT, $_SERVER['DOCUMENT_ROOT']) + strlen($_SERVER['DOCUMENT_ROOT']))));
+		// Declare `RELATIVE_ROOT`
+		// The absolute path, if your Razy locate in http://yoursite.com/Razy/Framework, the RELATIVE_ROOT will declare as /Razy/Framework
+		define('RELATIVE_ROOT', preg_replace('/\\\\+/', '/', substr(SYSTEM_ROOT, strpos(SYSTEM_ROOT, $_SERVER['DOCUMENT_ROOT']) + strlen($_SERVER['DOCUMENT_ROOT']))));
 
 		// Declare `HOSTNAME`
-		// The hostname, if the REQUEST PATH is http://yoursite.com:8080/Razy, the HOSTNAME will declare as yoursite.com:8080
+		// The hostname, if the REQUEST PATH is http://yoursite.com:8080/Razy, the HOSTNAME will declare as yoursite.com
 		define('HOSTNAME', (isset($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : ((isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : 'UNKNOWN'));
 
 		// Declare `PORT`
 		// The protocal, if the REQUEST PATH is http://yoursite.com:8080/Razy, the PORT will declare as 8080
 		define('PORT', $_SERVER['SERVER_PORT']);
 
-		// Declare `HTTPS`
-		// Determine of HTTPS protocol
-		if (isset($configuration['identify_ssl']) && is_callable($configuration['identify_ssl'])) {
-			define('HTTPS', $configuration['identify_ssl']());
-		} else {
-			define('HTTPS', (isset($_SERVER['HTTPS']) && 'on' === $_SERVER['HTTPS']) || PORT === '443');
-		}
+		// Declare `SITE_URL_ROOT`
+		$protocal = (is_ssl()) ? 'https' : 'http';
+		define('SITE_URL_ROOT', $protocal . '://' . HOSTNAME . ((PORT !== '80') ? ':' . PORT : ''));
 
-		// Declare `CORE_BASE_URL`
-		// The full URL path of Razy Framework, combined with http/https protocal, HOSTNAME and URL_ROOT
-		define('CORE_BASE_URL', ((HTTPS) ? 'https://' : 'http://') . HOSTNAME . ((PORT !== '80' && PORT !== '443') ? ':' . PORT : '') . URL_ROOT);
+		// Declare `RAZY_URL_ROOT`
+		define('RAZY_URL_ROOT', append(SITE_URL_ROOT, RELATIVE_ROOT));
 
-		// Force using HTTPS if global config declared parameter `force_ssl` as true
-		if (isset($configuration['force_ssl']) && $configuration['force_ssl']) {
-			if (!HTTPS) {
-				header('location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-			}
-		}
-
-		define('SHARED_VIEW_PATH', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'view');
-		define('SHARED_VIEW_URL', CORE_BASE_URL . '/view');
+		// Declare `RAZY_URL_ROOT`
+		define('SCRIPT_URL', append(SITE_URL_ROOT, strtok($_SERVER['REQUEST_URI'], '?')));
 	}
-
-  session_set_cookie_params(0, URL_ROOT . '/', HOSTNAME);
-  session_name(md5(CORE_BASE_URL));
-	session_start();
-
-	// Register Autoloader
-	spl_autoload_register(function ($class) use ($configuration) {
-		$classes = explode('\\', $class);
-		$package = (count($classes) > 1) ? array_shift($classes) : '';
-
-		// Load Razy core library from root library folder
-		if ('RazyFramework' === $package) {
-			$path = implode(\DIRECTORY_SEPARATOR, $classes);
-
-			// Setup the library path
-			if (isset($configuration['library_path']) && trim($configuration['library_path'])) {
-				$libraryFolder = trim($configuration['library_path']);
-				$libraryFolder = realpath(preg_replace('/[\\\\\/]+/', \DIRECTORY_SEPARATOR, $libraryFolder . \DIRECTORY_SEPARATOR));
-
-				if (false === $libraryFolder || !is_dir($libraryFolder)) {
-					// If the library folder does not exists or not a directory
-					header('HTTP/1.0 500 Internal Server Error');
-					die();
-				}
-			} else {
-				$libraryFolder = SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'library';
-			}
-
-			$libraryPath = $libraryFolder . \DIRECTORY_SEPARATOR . $path . '.php';
-
-			if (file_exists($libraryPath)) {
-				include $libraryPath;
-
-				return class_exists($class);
-			}
-
-			return false;
-		}
-
-		// If the autoload class is not in RazyFramework namespace, load external library from module folder
-		$manager = ModuleManager::GetInstance();
-
-		return $manager->loadLibrary($class);
-	});
 
 	if (isset($configuration['debug'])) {
-		ThrowError::SetDebugMode(!!$configuration['debug']);
+		ErrorHandler::SetDebug((bool) $configuration['debug']);
 	}
 
-	set_exception_handler(function($exception) {
-		new ThrowError($exception);
-	});
+  set_exception_handler(function ($exception) {
+  	if (!defined('EXCEPTION_HALT') && $exception) {
+  		define('EXCEPTION_HALT', true);
+  		ErrorHandler::ShowException($exception);
+  	}
+  });
+
+	// Eject the wrapper
+	$wrapper = (Scavenger::GetWorker())->eject();
+	register_shutdown_function(function ($wrapper) {
+		$wrapper->start();
+	}, $wrapper);
+	$wrapper = null;
 }

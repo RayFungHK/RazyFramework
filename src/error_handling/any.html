@@ -1,0 +1,145 @@
+<html>
+
+<head>
+  <style>
+    body {
+      font-family: sans-serif;
+      color: hsl(215, 10%, 30%);
+      background: hsl(215, 10%, 96%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body, pre, .debug > * {
+      margin: 0;
+      padding: 1rem;
+    }
+
+    pre {
+      border-left: 3px solid hsl(215, 10%, 90%);
+      background: hsl(215, 10%, 95%);
+      word-wrap: normal;
+      overflow: auto;
+      line-height: 1.5;
+    }
+
+    pre > code {
+      display: inline;
+      max-width: none;
+      padding: 0;
+      margin: 0;
+      overflow: visible;
+      line-height: inherit;
+      word-wrap: normal;
+      word-break: normal;
+      white-space: pre;
+    }
+
+    .debug {
+      border-bottom: 1px solid hsl(215, 10%, 95%);
+    }
+
+    .debug:hover {
+      background: hsl(215, 10%, 98%);
+    }
+
+    .debug-box {
+      font-size: 0.9rem;
+      background: #fff;
+      border-radius: 3px;
+      box-shadow: 0 2px 2px hsl(215, 10%, 92%);
+      margin-top: 1em;
+    }
+
+    .caller {
+      display: flex;
+      -ms-flex-align: center;
+      -webkit-box-align: center;
+      -ms-grid-row-align: center;
+      align-items: center;
+      color: hsl(215, 10%, 50%)
+    }
+
+    .classtype span {
+      display: inline-block;
+      padding: 0 .15em;
+      color: hsl(335, 40%, 50%);
+      font-weight: bold;
+    }
+
+    .stack {
+      background: hsl(215, 10%, 95%);
+      border: 1px solid hsl(215, 10%, 90%);
+      min-width: 1.75rem;
+      text-align: center;
+      border-radius: 3px;
+      padding: .25em .5em;
+      margin-right: .5em;
+    }
+
+    .error-message {
+      color: hsl(215, 10%, 50%);
+      margin-bottom: 1rem;
+    }
+
+    .error-detail {
+      font-size: .8rem;
+      line-height: 150%;
+      margin-bottom: .5em;
+      border-radius: 4px;
+    }
+
+    .error-detail span {
+      background: hsl(215, 10%, 92%);
+      border-radius: 4px;
+      padding: .25em;
+      width: 40px;
+      display: inline-block;
+      margin-right: .5em;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin: 1rem 0;
+    }
+
+    h2 {
+      border-top: 1px dotted hsl(215, 10%, 80%);
+      font-size: 1.4rem;
+      padding-top: 1rem;
+    }
+
+    .wrapper {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <h1>{$heading}</h1>
+    <div class="error-message">{$message}</div>
+    <div class="error-detail"><span>File</span>{$file}</div>
+    <div class="error-detail"><span>Line</span>{$line}</div>
+
+    {->>debug}
+    <h2>Stack Trace</h2>
+    <div class="debug-box">
+      {->>backtrace}
+      <div class="debug">
+        <div>
+          <div class="caller">
+            <span class="stack">{$index}</span>
+            <span class="classtype">{$stack}</span>
+          </div>
+        </div>
+      </div>
+      {<<-backtrace}
+    </div>
+    {<<-debug}
+  </div>
+</body>

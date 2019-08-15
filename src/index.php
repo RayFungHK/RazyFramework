@@ -12,23 +12,16 @@
 namespace RazyFramework
 {
   define('SYSTEM_ROOT', __DIR__);
-  require SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'system' . \DIRECTORY_SEPARATOR . 'core.inc.php';
+	define('CORE_FOLDER', SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'system' . \DIRECTORY_SEPARATOR);
+  require CORE_FOLDER . 'functions.php';
+  require CORE_FOLDER . 'core.inc.php';
 
-  // Setup the default module folder
-	if (array_key_exists('module_path', $configuration) && is_array($configuration['module_path'])) {
-		ModuleManager::SetDefaultModulePath($configuration['module_path']);
-	}
-
-	// Setup the module path from global config
-	if (array_key_exists('module_distribution', $configuration) && is_array($configuration['module_distribution'])) {
-		ModuleManager::SetModuleDistribution($configuration['module_distribution']);
-	}
+  Modular\Manager::Initialize();
+  ErrorHandler::SetDebug(true);
 
   if (CLI_MODE) {
-  	define('REQUEST_ROUTE', null);
-
   	// Load module
-  	$moduleManager = new ModuleManager();
+  	$moduleManager = new Modular\Manager();
   	$path          = $moduleManager->getScriptRoute();
 
   	if (!$moduleManager->route($path)) {
@@ -40,13 +33,16 @@ namespace RazyFramework
   		ob_start();
   	}
 
-  	// Load module
-  	$moduleManager = new ModuleManager();
-  	define('REQUEST_ROUTE', $moduleManager->getURLQuery());
+    session_set_cookie_params(0, RELATIVE_ROOT, HOSTNAME);
+    session_name(md5(HOSTNAME . RELATIVE_ROOT));
+    session_start();
 
-  	if (!$moduleManager->route(REQUEST_ROUTE)) {
-  		header('HTTP/1.0 404 Not Found');
-  		die();
+  	// Create the pirmary module manager
+  	$manager = new Modular\Manager();
+
+  	if (!$manager->route()) {
+  		ErrorHandler::Show404();
+  		exit;
   	}
 
   	ob_end_flush();

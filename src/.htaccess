@@ -4,9 +4,6 @@ RewriteBase /
 RewriteCond $0#%{REQUEST_URI} ([^#]*)#(.*)\1$
 RewriteRule ^.*$ - [E=CWD:%2]
 
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.+)/$ %{ENV:CWD}$1 [L,R=301]
-
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-l
