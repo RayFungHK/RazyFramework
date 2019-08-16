@@ -382,6 +382,12 @@ namespace RazyFramework\Modular
 		 */
 		public function route()
 		{
+			foreach ($this->packages as $packageCode => $package) {
+				if (Package::STATUS_ACTIVE === $package->getStatus()) {
+					$this->wrappers[$packageCode]->connect();
+				}
+			}
+
 			// If there is a module package is locked.
 			if ($this->locked) {
 				if (!$this->doRouting($this->locked)) {

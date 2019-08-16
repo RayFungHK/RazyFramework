@@ -94,7 +94,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * It will be executed if the module routing prefix is matched.
+		 * It will be triggered if the module routing prefix is matched.
 		 *
 		 * @param string $urlQuery The url query ready to route
 		 *
@@ -106,7 +106,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * After module manager routing to matched package by routing prefix, this method will be executed to rewrite the given URL query.
+		 * After module manager routing to matched package by routing prefix, this method will be triggered to rewrite the given URL query.
 		 *
 		 * @param string $urlQuery The original URL Query
 		 *
@@ -115,6 +115,16 @@ namespace RazyFramework\Modular
 		public function __onBeforeRoute(string $urlQuery)
 		{
 			return $urlQuery;
+		}
+
+		/**
+		 * It will be triggered before doing routing.
+		 *
+		 * @return self Chainable
+		 */
+		public function __onRouteReady()
+		{
+			return $this;
 		}
 
 		/**
@@ -128,7 +138,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * It will be executed if the version is different with the current version.
+		 * It will be triggered if the version is different with the current version.
 		 *
 		 * @param string $version The current version
 		 *
@@ -140,7 +150,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * It will be executed before execute the API method.
+		 * It will be triggered before execute the API method.
 		 *
 		 * @param array  $trace  An array contains the package module calling chain
 		 * @param string $method The name of the API method
@@ -154,7 +164,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * It will be executed before the trigger the event.
+		 * It will be triggered before the event has been triggered.
 		 *
 		 * @param array  $trace  An array contains the package module calling chain
 		 * @param string $method The name of the API method
@@ -168,7 +178,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * It will be executed if all module has prepared.
+		 * It will be triggered if all module has prepared.
 		 *
 		 * @return self Chainable
 		 */
@@ -178,7 +188,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * It will be executed if the route is done.
+		 * It will be triggered if the route is done.
 		 *
 		 * @param string $moduleCode The route module's code
 		 *

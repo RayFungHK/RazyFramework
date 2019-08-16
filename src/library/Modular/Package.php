@@ -207,7 +207,7 @@ namespace RazyFramework\Modular
 			}
 
 			$this->wrapper    = $wrapper;
-			$this->wrapper->preset($this)->exchange($this->code, $this->wrapper(['execute', 'trigger', 'route', 'prepare', 'touch', 'ready', 'rewrite', 'notify']));
+			$this->wrapper->preset($this)->exchange($this->code, $this->wrapper(['execute', 'trigger', 'route', 'prepare', 'touch', 'ready', 'rewrite', 'notify', 'connect']));
 
 			$this->version = trim($setting['version']);
 			if (!$this->version) {
@@ -786,6 +786,7 @@ namespace RazyFramework\Modular
 					$this->routedPath    = $route;
 
 					$this->wrapper->broadcast();
+
 					return call_user_func_array([$this->controller, $method], $args);
 				}
 			}
@@ -817,6 +818,18 @@ namespace RazyFramework\Modular
 		private function rewrite(string $urlQuery)
 		{
 			return $this->controller->__onBeforeRoute($urlQuery);
+		}
+
+		/**
+		 * Notify the module that ready to route.
+		 *
+		 * @return self Chainable
+		 */
+		private function connect()
+		{
+			$this->controller->__onRouteReady();
+
+			return $this;
 		}
 
 		/**

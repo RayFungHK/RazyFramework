@@ -11,7 +11,7 @@
 
 namespace RazyFramework\Database
 {
-	use \RazyFramework\ErrorHandler;
+	use RazyFramework\ErrorHandler;
 
 	/**
 	 * Contains the column parameter and its data type.
@@ -82,13 +82,40 @@ namespace RazyFramework\Database
 		private $collation = '';
 
 		/**
+		 * The column name.
+		 *
+		 * @var string
+		 */
+		private $name = '';
+
+		/**
+		 * The table name.
+		 *
+		 * @var string
+		 */
+		private $table = '';
+
+		/**
+		 * The specified column used to add column after.
+		 *
+		 * @var string
+		 */
+		private $after = '';
+
+		/**
 		 * Column constructor.
 		 *
 		 * @param string $columnName The column name
+		 * @param string $tableName  The table name
 		 */
-		public function __construct(string $columnName)
+		public function __construct(string $columnName, string $tableName = '')
 		{
-			$this->name = $columnName;
+			$columnName = trim($columnName);
+			if (!preg_match('/^(\`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\\`])+\`|[a-z]\w*)$/', $columnName)) {
+				throw new ErrorHandler('The column name ' . $columnName . ' is not in a correct format,');
+			}
+			$this->name  = $columnName;
+			$this->table = trim($tableName);
 		}
 
 		/**
@@ -283,6 +310,52 @@ namespace RazyFramework\Database
 			$this->nullable = $enable;
 
 			return $this;
+		}
+
+		/**
+		 * Alter table add column after the specified column.
+		 *
+		 * @param string $columnName The column name
+		 *
+		 * @return self Chainable
+		 */
+		public function after(string $columnName)
+		{
+			$columnName = trim($columnName);
+			if (!preg_match('/^(\`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\\`])+\`|[a-z]\w*)$/', $columnName)) {
+				throw new ErrorHandler('The after column name ' . $columnName . ' is not in a correct format,');
+			}
+			$this->after = $columnName;
+
+			return $this;
+		}
+
+		/**
+		 * Return the alter table add syntax.
+		 *
+		 * @return string The SQL Syntax
+		 */
+		public function getAddSyntax()
+		{
+			if ($this->table) {
+				return 'ALTER TABLE ' . $this->table . ' ADD ' . $this->getSyntax() . (($this->after) ? ' AFTER ' . $this->after : '');
+			}
+
+			return '';
+		}
+
+		/**
+		 * Return the alter table drop syntax.
+		 *
+		 * @return string The SQL Syntax
+		 */
+		public function getDropSyntax()
+		{
+			if ($this->table) {
+				return 'ALTER TABLE ' . $this->table . ' DROP ' . $this->name;
+			}
+
+			return '';
 		}
 
 		/**

@@ -182,7 +182,7 @@ namespace RazyFramework
   		$pathInfo = pathinfo($this->path);
 
   		// Check the configuration folder does exist
-  		if (!is_file($pathInfo['dirname'])) {
+  		if (!is_dir($pathInfo['dirname'])) {
   			// Create the directory
   			mkdir($pathInfo['dirname'], 0755, true);
   		} elseif (!is_dir($pathInfo['dirname'])) {

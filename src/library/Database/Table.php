@@ -11,8 +11,8 @@
 
 namespace RazyFramework\Database
 {
-	use \RazyFramework\ErrorHandler;
-	
+	use RazyFramework\ErrorHandler;
+
 	/**
 	 * Used to create a database table.
 	 */
@@ -67,7 +67,7 @@ namespace RazyFramework\Database
 		{
 			$columnName = trim($columnName);
 			if (!isset($this->columns[$columnName])) {
-				$this->columns[$columnName] = new Column($columnName);
+				$this->columns[$columnName] = new Column($columnName, $this->name);
 			}
 
 			return $this->columns[$columnName];
