@@ -538,34 +538,39 @@ namespace RazyFramework\Template
   	{
   		$content = $this->replaceFunc($content);
   		if (!$regex = RegexHelper::GetCache('template-replace-tag')) {
-  			$regex = new RegexHelper('/{\$(\w+)((?:\[\d+\]|\.(?<content>\w+|(?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>))*)(\|\w+(?::(?P>content))*)*(\s?(?:[<>]|(?:\s?[!*$^><])?=)\s?(?P>content))?(?:\s*#(\w+(?:\.\w+)*))?}/', 'template-replace-tag');
+  			$regex = new RegexHelper('/{(!)?\$(\w+)((?:\[\d+\]|\.(?<content>\w+|(?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>))*)(\|\w+(?::(?P>content))*)*(\s?(?:[<>]|(?:\s?[!*$^><])?=)\s?(?P>content))?(?:\s*#(\w+(?:\.\w+)*))?}/', 'template-replace-tag');
   		}
 
   		$result = '';
   		while ($matches = $regex->match($content, $offset)) {
   			// Get the parameter value
-  			$value = $this->processParameter($matches[1], $matches[2] ?? '');
+  			$value = $this->processParameter($matches[2], $matches[3] ?? '');
 
   			// Pass the value to modifier
-  			$value = $this->processModifier($value, $matches[5] ?? '');
+  			$value = $this->processModifier($value, $matches[6] ?? '');
 
   			// If the comparison is given
-  			if (isset($matches[6])) {
+  			if (isset($matches[7])) {
   				if (!is_scalar($value)) {
   					$value = false;
   				} else {
-  					$value = $this->comparision($value, trim($matches[6]));
+  					$value = $this->comparision($value, trim($matches[7]));
   				}
   			}
+
+        // Negative symbol is given
+        if (isset($matches[1]) && $matches[1]) {
+          $value = !$value;
+        }
 
   			$result .= substr($content, 0, $offset[0]);
   			$content = substr($content, $offset[0] + strlen($matches[0]));
 
   			// If the bookmark is given, find the closing tag with the given bookmark name.
-  			if (isset($matches[7])) {
-  				$closingTag = '{/#' . $matches[7] . '}';
+  			if (isset($matches[8])) {
+  				$closingTag = '{/#' . $matches[8] . '}';
   			} else {
-  				$closingTag = '{/$' . $matches[1] . ($matches[2] ?? '') . '}';
+  				$closingTag = '{/$' . $matches[2] . ($matches[3] ?? '') . '}';
   			}
 
   			if (false !== ($pos = strpos($content, $closingTag))) {
