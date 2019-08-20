@@ -29,32 +29,39 @@ namespace RazyFramework\Modular
 		const STATUS_PENDING = 0;
 
 		/**
+		 * Module initializing status
+		 *
+		 * @var int
+		 */
+		const STATUS_INITIALIZING = 1;
+
+		/**
 		 * Module Unloaded status, fail to initialize in onInit stage.
 		 *
 		 * @var int
 		 */
-		const STATUS_UNLOADED = 1;
+		const STATUS_UNLOADED = 2;
 
 		/**
 		 * Module loaded status, routing, API and event available.
 		 *
 		 * @var int
 		 */
-		const STATUS_LOADED = 2;
+		const STATUS_LOADED = 3;
 
 		/**
 		 * Module disabled status, it still can communicate with other modules. In this status it can not be routed, the event cannot be trggered and the API is not available.
 		 *
 		 * @var int
 		 */
-		const STATUS_DISABLED = 3;
+		const STATUS_DISABLED = 4;
 
 		/**
 		 * Module done status. In this status it can be routed, the event can be trggered and the API is available.
 		 *
 		 * @var int
 		 */
-		const STATUS_ACTIVE = 4;
+		const STATUS_ACTIVE = 5;
 
 		/**
 		 * The module code, it is unique in distribution.
@@ -207,7 +214,7 @@ namespace RazyFramework\Modular
 			}
 
 			$this->wrapper    = $wrapper;
-			$this->wrapper->preset($this)->exchange($this->code, $this->wrapper(['execute', 'trigger', 'route', 'prepare', 'touch', 'ready', 'rewrite', 'notify', 'connect']));
+			$this->wrapper->preset($this)->exchange($this->code, $this->wrapper(['execute', 'trigger', 'route', 'prepare', 'touch', 'ready', 'rewrite', 'notify', 'standby']));
 
 			$this->version = trim($setting['version']);
 			if (!$this->version) {
@@ -250,6 +257,8 @@ namespace RazyFramework\Modular
 				// Load the controller
 				$controllerPath = append($this->modulePath, 'controller', $this->code . '.php');
 				if (is_file($controllerPath)) {
+					$this->status = self::STATUS_INITIALIZING;
+
 					// Load the class file, all module controller class MUST under 'Module' namespace
 					include $controllerPath;
 
@@ -821,13 +830,13 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Notify the module that ready to route.
+		 * Standby until start to routing in
 		 *
 		 * @return self Chainable
 		 */
-		private function connect()
+		private function standby()
 		{
-			$this->controller->__onRouteReady();
+			$this->controller->__onRouteStandby();
 
 			return $this;
 		}

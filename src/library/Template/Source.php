@@ -55,27 +55,18 @@ namespace RazyFramework\Template
   	private $manager;
 
   	/**
-  	 * The Wrapper object.
-  	 *
-  	 * @var Wrapper
-  	 */
-  	private $wrapper;
-
-  	/**
   	 * Template Source constructor.
   	 *
   	 * @param string  $tplPath The path of template file
   	 * @param Manager $manager The Manager object
-  	 * @param Wrapper $wrapper The Wrapper object
   	 */
-  	public function __construct(string $tplPath, Manager $manager, Wrapper $wrapper)
+  	public function __construct(string $tplPath, Manager $manager)
   	{
   		if (!is_file($tplPath)) {
   			throw new ErrorHandler('Template file ' . $tplPath . ' is not exists.');
   		}
   		$content       = file($tplPath);
   		$this->manager = $manager;
-  		$this->wrapper = $wrapper;
 
   		$this->root = new Entity(new Block('_ROOT', $content, $this));
   		$this->id   = sprintf('%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff));
@@ -174,7 +165,7 @@ namespace RazyFramework\Template
   	 */
   	public function queue(string $name = '')
   	{
-  		$this->wrapper->addQueue($this, $name);
+  		$this->manager->addQueue($this, $name);
 
   		return $this;
   	}

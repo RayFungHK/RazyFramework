@@ -25,11 +25,11 @@ namespace RazyFramework\Modular
 		use \RazyFramework\Injector;
 
 		/**
-		 * An array contains module manager instance.
+		 * The wrapper object of the entry distribution
 		 *
-		 * @var self
+		 * @var Wrapper
 		 */
-		private static $instances = [];
+		private static $instance;
 
 		/**
 		 * An array contains multiple domain setting with its module distribution path.
@@ -274,15 +274,12 @@ namespace RazyFramework\Modular
 
 				$this->distPathCode = $distCode;
 
-				if (!count(self::$instances)) {
-					$this->isMain = true;
-				}
 				(Scavenger::GetWorker())->register($this->wrapper(['wipe']));
 
-				if (!isset(self::$instances[$this->getIdentifyName()])) {
-					self::$instances[$this->getIdentifyName()] = $this;
+				if (!self::$instance) {
+					self::$instance = $this->wrapper(['preload', 'autoload']);
 				} else {
-					throw new ErrorHandler('You cannot create domain ' . $this->getIdentifyName() . ' module manager again due to it has been created.');
+					throw new ErrorHandler('You cannot create domain ' . $this->getIdentifyName() . ' module manager again due to there is a instance has been created.');
 				}
 
 				// Load the version.php
@@ -384,7 +381,7 @@ namespace RazyFramework\Modular
 		{
 			foreach ($this->packages as $packageCode => $package) {
 				if (Package::STATUS_ACTIVE === $package->getStatus()) {
-					$this->wrappers[$packageCode]->connect();
+					$this->wrappers[$packageCode]->standby();
 				}
 			}
 
@@ -402,26 +399,6 @@ namespace RazyFramework\Modular
 			foreach ($this->routingPrefixMap as $routingPrefix => $package) {
 				if ($this->doRouting($package)) {
 					return true;
-				}
-			}
-
-			return false;
-		}
-
-		/**
-		 * Autoload a class from the available module library folder.
-		 *
-		 * @param string $class The class name waiting for declare
-		 *
-		 * @return bool Return true if the class is declared successfully
-		 */
-		public function autoload(string $class)
-		{
-			foreach ($this->packages as $code => $package) {
-				if (Package::STATUS_ACTIVE === $package->getStatus()) {
-					if ($package->loadLibrary($class)) {
-						return true;
-					}
 				}
 			}
 
@@ -580,23 +557,6 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Get the module manager by domain or create it if the manager is not exists.
-		 *
-		 * @param string $domain The domain name
-		 *
-		 * @return self The manager instance
-		 */
-		public static function GetManager(string $domain)
-		{
-			$domain = trim(ltrim($domain, '.'));
-			if (!isset(self::$instances[$domain])) {
-				return new self($domain);
-			}
-
-			return self::$instances[$domain];
-		}
-
-		/**
 		 * Autoload the class from all created module instance.
 		 *
 		 * @param string $class The class name
@@ -605,10 +565,8 @@ namespace RazyFramework\Modular
 		 */
 		public static function SPLAutoload(string $class)
 		{
-			foreach (self::$instances as $instance) {
-				if ($instance->autoload($class)) {
-					return true;
-				}
+			if (self::$instance) {
+				return self::$instance->autoload($class);
 			}
 
 			return false;
@@ -732,6 +690,26 @@ namespace RazyFramework\Modular
 			}
 
 			return $object;
+		}
+
+		/**
+		 * Autoload a class from the available module library folder.
+		 *
+		 * @param string $class The class name waiting for load
+		 *
+		 * @return bool Return true if the class is required successfully
+		 */
+		private function autoload(string $class)
+		{
+			foreach ($this->packages as $code => $package) {
+				if (Package::STATUS_INITIALIZING === $package->getStatus() || Package::STATUS_ACTIVE === $package->getStatus()) {
+					if ($package->loadLibrary($class)) {
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 		/**
@@ -939,10 +917,7 @@ namespace RazyFramework\Modular
 		 */
 		private function wipe()
 		{
-			if (!$this->isMain) {
-				// Remove the location header, you cannot redirect if it is not the main Manager.
-				header_remove('Location');
-			}
+			return $this;
 		}
 	}
 }

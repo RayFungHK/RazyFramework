@@ -122,7 +122,7 @@ namespace RazyFramework\Modular
 		 *
 		 * @return self Chainable
 		 */
-		public function __onRouteReady()
+		public function __onRouteStandby()
 		{
 			return $this;
 		}

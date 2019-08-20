@@ -124,7 +124,7 @@ namespace RazyFramework\Template
   	 */
   	public function load(string $path)
   	{
-  		$source                          = new Source($path, $this, $this->wrapper(['addQueue']));
+  		$source                          = new Source($path, $this);
   		$this->sources[$source->getID()] = $source;
 
   		return $source;
@@ -169,7 +169,7 @@ namespace RazyFramework\Template
   	 * @param Source $source The Source object
   	 * @param string $name   The queue name
   	 */
-  	private function addQueue(Source $source, string $name)
+  	public function addQueue(Source $source, string $name)
   	{
   		$name = trim($name);
   		if (!$name) {
