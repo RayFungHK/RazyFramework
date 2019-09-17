@@ -121,7 +121,13 @@ namespace RazyFramework\DOM\Control
 
 			if (is_array($label)) {
 				if ($this->callback) {
-					return call_user_func($this->callback, $label, $value);
+          $option = new Option;
+					$option = call_user_func($this->callback, $option, $label, $value);
+
+					if ($this->checkValue($value)) {
+						$option->setAttribute('selected', 'selected');
+					}
+          return $option->saveHTML();
 				}
 				$html .= '<optgroup label="' . $name . '">';
 				foreach ($value as $val => $label) {

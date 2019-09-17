@@ -8,6 +8,7 @@
  * This source file is subject to the MIT license that is bundled
  * with this source code in the file LICENSE.
  */
+
 use RazyFramework\RegexHelper;
 
 /**
@@ -34,6 +35,35 @@ function tidy(string $path, bool $ending = false, string $separator = \DIRECTORY
 function append(string $path, ...$extra)
 {
 	$separator = \DIRECTORY_SEPARATOR;
+	$protocal  = '';
+	if (preg_match('/^(https?:\/\/)(.*)/', $path, $matches)) {
+		$protocal  = $matches[1];
+		$path      = $matches[2];
+		$separator = '/';
+	}
+
+	foreach ($extra as $pathToAppend) {
+		if (is_array($pathToAppend) && count($pathToAppend)) {
+			$path .= $separator . implode($separator, $pathToAppend);
+		} elseif (is_scalar($pathToAppend) && strlen($pathToAppend)) {
+			$path .= $separator . $pathToAppend;
+		}
+	}
+
+	return $protocal . tidy($path, false, $separator);
+}
+
+/**
+ * Append additional path by using backslash.
+ *
+ * @param string       $path      The original path
+ * @param array|string $extra,... Extra path to append
+ *
+ * @return string The path appended extra path
+ */
+function bs_append(string $path, ...$extra)
+{
+	$separator = '/';
 	$protocal  = '';
 	if (preg_match('/^(https?:\/\/)(.*)/', $path, $matches)) {
 		$protocal  = $matches[1];
@@ -149,9 +179,9 @@ function is_ssl()
  */
 function getFilesizeString(float $size, int $decPoint = 2, bool $upperCase = false, string $separator = '')
 {
-	$unitScale = ['byte', 'kb', 'mb', 'gb', 'tb', 'pb', 'eb', 'zb', 'yb'];
-	$unit      = 'byte';
-	$scale     = 0;
+	$unitScale  = ['byte', 'kb', 'mb', 'gb', 'tb', 'pb', 'eb', 'zb', 'yb'];
+	$unit       = 'byte';
+	$scale      = 0;
 	$decPoint   = ($decPoint < 1) ? 0 : $decPoint;
 
 	while ($size >= 1024 && isset($unitScale[$scale + 1])) {
@@ -166,4 +196,31 @@ function getFilesizeString(float $size, int $decPoint = 2, bool $upperCase = fal
 	}
 
 	return $size . $separator . $unit;
+}
+
+/**
+ * Get the visitor IP.
+ *
+ * @return [type] [description]
+ */
+function getIP()
+{
+	$ipaddress = '';
+	if (isset($_SERVER['HTTP_CLIENT_IP'])) {
+		$ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+	} elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+		$ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	} elseif (isset($_SERVER['HTTP_X_FORWARDED'])) {
+		$ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+	} elseif (isset($_SERVER['HTTP_FORWARDED_FOR'])) {
+		$ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+	} elseif (isset($_SERVER['HTTP_FORWARDED'])) {
+		$ipaddress = $_SERVER['HTTP_FORWARDED'];
+	} elseif (isset($_SERVER['REMOTE_ADDR'])) {
+		$ipaddress = $_SERVER['REMOTE_ADDR'];
+	} else {
+		$ipaddress = 'UNKNOWN';
+	}
+
+	return $ipaddress;
 }

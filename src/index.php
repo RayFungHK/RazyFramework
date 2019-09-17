@@ -28,14 +28,10 @@ namespace RazyFramework
   		die("Command not found\n");
   	}
   } else {
-  	// Enable gzip compression
-  	if (!ob_start('ob_gzhandler')) {
-  		ob_start();
-  	}
-
-    session_set_cookie_params(0, RELATIVE_ROOT, HOSTNAME);
-    session_name(md5(HOSTNAME . RELATIVE_ROOT));
-    session_start();
+    // Enable gzip compression
+    if (!ob_start('ob_gzhandler')) {
+      ob_start();
+    }
 
   	// Create the pirmary module manager
   	$manager = new Modular\Manager();

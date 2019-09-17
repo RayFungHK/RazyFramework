@@ -20,10 +20,10 @@ namespace RazyFramework
 	// Register Autoloader
 	spl_autoload_register(function ($class) {
 		$classes = explode('\\', $class);
-		$package = (count($classes) > 1) ? array_shift($classes) : '';
+		$namespace = (count($classes) > 1) ? array_shift($classes) : '';
 
 		// Load Razy core library from root library folder
-		if ('RazyFramework' === $package) {
+		if ('RazyFramework' === $namespace) {
 			$libraryFolder = realpath(append(SYSTEM_ROOT, 'library'));
 			if ($libraryFolder && is_dir($libraryFolder)) {
 				$libraryPath = append($libraryFolder, $classes) . '.php';

@@ -204,9 +204,9 @@ namespace RazyFramework\Modular
 
 			// Get the path value from the multisite and alias list by th current domain
 			if (isset(self::$multisite[$domain])) {
-				$this->alias        = $domain;
-				$this->domainRoute  = $domain;
-				$distPath           = self::$multisite[$domain];
+				$this->alias = $domain;
+				$this->domainRoute = $domain;
+				$distPath = self::$multisite[$domain];
 			} elseif (isset(self::$domainalias[$domain])) {
 				$distPath          = self::$multisite[self::$domainalias[$domain]];
 				$this->alias       = $domain;
@@ -239,10 +239,10 @@ namespace RazyFramework\Modular
 				$urlQuery = tidy(strtok($urlQuery, '?'), true, '/');
 				if (is_array($distPath)) {
 					sort_path_level($distPath);
-					foreach ($distPath as $routes => $distPath) {
+					foreach ($distPath as $routes => $path) {
 						$routes = tidy($routes, true, '/');
 						if (0 === ($pos = strpos($urlQuery, $routes))) {
-							$this->distPath     = tidy($distPath, true);
+							$this->distPath     = tidy($path, true);
 							$this->relativePath = $routes;
 							$this->urlQuery     = substr($urlQuery, strlen($routes) - 1);
 
@@ -273,6 +273,10 @@ namespace RazyFramework\Modular
 				}
 
 				$this->distPathCode = $distCode;
+
+				// Setup the cookie and session
+		    session_set_cookie_params(0, bs_append(RELATIVE_ROOT, $this->distPathCode), HOSTNAME);
+		    session_start();
 
 				(Scavenger::GetWorker())->register($this->wrapper(['wipe']));
 
@@ -466,6 +470,16 @@ namespace RazyFramework\Modular
 		}
 
 		/**
+		 * Get the relative path of the routed site
+		 *
+		 * @return string The relative path
+		 */
+		public function getRelativePath()
+		{
+			return $this->relativePath;
+		}
+
+		/**
 		 * Get the root url with the protocal.
 		 *
 		 * @return string The root url
@@ -554,6 +568,26 @@ namespace RazyFramework\Modular
 		public function getRoutedPackage()
 		{
 			return $this->routed;
+		}
+
+		/**
+		 * Get the distribution code
+		 *
+		 * @return string The distribution code
+		 */
+		public function getDistCode()
+		{
+			return $this->distPathCode;
+		}
+
+		/**
+		 * Get the distribution path
+		 *
+		 * @return string The distribution path
+		 */
+		public function getDistPath()
+		{
+			return $this->distPath;
 		}
 
 		/**
@@ -728,6 +762,10 @@ namespace RazyFramework\Modular
 
 					// Rewrite the url query before routing
 					$urlQuery = $this->wrappers[$code]->rewrite($urlQuery);
+					if (!is_string($urlQuery)) {
+						$urlQuery = '';
+					}
+
 					if ($this->wrappers[$code]->touch($urlQuery)) {
 						$this->trace[] = $code;
 						$this->routed  = $package;

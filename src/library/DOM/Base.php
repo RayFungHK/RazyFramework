@@ -95,6 +95,21 @@ namespace RazyFramework\DOM
 		}
 
 		/**
+		 * Set the attribute `name` value.
+		 *
+		 * @param mixed $value The value of the name
+		 *
+		 * @return self Chainable
+		 */
+		public function setName($value)
+		{
+			$value      = trim($value);
+			$this->name = $value;
+
+			return $this;
+		}
+
+		/**
 		 * Get the value.
 		 *
 		 * @return mixed The value of the control

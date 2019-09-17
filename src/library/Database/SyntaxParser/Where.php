@@ -275,8 +275,8 @@ namespace RazyFramework\Database\SyntaxParser
 			if (preg_match('/^([a-zA-Z_]\w*)\((.+?)\)$/', $operand, $matches)) {
 				return [
 					'type'      => 'function',
-					'function'  => $matches[2],
-					'arguments' => stripcslashes($matches[3]),
+					'function'  => $matches[1],
+					'arguments' => stripcslashes($matches[2]),
 					'operand'   => $operand,
 				];
 			}

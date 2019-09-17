@@ -766,7 +766,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Tigger the onBeforeRoute in Controller before start routes matching.
+		 * Tigger the onTouch in Controller before start routes matching.
 		 *
 		 * @param string $urlQuery The url query ready to route
 		 *

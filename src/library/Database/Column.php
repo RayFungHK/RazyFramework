@@ -144,6 +144,7 @@ namespace RazyFramework\Database
 				$this->length        = '255';
 			} elseif ('long_text' === $type) {
 				$this->type = 'LONGTEXT';
+				$this->length = '';
 			} elseif ('int' === $type) {
 				$this->type         = 'INT';
 				$this->length       = '8';
