@@ -36,14 +36,14 @@ namespace RazyFramework\Database\SyntaxParser {
 		 *
 		 * @var array
 		 */
-		private $extracted  = [];
+		private $extracted = [];
 
 		/**
 		 * An array contains the SQL statement for table overriding.
 		 *
 		 * @var array
 		 */
-		private $overrides  = [];
+		private $overrides = [];
 
 		/**
 		 * TableJoin constructor.
@@ -67,7 +67,7 @@ namespace RazyFramework\Database\SyntaxParser {
 		 */
 		public function override($name, $statement = null)
 		{
-			if (is_array($name)) {
+			if (\is_array($name)) {
 				foreach ($name as $key => $statement) {
 					$this->override($key, $statement);
 				}
@@ -76,7 +76,7 @@ namespace RazyFramework\Database\SyntaxParser {
 					$this->overrides[$name] = $statement->getSyntax();
 				} elseif ($statement instanceof self) {
 					$this->overrides[$name] = $statement->getStatement();
-				} elseif (is_string($statement)) {
+				} elseif (\is_string($statement)) {
 					$this->overrides[$name] = $statement;
 				}
 			}
@@ -91,7 +91,7 @@ namespace RazyFramework\Database\SyntaxParser {
 		 */
 		public function getStatement()
 		{
-			if (!count($this->extracted)) {
+			if (!\count($this->extracted)) {
 				return '';
 			}
 
@@ -159,7 +159,7 @@ namespace RazyFramework\Database\SyntaxParser {
 			if (preg_match('/\[([?:])?(.+)\]$/', $syntax, $matches)) {
 				$condition = $matches[2];
 				$type      = $matches[1] ?? ':';
-				$syntax    = substr($syntax, 0, -strlen($matches[0]));
+				$syntax    = substr($syntax, 0, -\strlen($matches[0]));
 			}
 
 			if (preg_match('/^(\`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\\`])+\`|[a-z]\w*)(?:\.(?:((?1))|{\$(\w+)}))?$/', $syntax, $matches)) {
@@ -210,7 +210,7 @@ namespace RazyFramework\Database\SyntaxParser {
 		private function getAlias(string &$condition)
 		{
 			if (preg_match('/^<(.+?)>/', $condition, $matches)) {
-				$condition = substr($condition, 0, strlen($matches[0]));
+				$condition = substr($condition, 0, \strlen($matches[0]));
 
 				return $matches[1];
 			}
@@ -230,7 +230,7 @@ namespace RazyFramework\Database\SyntaxParser {
 		{
 			$statement = '';
 			$clip      = array_shift($clips);
-			if (is_array($clip)) {
+			if (\is_array($clip)) {
 				$statement .= '(' . $this->combine($clip, $primaryTable) . ')';
 			} else {
 				$clip = $this->parseTable($clip);
@@ -245,7 +245,7 @@ namespace RazyFramework\Database\SyntaxParser {
 
 			foreach (array_chunk($clips, 2) as list($joinType, $table)) {
 				$joinType = self::JOIN_TYPE[$joinType];
-				if (is_array($table)) {
+				if (\is_array($table)) {
 					$statement .= '(' . $this->combine($table, $primaryTable) . ')';
 				} else {
 					$table = $this->parseTable($table);
@@ -324,14 +324,14 @@ namespace RazyFramework\Database\SyntaxParser {
 		{
 			$clips = [];
 			foreach ($structure as $content) {
-				if (is_string($content)) {
+				if (\is_string($content)) {
 					$extracted = $this->parseTableJoin($content);
-					if (is_string($extracted[0]) && preg_match('/^[><\-\*]$/', $extracted[0]) && (!is_array(end($clips)) || !count($clips))) {
+					if (\is_string($extracted[0]) && preg_match('/^[><\-\*]$/', $extracted[0]) && (!\is_array(end($clips)) || !\count($clips))) {
 						throw new ErrorHandler('Syntax Error (Misplaced join type)');
 					}
 					$clips = array_merge($clips, $extracted);
 				} else {
-					if (count($clips) && !preg_match('/^[><\-\*]$/', end($clips))) {
+					if (\count($clips) && !preg_match('/^[><\-\*]$/', end($clips))) {
 						// If the previous clip is a statement or bracketed syntax and
 						// the first clip is not start with join type, throw error
 						throw new ErrorHandler('Syntax Error (Missing join type)');

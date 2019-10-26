@@ -11,8 +11,8 @@
 
 namespace RazyFramework\Iterator
 {
-	use RazyFramework\Plugin;
 	use RazyFramework\ErrorHandler;
+	use RazyFramework\Plugin;
 
 	/**
 	 * An array-like object, it is compatible with the PHP SPL array function. You can control the value with magic method "invoke" by given key or using magic method "call" to control the Iterator Manager object. Also you can use the addRule method to control data consistency.
@@ -48,7 +48,8 @@ namespace RazyFramework\Iterator
 		private $iterator;
 
 		/**
-		 * The Plugin object
+		 * The Plugin object.
+		 *
 		 * @var Plugin
 		 */
 		private $plugin;
@@ -60,7 +61,7 @@ namespace RazyFramework\Iterator
 		 */
 		public function __construct(array $data = [])
 		{
-			if (!is_array($data) && !array_key_exists('ArrayAccess', class_implements($data))) {
+			if (!\is_array($data) && !\array_key_exists('ArrayAccess', class_implements($data))) {
 				$data = [$data];
 			}
 
@@ -89,7 +90,7 @@ namespace RazyFramework\Iterator
 			}
 
 			// Bind convertor object to closure function
-			return call_user_func_array($closure->bindTo($this, __CLASS__), $args);
+			return \call_user_func_array($closure->bindTo($this, __CLASS__), $args);
 		}
 
 		/**
@@ -181,8 +182,8 @@ namespace RazyFramework\Iterator
 		/**
 		 * Apply the new value into current array value.
 		 *
-		 * @param mixed $values The new value set
-		 * @param bool           $existsOnly Set true to only apply on existing key
+		 * @param mixed $values     The new value set
+		 * @param bool  $existsOnly Set true to only apply on existing key
 		 *
 		 * @return self Chainable
 		 */

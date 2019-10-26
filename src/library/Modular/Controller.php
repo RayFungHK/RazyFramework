@@ -106,13 +106,37 @@ namespace RazyFramework\Modular
 		}
 
 		/**
+		 * It will be triggered if the module is matched the routing pattern, but before execute the routed closure function.
+		 *
+		 * @param array $args The arguments will be passed to routed closure function
+		 *
+		 * @return array Return the modified arguments
+		 */
+		public function __onBeforeRoute(array $args)
+		{
+			return $args;
+		}
+
+		/**
+		 * It will be triggered and pass the returned result from the routed closure function as a argument when the routed closure function is executed.
+		 *
+		 * @param mixed $result The returned result from routed closure function
+		 *
+		 * @return bool Return false to trigger the 404 error page, or return true to response 200 status
+		 */
+		public function __onAfterRoute(bool $result)
+		{
+			return $result;
+		}
+
+		/**
 		 * After module manager routing to matched package by routing prefix, this method will be triggered to rewrite the given URL query.
 		 *
 		 * @param string $urlQuery The original URL Query
 		 *
 		 * @return string The rewritten URL Query
 		 */
-		public function __onBeforeRoute(string $urlQuery)
+		public function __onRewrite(string $urlQuery)
 		{
 			return $urlQuery;
 		}
@@ -188,13 +212,13 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * It will be triggered if the route is done.
+		 * It will be triggered if some other module has routed.
 		 *
 		 * @param string $moduleCode The route module's code
 		 *
 		 * @return self Chainable
 		 */
-		public function __onAfterRoute(string $moduleCode)
+		public function __onNotify(string $moduleCode)
 		{
 			return $this;
 		}
@@ -211,12 +235,21 @@ namespace RazyFramework\Modular
 		{
 			$closure = null;
 			if (!isset($this->methodList[$method])) {
+				$controllerFolder = '';
+				// If the method name contains "/" slashes, extract it as sub controller folder path
+				if (false !== ($pos = strrpos($method, '/'))) {
+					// If the closure is under the sub folder, it will not requried to add the contoller class name as its prefix
+					$closureFilePath = substr($method, 0, $pos) . '/' . substr($method, $pos + 1) . '.php';
+				} else {
+					$closureFilePath = $this->controllerClass . '.' . $method . '.php';
+				}
+
 				// Load closure file if it is exists <Filename Pattern: classname.method>
-				$closurePath = append($this->package->getRootPath(), 'controller', $this->controllerClass . '.' . $method . '.php');
+				$closurePath = append($this->package->getRootPath(), 'controller', $closureFilePath);
 				if (is_file($closurePath)) {
 					try {
 						$closure = require $closurePath;
-						if (!is_callable($closure) && $closure instanceof \Closure) {
+						if (!\is_callable($closure) && $closure instanceof \Closure) {
 							throw new ErrorHandler('The object is a closure.');
 						}
 						$this->methodList[$method] = $closure;
@@ -230,7 +263,7 @@ namespace RazyFramework\Modular
 			}
 
 			if ($closure || $closure = $this->methodList[$method] ?? null) {
-				return call_user_func_array($closure, $arguments);
+				return \call_user_func_array($closure, $arguments);
 			}
 
 			throw new ErrorHandler('The Controller Closure ' . $method . ' is not exists.');

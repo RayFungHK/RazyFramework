@@ -32,7 +32,7 @@ namespace RazyFramework\DOM
   	 */
   	public function __construct($content = null)
   	{
-  		if (is_string($content)) {
+  		if (\is_string($content)) {
   			$this->document = new \DOMDocument();
   			$this->document->loadHTML($content, \LIBXML_COMPACT | \LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD | \LIBXML_NOERROR);
   		} elseif ($content instanceof \DOMNodeList) {
@@ -71,9 +71,9 @@ namespace RazyFramework\DOM
 
   		$element = new self();
   		foreach ($chips as $clip) {
-        if (!$regex->combination($clip)) {
-          throw new ErrorHandler('Invalid DOM query.');
-        }
+  			if (!$regex->combination($clip)) {
+  				throw new ErrorHandler('Invalid DOM query.');
+  			}
   			$domQuery = $regex->extract($clip);
   			foreach ($domQuery as $query) {
   				$operator = $query[1];
@@ -81,9 +81,8 @@ namespace RazyFramework\DOM
   				$attr     = $query[3] ?? '';
   				$filter   = $query[5] ?? '';
 
-          if ($operator == '>') {
-            
-          }
+  				if ('>' === $operator) {
+  				}
   			}
   		}
 
@@ -117,11 +116,11 @@ namespace RazyFramework\DOM
   	 */
   	public function append($element)
   	{
-  		if (is_array($element)) {
+  		if (\is_array($element)) {
   			foreach ($element as $ele) {
   				$this->append($ele);
   			}
-  		} elseif (is_string($element)) {
+  		} elseif (\is_string($element)) {
   			$this->children[] = new self(self::TYPE_TEXTNODE, $element);
   		} elseif ($element instanceof self) {
   			$this->children[] = $element;

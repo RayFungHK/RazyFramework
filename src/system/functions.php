@@ -201,7 +201,7 @@ function getFilesizeString(float $size, int $decPoint = 2, bool $upperCase = fal
 /**
  * Get the visitor IP.
  *
- * @return [type] [description]
+ * @return string The ip address
  */
 function getIP()
 {
@@ -223,4 +223,32 @@ function getIP()
 	}
 
 	return $ipaddress;
+}
+
+/**
+ * Refactor an array of data into a new data set by given key set
+ *
+ * @param array $source An array of data
+ * @param string ...$keys An array of key to extract
+ *
+ * @return array An array of refactored data set
+ */
+function refactor(array $source, string ...$keys)
+{
+	$result = [];
+	$keyset = array_keys($source);
+	if (count($keys)) {
+		$keyset = array_intersect($keyset, $keys);
+	}
+
+	while ($key = array_shift($keyset)) {
+		foreach ($source[$key] as $index => $value) {
+			if (!isset($result[$index])) {
+				$result[$index] = [];
+			}
+			$result[$index][$key] = $value;
+		}
+	}
+
+	return $result;
 }

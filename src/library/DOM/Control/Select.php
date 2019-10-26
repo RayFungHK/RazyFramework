@@ -33,6 +33,13 @@ namespace RazyFramework\DOM\Control
 		private $callback;
 
 		/**
+		 * The value of selectbox.
+		 *
+		 * @var mixed
+		 */
+		private $optionValue;
+
+		/**
 		 * Select constructor.
 		 *
 		 * @param string $name       the name "id" value
@@ -59,7 +66,7 @@ namespace RazyFramework\DOM\Control
 		 */
 		public function addOption($value, $label = '')
 		{
-			if (is_array($value)) {
+			if (\is_array($value)) {
 				foreach ($value as $val => $label) {
 					$this->addOption($val, $label);
 				}
@@ -101,6 +108,20 @@ namespace RazyFramework\DOM\Control
 		}
 
 		/**
+		 * Override the parent setValue, set the value for selectbox.
+		 *
+		 * @param mixed $value The value of option will be selected
+		 *
+		 * @return self Chainable
+		 */
+		public function setValue($value)
+		{
+			$this->optionValue = $value;
+
+			return $this;
+		}
+
+		/**
 		 * Generator the option and optgroup HTML code into text.
 		 *
 		 * @param int|string $label The option label name
@@ -119,15 +140,16 @@ namespace RazyFramework\DOM\Control
 				return $option->saveHTML();
 			}
 
-			if (is_array($label)) {
+			if (\is_array($label)) {
 				if ($this->callback) {
-          $option = new Option;
-					$option = call_user_func($this->callback, $option, $label, $value);
+					$option = new Option();
+					$option = \call_user_func($this->callback, $option, $label, $value);
 
 					if ($this->checkValue($value)) {
 						$option->setAttribute('selected', 'selected');
 					}
-          return $option->saveHTML();
+
+					return $option->saveHTML();
 				}
 				$html .= '<optgroup label="' . $name . '">';
 				foreach ($value as $val => $label) {
@@ -144,7 +166,7 @@ namespace RazyFramework\DOM\Control
 				return $html;
 			}
 			if ($this->callback) {
-				return call_user_func($this->callback, $label, $value);
+				return \call_user_func($this->callback, $label, $value);
 			}
 
 			return '';
@@ -160,12 +182,12 @@ namespace RazyFramework\DOM\Control
 		private function checkValue($value)
 		{
 			$value = (string) $value;
-			if (!is_scalar($value) && !is_array($value)) {
+			if (!is_scalar($value) && !\is_array($value)) {
 				return false;
 			}
 
-			if (is_array($this->value)) {
-				foreach ($this->value as $val) {
+			if (\is_array($this->optionValue)) {
+				foreach ($this->optionValue as $val) {
 					if (is_scalar($val)) {
 						if ((string) $val === $value) {
 							return true;
@@ -176,7 +198,7 @@ namespace RazyFramework\DOM\Control
 				return false;
 			}
 
-			return (string) $this->value === $value;
+			return (string) $this->optionValue === $value;
 		}
 	}
 }

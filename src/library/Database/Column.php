@@ -140,10 +140,10 @@ namespace RazyFramework\Database
 				$this->length        = '8';
 				$this->defaultValue  = '0';
 			} elseif ('text' === $type) {
-				$this->type          = 'VARCHAR';
-				$this->length        = '255';
+				$this->type   = 'VARCHAR';
+				$this->length = '255';
 			} elseif ('long_text' === $type) {
-				$this->type = 'LONGTEXT';
+				$this->type   = 'LONGTEXT';
 				$this->length = '';
 			} elseif ('int' === $type) {
 				$this->type         = 'INT';
@@ -250,7 +250,7 @@ namespace RazyFramework\Database
 		 */
 		public function charset(string $charset)
 		{
-			$charset       = trim($charset);
+			$charset = trim($charset);
 			if ($charset && !preg_match('/\w+^$', $charset)) {
 				throw new ErrorHandler($charset . ' is not in a correct character set format.');
 			}
@@ -368,7 +368,7 @@ namespace RazyFramework\Database
 		{
 			$syntax = '`' . $this->name . '`';
 
-			if (strlen($this->length)) {
+			if (\strlen($this->length)) {
 				if (!preg_match('/^(BIT|BOOL(EAN)?|DATE(TIME)?|TIMESTAMP|(TINY|MEDIUM)?BLOB|TEXT|GEOMETRY|JSON)$/i', $this->type)) {
 					if (preg_match('/^(REAL|DOUBLE|FLOAT|DEC(IMAL)?|NUMERIC|FIXED)$/i', $this->type)) {
 						list($integer, $decimal) = explode(',', $this->length);

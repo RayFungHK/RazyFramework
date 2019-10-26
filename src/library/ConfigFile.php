@@ -125,7 +125,7 @@ namespace RazyFramework
 
   		$content = [];
   		foreach ($this->getArrayCopy() as $key => $val) {
-  			if (is_array($val)) {
+  			if (\is_array($val)) {
   				$content[] = '[' . $key . ']';
   				foreach ($val as $skey => $sval) {
   					$content[] = $skey . ' = ' . (is_numeric($sval) ? $sval : '"' . $sval . '"');
@@ -190,11 +190,11 @@ namespace RazyFramework
   			throw new ErrorHandler($pathInfo['dirname'] . ' is not a directory.');
   		}
 
-      file_put_contents($this->path, $content);
+  		file_put_contents($this->path, $content);
   		if ($handle = fopen($this->path, 'w')) {
-				fwrite($handle, $content);
+  			fwrite($handle, $content);
 
-				fclose($handle);
+  			fclose($handle);
   		}
 
   		return $this;

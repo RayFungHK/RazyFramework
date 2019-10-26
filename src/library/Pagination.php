@@ -134,10 +134,10 @@ namespace RazyFramework
   				$lastPageTag  = $maxPage;
   			} else {
   				// Get the last page
-  				$lastPageTag  = min($maxPage, $firstPageTag + ($this->displayPageCount - 1));
+  				$lastPageTag = min($maxPage, $firstPageTag + ($this->displayPageCount - 1));
   			}
 
-  			$result      = [
+  			$result = [
   				'first'        => $firstPageTag,
   				'last'         => $lastPageTag,
   				'current'      => $currentPage,

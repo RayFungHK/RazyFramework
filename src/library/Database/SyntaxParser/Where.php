@@ -24,14 +24,14 @@ namespace RazyFramework\Database\SyntaxParser
 		 *
 		 * @var array
 		 */
-		private $extracted  = [];
+		private $extracted = [];
 
 		/**
 		 * An array contains the data type convertor of paramaters.
 		 *
 		 * @var array
 		 */
-		private $dataType   = [];
+		private $dataType = [];
 
 		/**
 		 * An array contains the paramaters.
@@ -62,12 +62,12 @@ namespace RazyFramework\Database\SyntaxParser
 		 */
 		public function assign($parameter, $value = null)
 		{
-			if (is_array($parameter)) {
+			if (\is_array($parameter)) {
 				foreach ($parameter as $key => $value) {
 					$this->assign($key, $value);
 				}
 			} else {
-				if (!array_key_exists($parameter, $this->dataType)) {
+				if (!\array_key_exists($parameter, $this->dataType)) {
 					$this->dataType[$parameter] = [
 						'type' => 'string',
 					];
@@ -105,7 +105,7 @@ namespace RazyFramework\Database\SyntaxParser
 		 */
 		public function getStatement()
 		{
-			if (!count($this->extracted)) {
+			if (!\count($this->extracted)) {
 				return '';
 			}
 
@@ -127,7 +127,7 @@ namespace RazyFramework\Database\SyntaxParser
 			}
 
 			return $regex->replace(function ($matches) {
-				if (array_key_exists($matches[2], $this->dataType)) {
+				if (\array_key_exists($matches[2], $this->dataType)) {
 					$dataType = $this->dataType[$matches[2]];
 					if (!isset($this->parameters[$matches[2]])) {
 						return "''";
@@ -135,7 +135,7 @@ namespace RazyFramework\Database\SyntaxParser
 
 					if ('json_path' === $dataType['type']) {
 						$value = $this->parameters[$matches[2]];
-						if (!is_string($value)) {
+						if (!\is_string($value)) {
 							throw new ErrorHandler('Invalid JSON path datatype, it should be a string.');
 						}
 						if (($value[0] ?? '') !== '$') {
@@ -147,10 +147,10 @@ namespace RazyFramework\Database\SyntaxParser
 
 					if ('json_object' === $dataType['type']) {
 						$value = $this->parameters[$matches[2]];
-						if (is_array($value)) {
+						if (\is_array($value)) {
 							return '"' . addslashes(json_encode($value)) . '"';
 						}
-						if (is_string($value) && preg_match('/^{.+?}$/', $value)) {
+						if (\is_string($value) && preg_match('/^{.+?}$/', $value)) {
 							// Assume it is a JSON string
 							return '"' . $value . '"';
 						}
@@ -160,7 +160,7 @@ namespace RazyFramework\Database\SyntaxParser
 
 					if ('set' === $dataType['type']) {
 						$set = [];
-						if (is_array($this->parameters[$matches[2]])) {
+						if (\is_array($this->parameters[$matches[2]])) {
 							foreach ($this->parameters[$matches[2]] as $text) {
 								$set[] = addslashes($text);
 							}
@@ -193,7 +193,7 @@ namespace RazyFramework\Database\SyntaxParser
 		{
 			$statement = '';
 			foreach ($clips as $clip) {
-				$statement .= ' ' . ((is_array($clip)) ? '(' . $this->combine($clip) . ')' : $clip);
+				$statement .= ' ' . ((\is_array($clip)) ? '(' . $this->combine($clip) . ')' : $clip);
 			}
 
 			return substr($statement, 1);
@@ -216,8 +216,8 @@ namespace RazyFramework\Database\SyntaxParser
 				];
 
 				if (isset($matches[3]) && $matches[3]) {
-					$object['table_alias']  = trim($matches[2], '`');
-					$object['column_name']  = trim($matches[3], '`');
+					$object['table_alias'] = trim($matches[2], '`');
+					$object['column_name'] = trim($matches[3], '`');
 				} else {
 					$object['column_name'] = trim($matches[2], '`');
 				}
@@ -330,7 +330,7 @@ namespace RazyFramework\Database\SyntaxParser
 			}
 
 			$matches = $regex->split($statement, RegexHelper::SPLIT_DELIMITER | RegexHelper::SPLIT_BODY_ONLY, 3);
-			if (1 === count($matches) || 3 === count($matches)) {
+			if (1 === \count($matches) || 3 === \count($matches)) {
 				$leftHand = trim($matches[0]);
 				$negative = false;
 				if ('!' === $leftHand[0]) {
@@ -338,7 +338,7 @@ namespace RazyFramework\Database\SyntaxParser
 					$leftHand = substr($leftHand, 1);
 				}
 
-				if (3 === count($matches)) {
+				if (3 === \count($matches)) {
 					$operator  = trim($matches[1]);
 					$rightHand = trim($matches[2]);
 					if ($leftHand === $rightHand) {
@@ -405,7 +405,7 @@ namespace RazyFramework\Database\SyntaxParser
 		 */
 		private function setDefaultDataType(array $operand)
 		{
-			if ('parameter' === $operand['type'] && !array_key_exists($operand['parameter'], $this->dataType)) {
+			if ('parameter' === $operand['type'] && !\array_key_exists($operand['parameter'], $this->dataType)) {
 				$this->dataType[$operand['parameter']] = [
 					'type' => 'string',
 				];
@@ -649,11 +649,11 @@ namespace RazyFramework\Database\SyntaxParser
 			$clips = [];
 
 			foreach ($structure as $content) {
-				if (is_string($content)) {
+				if (\is_string($content)) {
 					$clips = array_merge($clips, $this->syntaxParser($content));
 				} else {
 					$extracted = $this->extract($content);
-					if (count($clips) && !preg_match('/^(AND|OR)$/', end($clips))) {
+					if (\count($clips) && !preg_match('/^(AND|OR)$/', end($clips))) {
 						// If the previous clip is a statement or bracketed syntax and
 						// the first clip is not start with operator, throw error
 						throw new ErrorHandler('Syntax Error (Missing operator)');

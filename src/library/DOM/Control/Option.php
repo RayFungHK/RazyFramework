@@ -34,7 +34,7 @@ namespace RazyFramework\DOM\Control
 		public function __construct(string $name = '', string $id = '')
 		{
 			$this->tag = 'option';
-      $this->setVoidElement(false);
+			$this->setVoidElement(false);
 			parent::__construct($name, $id);
 		}
 	}

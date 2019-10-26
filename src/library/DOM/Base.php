@@ -180,12 +180,12 @@ namespace RazyFramework\DOM
 		 */
 		public function addClass($className)
 		{
-			if (is_string($className)) {
+			if (\is_string($className)) {
 				$className = trim($className);
 				if ($className) {
 					$this->className[$className] = true;
 				}
-			} elseif (is_array($className)) {
+			} elseif (\is_array($className)) {
 				foreach ($className as $name) {
 					$this->addClass($name);
 				}
@@ -203,12 +203,12 @@ namespace RazyFramework\DOM
 		 */
 		public function removeClass($className)
 		{
-			if (is_string($className)) {
+			if (\is_string($className)) {
 				$className = trim($className);
 				if ($className) {
 					unset($this->className[$className]);
 				}
-			} elseif (is_array($className)) {
+			} elseif (\is_array($className)) {
 				foreach ($className as $name) {
 					$this->removeClass($name);
 				}
@@ -227,12 +227,12 @@ namespace RazyFramework\DOM
 		 */
 		public function setDataset($parameter, $value = null)
 		{
-			if (is_string($parameter)) {
+			if (\is_string($parameter)) {
 				$parameter = trim($parameter);
 				if ($parameter) {
 					$this->dataset[$parameter] = $value;
 				}
-			} elseif (is_array($parameter)) {
+			} elseif (\is_array($parameter)) {
 				foreach ($parameter as $param => $value) {
 					$this->setDataset($param, $value);
 				}
@@ -251,12 +251,12 @@ namespace RazyFramework\DOM
 		 */
 		public function setAttribute($attribute, $value = null)
 		{
-			if (is_string($attribute)) {
+			if (\is_string($attribute)) {
 				$attribute = trim($attribute);
 				if ($attribute) {
 					$this->attribute[$attribute] = $value;
 				}
-			} elseif (is_array($attribute)) {
+			} elseif (\is_array($attribute)) {
 				foreach ($attribute as $attr => $value) {
 					$this->setDataset($attr, $value);
 				}
@@ -295,7 +295,7 @@ namespace RazyFramework\DOM
 				$control .= ' id="' . $this->id . '"';
 			}
 
-			if (count($this->attribute)) {
+			if (\count($this->attribute)) {
 				foreach ($this->attribute as $attr => $value) {
 					$control .= ' ' . $attr;
 					if (null !== $value) {
@@ -304,13 +304,13 @@ namespace RazyFramework\DOM
 				}
 			}
 
-			if (count($this->dataset)) {
+			if (\count($this->dataset)) {
 				foreach ($this->dataset as $name => $value) {
 					$control .= ' data-' . $name . '="' . $this->getHTMLValue($value) . '"';
 				}
 			}
 
-			if (count($this->className)) {
+			if (\count($this->className)) {
 				$control .= ' class="' . implode(' ', $this->className) . '"';
 			}
 
@@ -340,7 +340,7 @@ namespace RazyFramework\DOM
 				return htmlspecialchars((string) $value);
 			}
 
-			if (!is_resource($value)) {
+			if (!\is_resource($value)) {
 				return htmlspecialchars(json_encode($value));
 			}
 

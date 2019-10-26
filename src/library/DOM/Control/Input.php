@@ -26,7 +26,7 @@ namespace RazyFramework\DOM\Control
 		 */
 		public function __construct(string $name = '', string $id = '')
 		{
-      $this->tag = 'input';
+			$this->tag = 'input';
 			$this->setAttribute('type', 'text');
 			parent::__construct($name, $id);
 		}

@@ -82,7 +82,7 @@ namespace RazyFramework\Database
 		 */
 		public function charset(string $charset)
 		{
-			$charset       = trim($charset);
+			$charset = trim($charset);
 			if (!preg_match('/\w+^$', $charset)) {
 				throw new ErrorHandler($charset . ' is not in a correct character set format.');
 			}
@@ -141,7 +141,7 @@ namespace RazyFramework\Database
 					$indexKey['primary'][] = $column->getName();
 					$autoColumn            = $column;
 				} elseif ($index = $column->getIndex()) {
-					if (array_key_exists($index, $indexKey)) {
+					if (\array_key_exists($index, $indexKey)) {
 						$indexKey[$index][] = $column->getName();
 					}
 				}
@@ -150,7 +150,7 @@ namespace RazyFramework\Database
 			$syntax = 'CREATE TABLE ' . $this->name . ' (';
 
 			// Primary key
-			if (count($indexKey['primary'])) {
+			if (\count($indexKey['primary'])) {
 				$clips[] = 'PRIMARY KEY(`' . implode('`, `', $indexKey['primary']) . '`)';
 			}
 			unset($indexKey['primary']);

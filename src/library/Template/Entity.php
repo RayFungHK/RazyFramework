@@ -76,11 +76,40 @@ namespace RazyFramework\Template
   	/**
   	 * Return the entity id.
   	 *
-  	 * @return [type] [description]
+  	 * @return string The entity id
   	 */
   	public function getID()
   	{
   		return $this->id;
+  	}
+
+  	/**
+  	 * Detach this entity from the list.
+  	 *
+  	 * @return self Chainable
+  	 */
+  	public function detach()
+  	{
+  		$this->parent->remove($this->block->getName(), $this->id);
+
+  		return $this;
+  	}
+
+  	/**
+  	 * Remove the entity by given block name and entity id.
+  	 *
+  	 * @param string $blockName The block name under current block level
+  	 * @param string $id        The entity id
+  	 *
+  	 * @return self Chainable
+  	 */
+  	public function remove(string $blockName, string $id)
+  	{
+  		if (isset($this->entities[$blockName])) {
+  			unset($this->entities[$blockName][$id]);
+  		}
+
+  		return $this;
   	}
 
   	/**
@@ -106,7 +135,7 @@ namespace RazyFramework\Template
   		if (!isset($this->entities[$blockName])) {
   			$this->entities[$blockName] = [];
   		}
-  		$blockEntity                     = new self($block, $id);
+  		$blockEntity                     = new self($block, $id, $this);
   		$this->entities[$blockName][$id] = $blockEntity;
 
   		return $blockEntity;
@@ -122,12 +151,12 @@ namespace RazyFramework\Template
   	 */
   	public function assign($parameter, $value = null)
   	{
-  		if (is_array($parameter)) {
+  		if (\is_array($parameter)) {
   			foreach ($parameter as $index => $value) {
   				$this->assign($index, $value);
   			}
   		} else {
-  			if (is_object($value) && $value instanceof \Closure) {
+  			if (\is_object($value) && $value instanceof \Closure) {
   				// If the value is closure, pass the current value to closure
   				$this->parameters[$parameter] = $value($this->parameters[$parameter] ?? null);
   			} else {
@@ -168,7 +197,7 @@ namespace RazyFramework\Template
   	 */
   	public function hasValue(string $parameter)
   	{
-  		return array_key_exists($parameter, $this->parameters);
+  		return \array_key_exists($parameter, $this->parameters);
   	}
 
   	/**
@@ -193,7 +222,7 @@ namespace RazyFramework\Template
   	public function getBlockCount(string $blockName)
   	{
   		if (isset($this->entities[$blockName])) {
-  			return count($this->entities[$blockName]);
+  			return \count($this->entities[$blockName]);
   		}
 
   		return 0;
@@ -225,7 +254,7 @@ namespace RazyFramework\Template
   				// Search the entity in the entity list
   				foreach ($result as $entity) {
   					if ($entities = $entity->getEntities($blockName)) {
-  						if (count($clip) > 2 && $filter = isset($clip[4]) ? $clip[4] : $clip[2]) {
+  						if (\count($clip) > 2 && $filter = isset($clip[4]) ? $clip[4] : $clip[2]) {
   							// Convert the non-escaped wildcard
   							if (!$regex = RegexHelper::GetCache('template-wildcard')) {
   								$regex = new RegexHelper('/(?<!\\\\)(?:\\\\\\\\)*\\*/', 'template-wildcard');
@@ -245,7 +274,7 @@ namespace RazyFramework\Template
   					}
   				}
 
-  				if (!count($entityFound)) {
+  				if (!\count($entityFound)) {
   					return [];
   				}
 
@@ -358,15 +387,15 @@ namespace RazyFramework\Template
   				}
 
   				if ($matches = $regex->match($clip)) {
-  					$modifier  = $this->block->getManager()->plugin('modifier', $matches[1]);
-  					$object    = (object) [
+  					$modifier = $this->block->getManager()->plugin('modifier', $matches[1]);
+  					$object   = (object) [
   						'value'     => $value,
   						'arguments' => $this->processArguments($matches[2]),
   					];
 
   					if ($modifier) {
   						$modifier = $modifier->bindTo($object);
-  						$value    = call_user_func_array($modifier, $object->arguments);
+  						$value    = \call_user_func_array($modifier, $object->arguments);
   					}
   				} else {
   					// If the modifier arguments format is not valid, return null
@@ -404,7 +433,7 @@ namespace RazyFramework\Template
   		// If the value is not empty
   		if (is_iterable($value)) {
   			// If the parameter tag contains array path, walk the array and get the value
-  			if (count($clips)) {
+  			if (\count($clips)) {
   				while ($clip = array_shift($clips)) {
   					// If the value is not an array, return empty string
   					if (!is_iterable($value)) {
@@ -418,11 +447,11 @@ namespace RazyFramework\Template
   					}
 
   					$clip = $this->unquote($clip);
-  					if (array_key_exists($clip, $value)) {
+  					if (\array_key_exists($clip, $value)) {
   						$value = $value[$clip];
   						if (false !== $index) {
-  							if (is_iterable($value) && count($value) > $index) {
-  								$value = array_slice($value, $index, 1);
+  							if (is_iterable($value) && \count($value) > $index) {
+  								$value = \array_slice($value, $index, 1);
   							} else {
   								return null;
   							}
@@ -502,7 +531,7 @@ namespace RazyFramework\Template
 
   			$result .= substr($content, 0, $offset[0]);
 
-  			$content    = substr($content, $offset[0] + strlen($matches[0]));
+  			$content    = substr($content, $offset[0] + \strlen($matches[0]));
   			$parameters = $this->extractParams($matches[2]);
 
   			$structure = $this->block->getManager()->plugin('structure', $func);
@@ -511,14 +540,14 @@ namespace RazyFramework\Template
 
   				if (false !== ($pos = strpos($content, $closingTag))) {
   					$wrapped = substr($content, 0, $pos);
-  					$content = substr($content, $pos + strlen($closingTag));
+  					$content = substr($content, $pos + \strlen($closingTag));
   				}
-  				$result .= call_user_func($structure, $wrapped, $parameters);
+  				$result .= \call_user_func($structure, $wrapped, $parameters);
   			} else {
   				$function = $this->block->getManager()->plugin('function', $func);
   				$function = $function->bindTo($this);
   				if ($function) {
-  					$result .= call_user_func($function, $parameters);
+  					$result .= \call_user_func($function, $parameters);
   				}
   			}
   		}
@@ -558,13 +587,13 @@ namespace RazyFramework\Template
   				}
   			}
 
-        // Negative symbol is given
-        if (isset($matches[1]) && $matches[1]) {
-          $value = !$value;
-        }
+  			// Negative symbol is given
+  			if (isset($matches[1]) && $matches[1]) {
+  				$value = !$value;
+  			}
 
   			$result .= substr($content, 0, $offset[0]);
-  			$content = substr($content, $offset[0] + strlen($matches[0]));
+  			$content = substr($content, $offset[0] + \strlen($matches[0]));
 
   			// If the bookmark is given, find the closing tag with the given bookmark name.
   			if (isset($matches[8])) {
@@ -582,7 +611,7 @@ namespace RazyFramework\Template
   					$value = null;
   				}
 
-  				$content = substr($content, $pos + strlen($closingTag));
+  				$content = substr($content, $pos + \strlen($closingTag));
   			}
 
   			if (is_scalar($value)) {

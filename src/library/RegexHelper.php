@@ -196,28 +196,28 @@ namespace RazyFramework
 		 *
 		 * @var int
 		 */
-		private $index         = 0;
+		private $index = 0;
 
 		/**
 		 * An array contains the flag of modifier.
 		 *
 		 * @var array
 		 */
-		private $modifiers     = [];
+		private $modifiers = [];
 
 		/**
 		 * The regular expression pattern.
 		 *
 		 * @var string
 		 */
-		private $regex         = '';
+		private $regex = '';
 
 		/**
 		 * The pattern will be ignored by (*SKIP)(*FAIL).
 		 *
 		 * @var string
 		 */
-		private $excludeRegex  = '';
+		private $excludeRegex = '';
 
 		/**
 		 * The option set to match the text by start of or end of string.
@@ -237,7 +237,7 @@ namespace RazyFramework
 			if ($regex && preg_match('/^(?<delimter>[\/-@;%`])(?<begin>\\^)?(?<regex>.+?)(?<end>(?<!\\\\)(?:\\\\\\\\)*\\$)?\\1(?<modifier>[mixXsUuAJD]*)$/', $regex, $matches)) {
 				$this->regex = $matches['regex'];
 				if (isset($matches[3])) {
-					for ($i = 0; $i < strlen($matches['modifier']); ++$i) {
+					for ($i = 0; $i < \strlen($matches['modifier']); ++$i) {
 						$this->modifiers[$matches['modifier'][$i]] = true;
 					}
 				}
@@ -270,12 +270,12 @@ namespace RazyFramework
 		{
 			if (preg_match('/Quick(Test|Match|Extract|Replace|Split|Combination|Divide)/', $name, $matches)) {
 				$regex = array_shift($arguments);
-				if (!is_string($regex)) {
+				if (!\is_string($regex)) {
 					throw new ErrorHandler('The parameter `regex` only allowed in string.');
 				}
 				$regex = new self($regex);
 
-				return call_user_func_array([$regex, lcfirst($matches[1])], $arguments);
+				return \call_user_func_array([$regex, lcfirst($matches[1])], $arguments);
 			}
 
 			throw new \BadMethodCallException('Static method ' . $name . ' doesn\'t exist');
@@ -302,7 +302,7 @@ namespace RazyFramework
 				if ($offset[0] > 0) {
 					$nestedContent[] = substr($text, 0, $offset[0]);
 				}
-				$text            = substr($text, $offset[0] + strlen($matches[0]));
+				$text            = substr($text, $offset[0] + \strlen($matches[0]));
 				$nestedContent[] = self::ParensParser(substr($matches[0], 1, -1), $flag, $customConditions);
 			}
 
@@ -335,9 +335,9 @@ namespace RazyFramework
 					$divided = '';
 				}
 
-				$remaining = substr($subject, $offset[0] + strlen($matches[0]));
+				$remaining = substr($subject, $offset[0] + \strlen($matches[0]));
 
-				if (!count($splitted) && 0 === strlen($divided) && 0 === strlen($reserved) && self::SPLIT_BODY_ONLY === ($flag & self::SPLIT_BODY_ONLY)) {
+				if (!\count($splitted) && 0 === \strlen($divided) && 0 === \strlen($reserved) && self::SPLIT_BODY_ONLY === ($flag & self::SPLIT_BODY_ONLY)) {
 					$reserved = $matches[0];
 
 					continue;
@@ -346,19 +346,19 @@ namespace RazyFramework
 				if ($reserved . $divided && self::SPLIT_SKIP_EMPTY !== ($flag & self::SPLIT_SKIP_EMPTY)) {
 					$splitted[] = $reserved . $divided;
 				}
-				$subject    = $remaining;
-				$reserved   = '';
+				$subject  = $remaining;
+				$reserved = '';
 
 				if (self::SPLIT_DELIMITER === ($flag & self::SPLIT_DELIMITER)) {
-					$splitted[] = (is_callable($callback)) ? $callback($matches) : $matches[0];
+					$splitted[] = (\is_callable($callback)) ? $callback($matches) : $matches[0];
 				}
 
-				if ($max > 0 && count($splitted) >= $max) {
+				if ($max > 0 && \count($splitted) >= $max) {
 					break;
 				}
 			}
 
-			if (strlen($subject) || strlen($reserved)) {
+			if (\strlen($subject) || \strlen($reserved)) {
 				$splitted[] = $reserved . $subject;
 			}
 
@@ -402,11 +402,11 @@ namespace RazyFramework
 		 */
 		public function replace($replacement, string $subject)
 		{
-			if (is_callable($replacement)) {
+			if (\is_callable($replacement)) {
 				return preg_replace_callback($this->getRegex(), $replacement, $subject);
 			}
 
-			if (is_string($replacement)) {
+			if (\is_string($replacement)) {
 				return preg_replace($this->getRegex(), $replacement, $subject);
 			}
 
@@ -427,7 +427,7 @@ namespace RazyFramework
 			// If the `m` multi line modifier is not set and it has the begin '^' or the end '$' token, use preg_match instead
 			if ((self::REGEX_BEGIN === ($this->regexBeginEnd & self::REGEX_BEGIN) || self::REGEX_END === ($this->regexBeginEnd & self::REGEX_END)) && !isset($this->modifiers['m'])) {
 				$matches = $this->match($subject);
-				if (is_callable($callback) && $matches) {
+				if (\is_callable($callback) && $matches) {
 					return $callback($matches);
 				}
 
@@ -435,7 +435,7 @@ namespace RazyFramework
 			}
 
 			$result = [];
-			if (is_callable($callback)) {
+			if (\is_callable($callback)) {
 				preg_replace_callback($this->getRegex(), function ($matches) use (&$result, $callback) {
 					$result[] = $callback($matches);
 				}, $subject);
@@ -457,7 +457,7 @@ namespace RazyFramework
 		 */
 		public function match(string $subject, array &$offset = null, callable $callback = null)
 		{
-			if (is_string($subject) && $subject) {
+			if (\is_string($subject) && $subject) {
 				$result = [];
 				$offset = [];
 				if (preg_match($this->getRegex(), $subject, $matches, PREG_OFFSET_CAPTURE)) {
@@ -490,7 +490,7 @@ namespace RazyFramework
 			if ($matches = $this->match($subject, $offset)) {
 				return [
 					substr($subject, 0, $offset[0]),
-					substr($subject, $offset[0] + strlen($matches[0])),
+					substr($subject, $offset[0] + \strlen($matches[0])),
 				];
 			}
 
@@ -562,14 +562,14 @@ namespace RazyFramework
 					if (isset($custom['regex'])) {
 						$excludeInCustoms .= $custom['regex'] . '(*SKIP)(*FAIL)|';
 					} elseif (isset($custom['wrap'])) {
-						if (is_string($custom['wrap'])) {
-							if (1 === strlen($custom['wrap'])) {
+						if (\is_string($custom['wrap'])) {
+							if (1 === \strlen($custom['wrap'])) {
 								$wrap = preg_quote($custom['wrap']);
 								$excludeInCustoms .= $wrap . '(?:[^\\\\' . $wrap . ']++|\\\\.)*' . $wrap . '(*SKIP)(*FAIL)|';
 							} else {
 								throw new ErrorHandler('The `wrap` parameter only allows one character.');
 							}
-						} elseif (is_array($custom['wrap'])) {
+						} elseif (\is_array($custom['wrap'])) {
 							if (isset($custom['wrap']['begin'], $custom['wrap']['end'])) {
 								$excludeInCustoms .= $this->getRecursionWrap($custom['wrap']['begin'], $custom['wrap']['end']) . '(*SKIP)(*FAIL)|';
 							}
@@ -693,7 +693,7 @@ namespace RazyFramework
 			if ($beginChar && $endChar) {
 				$ignoreChar = $beginChar[0];
 				$beginChar  = preg_quote($beginChar);
-				$ignoreChar .= $endChar[strlen($endChar) - 1];
+				$ignoreChar .= $endChar[\strlen($endChar) - 1];
 				$endChar    = preg_quote($endChar);
 				$ignoreChar = preg_quote($ignoreChar);
 

@@ -77,13 +77,13 @@ namespace RazyFramework
   		$compare = $this->checkpoints[$label];
   		$report  = [];
   		foreach ($this->init as $parameter => $value) {
-  			if ('index' === $parameter || !array_key_exists($parameter, $compare)) {
+  			if ('index' === $parameter || !\array_key_exists($parameter, $compare)) {
   				continue;
   			}
 
   			if (is_numeric($value)) {
   				$report[$parameter] = $compare[$parameter] - $value;
-  			} elseif (is_array($value)) {
+  			} elseif (\is_array($value)) {
   				$report[$parameter] = array_diff($compare[$parameter], $value);
   			}
   		}
@@ -101,10 +101,10 @@ namespace RazyFramework
   	 */
   	public function report(bool $compareWithInit = false, string ...$labels)
   	{
-  		if (count($labels)) {
-  			if (1 < count($labels)) {
+  		if (\count($labels)) {
+  			if (1 < \count($labels)) {
   				$checkpoints = array_intersect_key($this->checkpoints, array_flip($labels));
-  				if (!count($checkpoints)) {
+  				if (!\count($checkpoints)) {
   					throw new ErrorHandler('There is no checkpoint for generate the report.');
   				}
   			} else {
@@ -116,7 +116,7 @@ namespace RazyFramework
   				$checkpoints['@init'] = $this->init;
   			}
 
-  			if (count($checkpoints) < 2) {
+  			if (\count($checkpoints) < 2) {
   				throw new ErrorHandler('Not enough checkpoints to generate a report.');
   			}
 
@@ -134,13 +134,13 @@ namespace RazyFramework
   				$report = [];
 
   				foreach ($previous as $parameter => $value) {
-  					if ('index' === $parameter || !array_key_exists($parameter, $stats)) {
+  					if ('index' === $parameter || !\array_key_exists($parameter, $stats)) {
   						continue;
   					}
 
   					if (is_numeric($value)) {
   						$report[$parameter] = $stats[$parameter] - $value;
-  					} elseif (is_array($value)) {
+  					} elseif (\is_array($value)) {
   						$report[$parameter] = array_diff($stats[$parameter], $value);
   					} else {
   						$report[$parameter] = $value;
@@ -155,21 +155,21 @@ namespace RazyFramework
   		}
 
   		// If $compareWithInit set to true, put init checkpoint into checkpoint list
-  		if (!$compareWithInit && count($this->checkpoints) < 2) {
+  		if (!$compareWithInit && \count($this->checkpoints) < 2) {
   			throw new ErrorHandler('Not enough checkpoints to generate a report.');
   		}
 
   		$start   = ($compareWithInit) ? $this->init : reset($this->checkpoints);
-  		$compare = (0 === count($this->checkpoints)) ? $this->createSample() : end($this->checkpoints);
+  		$compare = (0 === \count($this->checkpoints)) ? $this->createSample() : end($this->checkpoints);
   		$report  = [];
   		foreach ($start as $parameter => $value) {
-  			if ('index' === $parameter || !array_key_exists($parameter, $compare)) {
+  			if ('index' === $parameter || !\array_key_exists($parameter, $compare)) {
   				continue;
   			}
 
   			if (is_numeric($value)) {
   				$report[$parameter] = $compare[$parameter] - $value;
-  			} elseif (is_array($value)) {
+  			} elseif (\is_array($value)) {
   				$report[$parameter] = array_diff($compare[$parameter], $value);
   			}
   		}
@@ -187,8 +187,8 @@ namespace RazyFramework
   		$ru                = getrusage();
   		$defined_functions = get_defined_functions(true);
 
-  		$stats = [
-  			'index'             => count($this->checkpoints),
+  		return [
+  			'index'             => \count($this->checkpoints),
   			'memory_usage'      => memory_get_usage(),
   			'memory_allocated'  => memory_get_usage(true),
   			'output_buffer'     => ob_get_length(),
@@ -198,8 +198,6 @@ namespace RazyFramework
   			'defined_functions' => $defined_functions['user'] ?? [],
   			'declared_classes'  => get_declared_classes(),
   		];
-
-  		return $stats;
   	}
   }
 }

@@ -185,12 +185,12 @@ namespace RazyFramework {
 		{
 			$args = [];
 			foreach ($arguments as $arg) {
-				if (is_object($arg)) {
-					$args[] = 'Object(' . get_class($arg) . ')';
+				if (\is_object($arg)) {
+					$args[] = 'Object(' . \get_class($arg) . ')';
 				} else {
-					$type = gettype($arg);
+					$type = \gettype($arg);
 					if ('string' === $type) {
-						$arg    = (strlen($arg) > 15) ? substr($arg, 0, 15) . '...' : $arg;
+						$arg    = (\strlen($arg) > 15) ? substr($arg, 0, 15) . '...' : $arg;
 						$args[] = "'" . $arg . "'";
 					} elseif ('array' === $type) {
 						$args[] = 'Array';
@@ -200,7 +200,7 @@ namespace RazyFramework {
 				}
 			}
 
-			return (count($args)) ? '<span>' . implode('</span>, <span>', $args) . '</span>' : '';
+			return (\count($args)) ? '<span>' . implode('</span>, <span>', $args) . '</span>' : '';
 		}
 
 		/**
@@ -234,7 +234,7 @@ namespace RazyFramework {
 		private static function ReplaceTag(string $content, array $replacement = [])
 		{
 			return preg_replace_callback('/{\$(\w+)}/i', function ($matches) use ($replacement) {
-				if (array_key_exists($matches[1], $replacement)) {
+				if (\array_key_exists($matches[1], $replacement)) {
 					return $replacement[$matches[1]];
 				}
 

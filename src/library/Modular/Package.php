@@ -29,7 +29,7 @@ namespace RazyFramework\Modular
 		const STATUS_PENDING = 0;
 
 		/**
-		 * Module initializing status
+		 * Module initializing status.
 		 *
 		 * @var int
 		 */
@@ -195,12 +195,12 @@ namespace RazyFramework\Modular
 			$this->manager    = $manager;
 			$this->modulePath = $modulePath;
 			if (0 === strpos($modulePath, SYSTEM_ROOT)) {
-				$this->moduleRelativePath = substr($modulePath, strlen(SYSTEM_ROOT));
+				$this->moduleRelativePath = substr($modulePath, \strlen(SYSTEM_ROOT));
 			}
 
 			if (isset($setting['module_code'])) {
 				$code = trim($setting['module_code']);
-				if (!is_string($code)) {
+				if (!\is_string($code)) {
 					throw new ErrorHandler('The module code should be a string');
 				}
 
@@ -213,7 +213,7 @@ namespace RazyFramework\Modular
 				throw new ErrorHandler('Missing module code.');
 			}
 
-			$this->wrapper    = $wrapper;
+			$this->wrapper = $wrapper;
 			$this->wrapper->preset($this)->exchange($this->code, $this->wrapper(['execute', 'trigger', 'route', 'prepare', 'touch', 'ready', 'rewrite', 'notify', 'standby']));
 
 			$this->version = trim($setting['version']);
@@ -226,10 +226,10 @@ namespace RazyFramework\Modular
 				throw new ErrorHandler('Missing module author.');
 			}
 
-			if (isset($setting['require']) && is_array($setting['require'])) {
+			if (isset($setting['require']) && \is_array($setting['require'])) {
 				foreach ($setting['require'] as $moduleCode => $version) {
 					$moduleCode = trim($moduleCode);
-					if (preg_match('/^[\w-]+$/', $moduleCode) && is_string($version)) {
+					if (preg_match('/^[\w-]+$/', $moduleCode) && \is_string($version)) {
 						$this->require[$moduleCode] = trim($version);
 					}
 				}
@@ -352,7 +352,7 @@ namespace RazyFramework\Modular
 			$route    = tidy('/' . $route, true, '/');
 			$urlQuery = $this->manager->getURLQuery();
 			if (0 === ($pos = strpos($urlQuery, $this->routingPrefix))) {
-				$urlQuery = substr($urlQuery, strlen($this->routingPrefix) - 1);
+				$urlQuery = substr($urlQuery, \strlen($this->routingPrefix) - 1);
 				if (0 === ($pos = strpos($urlQuery, $route))) {
 					return true;
 				}
@@ -386,6 +386,33 @@ namespace RazyFramework\Modular
 		}
 
 		/**
+		 * Copy the file from source to target directory.
+		 *
+		 * @param string $sourcePath The file source
+		 * @param string $directory  The directory in distribution folder
+		 * @param string $filename   The filename in target directory, leave blank as the source file name
+		 *
+		 * @return string The target path
+		 */
+		public function moveFile(string $sourcePath, string $directory = '/', string $filename = '')
+		{
+			return $this->wrapper->moveFile($sourcePath, $directory, $filename);
+		}
+
+		/**
+		 * Copy the file from source to target directory.
+		 *
+		 * @param string  $path 	The file path in target directory
+		 * @param string  $distCode   The distribution code under the current domain
+		 *
+		 * @return string Return the file path URL or return empty string if the file is not exists
+		 */
+		public function getStorageFilePath(string $path, string $distCode = '')
+		{
+			return $this->wrapper->getStorageFilePath($path, $distCode);
+		}
+
+		/**
 		 * Add module package routing.
 		 *
 		 * @param array|string $route  A string of the route path or an array contains a set of routing
@@ -395,7 +422,7 @@ namespace RazyFramework\Modular
 		 */
 		public function addRoute($route, string $method = '')
 		{
-			if (is_array($route)) {
+			if (\is_array($route)) {
 				foreach ($route as $routeName => $method) {
 					$this->addRoute($routeName, $method);
 				}
@@ -417,7 +444,7 @@ namespace RazyFramework\Modular
 		 */
 		public function addProperty($property, string $value = '')
 		{
-			if (is_array($property)) {
+			if (\is_array($property)) {
 				foreach ($property as $name => $value) {
 					$this->addProperty($name, $value);
 				}
@@ -455,13 +482,13 @@ namespace RazyFramework\Modular
 		 */
 		public function addAPI($api, string $method = '')
 		{
-			if (is_array($api)) {
+			if (\is_array($api)) {
 				foreach ($api as $name => $method) {
 					$this->addAPI($name, $method);
 				}
 			} else {
 				$api = trim($api);
-				if (preg_match('/^\w+$/', $api) && preg_match('/^\w+$/i', $method)) {
+				if (preg_match('/^[a-z]\w*$/', $api) && preg_match('/^([a-z]\w*\/)*[a-z]\w*$/i', $method)) {
 					$api             = trim($api);
 					$this->api[$api] = $method;
 				}
@@ -480,7 +507,7 @@ namespace RazyFramework\Modular
 		 */
 		public function listen($event, string $method = '')
 		{
-			if (is_array($event)) {
+			if (\is_array($event)) {
 				foreach ($event as $name => $method) {
 					$this->listen($name, $method);
 				}
@@ -689,7 +716,6 @@ namespace RazyFramework\Modular
 
 			if (isset($this->api[$name])) {
 				$method = $this->api[$name];
-
 				// Check the methed is callable or not, protected and private method is not executable
 				if (method_exists($this->controller, $method)) {
 					// Method Reflection, get the method type
@@ -702,7 +728,7 @@ namespace RazyFramework\Modular
 
 				if ($this->controller->__onAPICall($trace, $name, $args)) {
 					// Pass all arguments to routed method
-					return call_user_func_array([$this->controller, $method], $args);
+					return \call_user_func_array([$this->controller, $method], $args);
 				}
 			}
 
@@ -737,7 +763,7 @@ namespace RazyFramework\Modular
 
 					if ($this->controller->__onEventTrigger($trace, $name, $args)) {
 						// Pass all arguments to routed method
-						$result = call_user_func_array([$this->controller, $method], $args);
+						$result = \call_user_func_array([$this->controller, $method], $args);
 					}
 				}
 			}
@@ -790,13 +816,22 @@ namespace RazyFramework\Modular
 			foreach ($this->routes as $route => $method) {
 				if (0 === ($pos = strpos($urlQuery, $route))) {
 					$this->moduleRootURL = append($this->manager->getSiteURL(), $route);
-					$urlQuery            = rtrim(substr($urlQuery, strlen($route)), '/');
+					$urlQuery            = rtrim(substr($urlQuery, \strlen($route)), '/');
 					$args                = explode('/', $urlQuery);
 					$this->routedPath    = $route;
 
-					$this->wrapper->broadcast();
+					// Send a signal to other package that the packge has routed successfully
+					$this->wrapper->notify();
 
-					return call_user_func_array([$this->controller, $method], $args);
+					// Pass the arguments to package before execute the routing method
+					$this->controller->__onBeforeRoute($args);
+
+					// Store the result from the closure function
+					$result = (bool) \call_user_func_array([$this->controller, $method], $args);
+
+					// Pass the result to __onAfterRoute when the closure function is executed
+					// Return false to trigger 404 error
+					return $this->controller->__onAfterRoute($result);
 				}
 			}
 
@@ -804,7 +839,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Notify all module that the route is done.
+		 * Call the package that some module code is routed in.
 		 *
 		 * @param string $moduleCode The routed module's code
 		 *
@@ -812,7 +847,7 @@ namespace RazyFramework\Modular
 		 */
 		private function notify(string $moduleCode)
 		{
-			$this->controller->__onAfterRoute($moduleCode);
+			$this->controller->__onNotify($moduleCode);
 
 			return $this;
 		}
@@ -826,11 +861,11 @@ namespace RazyFramework\Modular
 		 */
 		private function rewrite(string $urlQuery)
 		{
-			return $this->controller->__onBeforeRoute($urlQuery);
+			return $this->controller->__onRewrite($urlQuery);
 		}
 
 		/**
-		 * Standby until start to routing in
+		 * Send a standby signal to package
 		 *
 		 * @return self Chainable
 		 */

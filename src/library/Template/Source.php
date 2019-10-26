@@ -12,7 +12,6 @@
 namespace RazyFramework\Template
 {
   use RazyFramework\ErrorHandler;
-  use RazyFramework\Wrapper;
 
   /**
    * Template Source is an object continas the file structure and its parameters.
@@ -82,12 +81,12 @@ namespace RazyFramework\Template
   	 */
   	public function assign($parameter, $value = null)
   	{
-  		if (is_array($parameter)) {
+  		if (\is_array($parameter)) {
   			foreach ($parameter as $index => $value) {
   				$this->assign($index, $value);
   			}
   		} else {
-  			if (is_object($value) && ($value instanceof \Closure)) {
+  			if (\is_object($value) && ($value instanceof \Closure)) {
   				// If the value is closure, pass the current value to closure
   				$this->parameters[$parameter] = $value($this->parameters[$parameter] ?? null);
   			} else {
@@ -107,7 +106,7 @@ namespace RazyFramework\Template
   	 */
   	public function hasValue(string $parameter)
   	{
-  		return array_key_exists($parameter, $this->parameters);
+  		return \array_key_exists($parameter, $this->parameters);
   	}
 
   	/**

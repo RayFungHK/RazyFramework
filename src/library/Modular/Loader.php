@@ -80,7 +80,7 @@ namespace RazyFramework\Modular
 				$this->closures[$method] = \Closure::bind(self::$loaders[$method], $this->package);
 			}
 
-			return call_user_func_array($this->closures[$method], $arguments);
+			return \call_user_func_array($this->closures[$method], $arguments);
 		}
 
 		/**

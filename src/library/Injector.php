@@ -26,18 +26,18 @@ namespace RazyFramework
   	private function wrapper(?array $methods = null)
   	{
   		$wrapper = new Wrapper();
-      if (is_array($methods)) {
-    		foreach ($methods as $method) {
-    			if (is_string($method)) {
-    				$wrapper->bindTunnel($method, function () use ($method) {
-    					$stack = debug_backtrace(0, 1);
-    					$args  = $stack[0]['args'];
+  		if (\is_array($methods)) {
+  			foreach ($methods as $method) {
+  				if (\is_string($method)) {
+  					$wrapper->bindTunnel($method, function () use ($method) {
+  						$stack = debug_backtrace(0, 1);
+  						$args = $stack[0]['args'];
 
-    					return call_user_func_array([$this, $method], $args);
-    				});
-    			}
-    		}
-      }
+  						return \call_user_func_array([$this, $method], $args);
+  					});
+  				}
+  			}
+  		}
 
   		return $wrapper;
   	}

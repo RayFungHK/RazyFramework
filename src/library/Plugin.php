@@ -36,35 +36,37 @@ namespace RazyFramework
   	 */
   	private $plugins = [];
 
-    /**
-     * Plugin constructor
-     * @param mixed $object The hash name or the object which is going to create a plugin pool
-     */
+  	/**
+  	 * Plugin constructor.
+  	 *
+  	 * @param mixed $object The hash name or the object which is going to create a plugin pool
+  	 */
   	public function __construct($object)
   	{
   		if (is_scalar($object)) {
   			$hash = $object;
-  		} elseif (!is_object($object)) {
+  		} elseif (!\is_object($object)) {
   			$hash = spl_object_hash(new \stdClass());
   		} else {
   			$hash = spl_object_hash($object);
   		}
 
   		if (!isset(self::$pool[$hash])) {
-  			$this->hash = $hash;
+  			$this->hash        = $hash;
   			self::$pool[$hash] = $this;
   		} else {
   			throw new ErrorHandler('Duplicated plugin pool hash ' . $hash . '.');
   		}
   	}
 
-    /**
-     * Get the plugin by given hash or object
-     * @param self $object The Plugin object
-     */
+  	/**
+  	 * Get the plugin by given hash or object.
+  	 *
+  	 * @param self $object The Plugin object
+  	 */
   	public static function GetPool($object)
   	{
-  		if (!is_object()) {
+  		if (!\is_object()) {
   			$hash = spl_object_hash(new \stdClass());
   		} else {
   			$hash = spl_object_hash($object);
@@ -87,20 +89,20 @@ namespace RazyFramework
   	public function plugin(string $filename)
   	{
   		if (!isset($this->plugins[$filename])) {
-        $this->plugins[$filename] = null;
+  			$this->plugins[$filename] = null;
   			foreach ($this->pluginFolder as $folder) {
   				$pluginFile = append($folder, $filename . '.php');
 
   				if (is_file($pluginFile)) {
   					$callback = require $pluginFile;
-  					if (is_callable($callback)) {
+  					if (\is_callable($callback)) {
   						$this->plugins[$filename] = $callback;
 
   						return $callback;
   					}
   				}
   			}
-      }
+  		}
 
   		return $this->plugins[$filename];
   	}

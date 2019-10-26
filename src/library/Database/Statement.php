@@ -208,7 +208,7 @@ namespace RazyFramework\Database
 					$regex->exclude(RegexHelper::EXCLUDE_ALL_QUOTES);
 				}
 				$columns = $regex->split($columns);
-			} elseif (!is_array($columns)) {
+			} elseif (!\is_array($columns)) {
 				throw new ErrorHandler('The given value is not a column or not contains column syntax.');
 			}
 
@@ -236,13 +236,13 @@ namespace RazyFramework\Database
 				}
 
 				$syntax = $regex->split($syntax);
-			} elseif (!is_array($syntax)) {
+			} elseif (!\is_array($syntax)) {
 				throw new ErrorHandler('The given value is a column or contains column syntax.');
 			}
 
 			$this->orderby = [];
 			foreach ($syntax as $stx) {
-				if (is_string($stx)) {
+				if (\is_string($stx)) {
 					$stx = trim($stx);
 					if ($stx) {
 						if ('>' === $stx[0]) {
@@ -297,7 +297,7 @@ namespace RazyFramework\Database
 
 			if (is_scalar($columns)) {
 				$columns = $regex->split($columns);
-			} elseif (!is_array($columns)) {
+			} elseif (!\is_array($columns)) {
 				throw new ErrorHandler('The given value is not a column or not contains column syntax.');
 			}
 
@@ -362,7 +362,7 @@ namespace RazyFramework\Database
 		 */
 		public function assign($parameter, $value = null)
 		{
-			if (is_array($parameter)) {
+			if (\is_array($parameter)) {
 				foreach ($parameter as $key => $value) {
 					$this->assign($key, $value);
 				}
@@ -393,7 +393,7 @@ namespace RazyFramework\Database
 			if ('select' === $this->queryType) {
 				if ($this->tableJoinSyntax) {
 					$sql = 'SELECT ' . implode(', ', $this->columns) . ' FROM ';
-					$sql .= (is_string($this->tableJoinSyntax)) ? $this->tableJoinSyntax : $this->tableJoinSyntax->getStatement();
+					$sql .= (\is_string($this->tableJoinSyntax)) ? $this->tableJoinSyntax : $this->tableJoinSyntax->getStatement();
 					if ($this->whereSyntax) {
 						$syntax = $this->getWhereSyntax($this->whereSyntax);
 						if ($syntax) {
@@ -401,7 +401,7 @@ namespace RazyFramework\Database
 						}
 					}
 
-					if (count($this->groupby)) {
+					if (\count($this->groupby)) {
 						$sql .= ' GROUP BY ' . implode(', ', $this->groupby);
 					}
 
@@ -412,7 +412,7 @@ namespace RazyFramework\Database
 						}
 					}
 
-					if (count($this->orderby)) {
+					if (\count($this->orderby)) {
 						$sql .= ' ORDER BY ' . implode(', ', $this->orderby);
 					}
 
@@ -470,12 +470,12 @@ namespace RazyFramework\Database
 			}
 
 			$statement = '';
-			if (is_string($whereSyntax)) {
+			if (\is_string($whereSyntax)) {
 				return $whereSyntax;
 			}
 
 			if ($whereSyntax instanceof Where) {
-				if (count($this->parameters)) {
+				if (\count($this->parameters)) {
 					$whereSyntax->assign($this->parameters);
 				}
 
@@ -496,7 +496,7 @@ namespace RazyFramework\Database
 			}
 
 			return $regex->replace(function ($matches) {
-				if (!array_key_exists($matches[2], $this->parameters)) {
+				if (!\array_key_exists($matches[2], $this->parameters)) {
 					return '""';
 				}
 

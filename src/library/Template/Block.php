@@ -12,7 +12,6 @@
 namespace RazyFramework\Template
 {
   use RazyFramework\ErrorHandler;
-  use RazyFramework\RegexHelper;
 
   /**
    * Template block contains the structure, such as its sub block, raw text and parameters.
@@ -106,10 +105,10 @@ namespace RazyFramework\Template
   						$this->structure[$matches[2]] = $this->blocks[$matches[2]];
   					} elseif ('RECURSION' === $matches[1]) {
   						if (!($parent = $this->getParentByName($matches[2]))) {
-    						throw new ErrorHandler('The parent block ' . $matches[2] . ' is not found to become the recursive block.');
+  							throw new ErrorHandler('The parent block ' . $matches[2] . ' is not found to become the recursive block.');
   						}
 
-  						$this->blocks[$matches[2]] = $parent;
+  						$this->blocks[$matches[2]]    = $parent;
   						$this->structure[$matches[2]] = $this->blocks[$matches[2]];
   					} elseif ('END' === $matches[1]) {
   						if ($blockName === $matches[2]) {
@@ -210,7 +209,7 @@ namespace RazyFramework\Template
   	 */
   	public function hasValue(string $parameter)
   	{
-  		return array_key_exists($parameter, $this->parameters);
+  		return \array_key_exists($parameter, $this->parameters);
   	}
 
   	/**
@@ -251,12 +250,12 @@ namespace RazyFramework\Template
   	 */
   	public function assign($parameter, $value = null)
   	{
-  		if (is_array($parameter)) {
+  		if (\is_array($parameter)) {
   			foreach ($parameter as $index => $value) {
   				$this->assign($index, $value);
   			}
   		} else {
-  			if (is_object($value) && ($value instanceof \Closure)) {
+  			if (\is_object($value) && ($value instanceof \Closure)) {
   				// If the value is closure, pass the current value to closure
   				$this->parameters[$parameter] = $value($this->parameters[$parameter] ?? null);
   			} else {
@@ -288,9 +287,9 @@ namespace RazyFramework\Template
   	}
 
   	/**
-  	 * Walk through the parent and return the block by given block name
+  	 * Walk through the parent and return the block by given block name.
   	 *
-  	 * @param string $block The block name.
+  	 * @param string $block the block name
   	 *
   	 * @return Block The Block object
   	 */

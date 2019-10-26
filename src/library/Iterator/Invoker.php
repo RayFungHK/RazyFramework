@@ -62,7 +62,7 @@ namespace RazyFramework\Iterator
 			}
 
 			// Bind convertor object to closure function
-			return call_user_func_array($closure->bindTo($this, __CLASS__), $args);
+			return \call_user_func_array($closure->bindTo($this, __CLASS__), $args);
 		}
 
 		/**
@@ -109,7 +109,7 @@ namespace RazyFramework\Iterator
 					self::$dynamicInvokers[$name] = null;
 				}
 
-				if (is_callable($callback)) {
+				if (\is_callable($callback)) {
 					self::$dynamicInvokers[$name] = $callback;
 				}
 			}

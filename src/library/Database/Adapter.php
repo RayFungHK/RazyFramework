@@ -154,7 +154,7 @@ namespace RazyFramework\Database
 				return $sql;
 			}
 
-			if (is_string($sql)) {
+			if (\is_string($sql)) {
 				return new Statement($this, $sql);
 			}
 
@@ -237,7 +237,7 @@ namespace RazyFramework\Database
 				throw new ErrorHandler('Table name should not be empty');
 			}
 
-			if (!count($dataset)) {
+			if (!\count($dataset)) {
 				throw new ErrorHandler('Dataset should not be empty');
 			}
 
@@ -259,7 +259,7 @@ namespace RazyFramework\Database
 				throw new ErrorHandler('Table name should not be empty');
 			}
 
-			if (!count($dataset)) {
+			if (!\count($dataset)) {
 				throw new ErrorHandler('Dataset should not be empty');
 			}
 
@@ -278,7 +278,7 @@ namespace RazyFramework\Database
 		 */
 		public function getCharset()
 		{
-			if (!count($this->charset)) {
+			if (!\count($this->charset)) {
 				$query = $this->query('SHOW CHARACTER SET');
 				while ($result = $query->fetch()) {
 					$this->charset[$result['Charset']] = [
@@ -306,7 +306,7 @@ namespace RazyFramework\Database
 			$this->getCharset();
 
 			if (isset($this->charset[$charset])) {
-				if (!count($this->charset[$charset]['collation'])) {
+				if (!\count($this->charset[$charset]['collation'])) {
 					$query = $this->query("SHOW COLLATION WHERE Charset = '" . $charset . "'");
 					while ($result = $query->fetch()) {
 						$this->charset[$charset]['collation'][$result['Collation']] = $result['Charset'];

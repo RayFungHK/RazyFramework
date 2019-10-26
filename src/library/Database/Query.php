@@ -42,7 +42,7 @@ namespace RazyFramework\Database
 		 */
 		public function fetch($object = null)
 		{
-			if (is_string($object)) {
+			if (\is_string($object)) {
 				if ('all' === $object) {
 					return $this->statement->fetchAll(\PDO::FETCH_ASSOC);
 				}
@@ -54,7 +54,7 @@ namespace RazyFramework\Database
 				}
 			}
 
-			if (is_array($object) && count($object)) {
+			if (\is_array($object) && \count($object)) {
 				foreach ($object as $mapping => $column) {
 					$object[$mapping] = null;
 					$this->statement->bindColumn($column, $object[$mapping]);
@@ -64,11 +64,11 @@ namespace RazyFramework\Database
 				return $object;
 			}
 
-			if (is_string($object) && class_exists($object)) {
+			if (\is_string($object) && class_exists($object)) {
 				return $this->statement->fetch(\PDO::FETCH_CLASS, $object);
 			}
 
-			if (is_object($object)) {
+			if (\is_object($object)) {
 				return $this->statement->fetch(\PDO::FETCH_INTO, $object);
 			}
 

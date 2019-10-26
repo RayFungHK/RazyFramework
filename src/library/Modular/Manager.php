@@ -25,7 +25,7 @@ namespace RazyFramework\Modular
 		use \RazyFramework\Injector;
 
 		/**
-		 * The wrapper object of the entry distribution
+		 * The wrapper object of the entry distribution.
 		 *
 		 * @var Wrapper
 		 */
@@ -204,9 +204,9 @@ namespace RazyFramework\Modular
 
 			// Get the path value from the multisite and alias list by th current domain
 			if (isset(self::$multisite[$domain])) {
-				$this->alias = $domain;
+				$this->alias       = $domain;
 				$this->domainRoute = $domain;
-				$distPath = self::$multisite[$domain];
+				$distPath          = self::$multisite[$domain];
 			} elseif (isset(self::$domainalias[$domain])) {
 				$distPath          = self::$multisite[self::$domainalias[$domain]];
 				$this->alias       = $domain;
@@ -235,16 +235,16 @@ namespace RazyFramework\Modular
 
 			if ($distPath) {
 				// Extract the url query path
-				$urlQuery = (RELATIVE_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], RELATIVE_ROOT) + strlen(RELATIVE_ROOT)) : $_SERVER['REQUEST_URI'];
+				$urlQuery = (RELATIVE_ROOT) ? substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], RELATIVE_ROOT) + \strlen(RELATIVE_ROOT)) : $_SERVER['REQUEST_URI'];
 				$urlQuery = tidy(strtok($urlQuery, '?'), true, '/');
-				if (is_array($distPath)) {
+				if (\is_array($distPath)) {
 					sort_path_level($distPath);
 					foreach ($distPath as $routes => $path) {
 						$routes = tidy($routes, true, '/');
 						if (0 === ($pos = strpos($urlQuery, $routes))) {
 							$this->distPath     = tidy($path, true);
 							$this->relativePath = $routes;
-							$this->urlQuery     = substr($urlQuery, strlen($routes) - 1);
+							$this->urlQuery     = substr($urlQuery, \strlen($routes) - 1);
 
 							break;
 						}
@@ -275,8 +275,9 @@ namespace RazyFramework\Modular
 				$this->distPathCode = $distCode;
 
 				// Setup the cookie and session
-		    session_set_cookie_params(0, bs_append(RELATIVE_ROOT, $this->distPathCode), HOSTNAME);
-		    session_start();
+				session_set_cookie_params(0, '/', HOSTNAME);
+				session_name($this->distPathCode);
+				session_start();
 
 				(Scavenger::GetWorker())->register($this->wrapper(['wipe']));
 
@@ -341,7 +342,7 @@ namespace RazyFramework\Modular
 
 					$this->required[$packageCode] = true;
 					$require                      = $package->getRequire();
-					if (count($require)) {
+					if (\count($require)) {
 						foreach ($require as $code => $version) {
 							if (isset($this->required[$code]) || $code === $packageCode) {
 								continue;
@@ -470,7 +471,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Get the relative path of the routed site
+		 * Get the relative path of the routed site.
 		 *
 		 * @return string The relative path
 		 */
@@ -571,7 +572,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Get the distribution code
+		 * Get the distribution code.
 		 *
 		 * @return string The distribution code
 		 */
@@ -581,7 +582,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Get the distribution path
+		 * Get the distribution path.
 		 *
 		 * @return string The distribution path
 		 */
@@ -611,25 +612,25 @@ namespace RazyFramework\Modular
 		 */
 		public static function Initialize()
 		{
-			if (!defined('SYSTEM_ROOT')) {
+			if (!\defined('SYSTEM_ROOT')) {
 				throw new ErrorHandler('SYSTEM_ROOT is not defined, initial failed.');
 			}
 
 			$regex = new RegexHelper('/^(?:(?:([a-z0-9][\w-]*(?<![-_]))|\*)\.)*(?:[a-z]{2,}|\*)|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}$/');
 
 			$sitesConfig = require SYSTEM_ROOT . \DIRECTORY_SEPARATOR . 'sites.inc.php';
-			if (is_array($sitesConfig['domains'])) {
+			if (\is_array($sitesConfig['domains'])) {
 				foreach ($sitesConfig['domains'] as $domain => $path) {
 					$domain = trim(ltrim($domain, '.'));
 					if ($regex->test($domain)) {
-						if (is_string($path) || is_array($path)) {
+						if (\is_string($path) || \is_array($path)) {
 							self::$multisite[$domain] = $path;
 						}
 					}
 				}
 			}
 
-			if (is_array($sitesConfig['alias'])) {
+			if (\is_array($sitesConfig['alias'])) {
 				foreach ($sitesConfig['alias'] as $alias => $domain) {
 					$domain = trim(ltrim($domain, '.'));
 					$alias  = trim(ltrim($alias, '.'));
@@ -727,6 +728,68 @@ namespace RazyFramework\Modular
 		}
 
 		/**
+		 * Copy the file from source to target directory.
+		 *
+		 * @param Package $package    The package to locate the data storage
+		 * @param string  $sourcePath The file source
+		 * @param string  $directory  The directory in distribution folder
+		 * @param string  $filename   The filename in target directory, leave blank as the source file name
+		 *
+		 * @return string The target path
+		 */
+		private function moveFile(Package $package, string $sourcePath, string $directory = '/', string $filename = '')
+		{
+			if ($this === $package->getManager()) {
+				if (is_file($sourcePath)) {
+					if (!$filename) {
+						$filename = basename($sourcePath);
+					}
+					$directory = append(SYSTEM_ROOT, 'data', $this->getIdentifyName(true), $directory);
+					if (!is_dir($directory)) {
+						if (is_file($directory)) {
+							throw new ErrorHandler($directory . ' is not a directory.');
+						}
+						// Create the directory
+						mkdir($directory, 0755, true);
+					}
+
+					$target = append($directory, $filename);
+					if (!copy($sourcePath, $target)) {
+						return '';
+					}
+
+					return $target;
+				}
+			}
+
+			return '';
+		}
+
+		/**
+		 * Get the storage file path
+		 *
+		 * @param Package $package    The package to locate the data storage
+		 * @param string  $path   		The file path in target directory
+		 * @param string  $distCode   The distribution code under the current domain
+		 *
+		 * @return string Return the file path URL or return empty string if the file is not exists
+		 */
+		private function getStorageFilePath(Package $package, string $path, string $distCode = '')
+		{
+			if ($this === $package->getManager()) {
+				$distCode = $this->getIdentifyName(true, $distCode);
+				$filePath = append(SYSTEM_ROOT, 'data', $distCode, $path);
+				if (!is_file($filePath)) {
+					return '';
+				}
+
+				return append($this->getRootURL(), RELATIVE_ROOT, 'data', $distCode, $path);
+			}
+
+			return '';
+		}
+
+		/**
 		 * Autoload a class from the available module library folder.
 		 *
 		 * @param string $class The class name waiting for load
@@ -757,12 +820,12 @@ namespace RazyFramework\Modular
 		{
 			if (Package::STATUS_ACTIVE === $package->getStatus()) {
 				if (0 === ($pos = strpos($this->urlQuery, $package->getRoutingPrefix()))) {
-					$urlQuery = substr($this->urlQuery, strlen($package->getRoutingPrefix()) - 1);
+					$urlQuery = substr($this->urlQuery, \strlen($package->getRoutingPrefix()) - 1);
 					$code     = $package->getCode();
 
 					// Rewrite the url query before routing
 					$urlQuery = $this->wrappers[$code]->rewrite($urlQuery);
-					if (!is_string($urlQuery)) {
+					if (!\is_string($urlQuery)) {
 						$urlQuery = '';
 					}
 
@@ -882,7 +945,7 @@ namespace RazyFramework\Modular
 					if (is_file($folder . 'package.php')) {
 						// Load the module if it has the package.php file
 						try {
-							$wrapper = $this->wrapper(['lock', 'updateVersion', 'saveConfig', 'getConfig', 'getTplManager', 'routeTo', 'broadcast']);
+							$wrapper = $this->wrapper(['lock', 'updateVersion', 'saveConfig', 'getConfig', 'moveFile', 'getStorageFilePath', 'getTplManager', 'routeTo', 'notify']);
 
 							$package = new Package($this, $folder, require $folder . 'package.php', $wrapper);
 
@@ -917,11 +980,12 @@ namespace RazyFramework\Modular
 		/**
 		 * Get the identify name by its domain and distribution code.
 		 *
-		 * @param bool $safe Set true to ouput the file name safe string
+		 * @param bool 		$safe 			Set true to ouput the file name safe string
+		 * @param string  $distCode   The distribution code under the current domain
 		 *
 		 * @return string The identify name
 		 */
-		private function getIdentifyName(bool $safe = false)
+		private function getIdentifyName(bool $safe = false, string $distCode = '')
 		{
 			$domain = $this->domainRoute;
 
@@ -929,7 +993,7 @@ namespace RazyFramework\Modular
 				$domain = str_replace('*', '_', $domain);
 			}
 
-			return $domain . '-' . $this->distPathCode;
+			return $domain . '-' . (($distCode) ? $distCode : $this->distPathCode);
 		}
 
 		/**
@@ -939,7 +1003,7 @@ namespace RazyFramework\Modular
 		 *
 		 * @return self Chainable
 		 */
-		private function broadcast(Package $routedPackage)
+		private function notify(Package $routedPackage)
 		{
 			foreach ($this->packages as $package) {
 				if (Package::STATUS_ACTIVE === $package->getStatus() && $package->getCode() !== $routedPackage->getCode()) {

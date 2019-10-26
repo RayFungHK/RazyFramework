@@ -55,10 +55,10 @@ namespace RazyFramework
 		public function __call(string $name, array $args)
 		{
 			if (isset($this->tunnels[$name])) {
-				if (!array_key_exists($name, $this->grantaccess)) {
+				if (!\array_key_exists($name, $this->grantaccess)) {
 					$reflectionFunction = new \ReflectionFunction($this->tunnels[$name]);
 					$reflectionClass    = $reflectionFunction->getClosureScopeClass();
-					if (in_array('RazyFramework\Injector', $reflectionClass->getTraitNames(), true)) {
+					if (\in_array('RazyFramework\Injector', $reflectionClass->getTraitNames(), true)) {
 						$this->grantaccess[$name] = true;
 					}
 				}
@@ -67,7 +67,7 @@ namespace RazyFramework
 					throw new ErrorHandler('You cannot wrap the class method that the class does not use the Injector.');
 				}
 
-				return call_user_func_array($this->tunnels[$name], array_merge($this->preset, $args));
+				return \call_user_func_array($this->tunnels[$name], array_merge($this->preset, $args));
 			}
 
 			trigger_error('Call to undefined method ' . __CLASS__ . '::' . $name . '()', E_USER_ERROR);
@@ -131,7 +131,7 @@ namespace RazyFramework
 		public function walk(callable $callback)
 		{
 			foreach ($this->tunnels as $method => $closure) {
-				call_user_func($callback, $method, $closure);
+				\call_user_func($callback, $method, $closure);
 			}
 
 			return $this;
