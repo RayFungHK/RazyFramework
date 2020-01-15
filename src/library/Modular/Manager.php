@@ -178,6 +178,8 @@ namespace RazyFramework\Modular
 		 */
 		private $isMain = false;
 
+		private $pointer;
+
 		/**
 		 * Manager constructor.
 		 *
@@ -471,6 +473,19 @@ namespace RazyFramework\Modular
 		}
 
 		/**
+		 * Get the module view url path by given package code
+		 *
+		 * @return string The package view url path
+		 */
+		public function getViewURL($code)
+		{
+			if (isset($this->packages[$code])) {
+				return $this->packages[$code]->getViewURL();
+			}
+			return '';
+		}
+
+		/**
 		 * Get the relative path of the routed site.
 		 *
 		 * @return string The relative path
@@ -564,11 +579,11 @@ namespace RazyFramework\Modular
 		/**
 		 * Get the routed module package.
 		 *
-		 * @return Package The routed module package
+		 * @return string The routed module package code
 		 */
 		public function getRoutedPackage()
 		{
-			return $this->routed;
+			return $this->routed->getCode();
 		}
 
 		/**
@@ -766,11 +781,31 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Get the storage file path
+		 * Get the storage file url.
 		 *
-		 * @param Package $package    The package to locate the data storage
-		 * @param string  $path   		The file path in target directory
-		 * @param string  $distCode   The distribution code under the current domain
+		 * @param Package $package  The package to locate the data storage
+		 * @param string  $path     The file path in target directory
+		 * @param string  $distCode The distribution code under the current domain
+		 *
+		 * @return string Return the file path URL or return empty string if the file is not exists
+		 */
+		private function getStorageFileURL(Package $package, string $path, string $distCode = '')
+		{
+			if ($this === $package->getManager()) {
+				$distCode = $this->getIdentifyName(true, $distCode);
+
+				return append($this->getRootURL(), RELATIVE_ROOT, 'data', $distCode, $path);
+			}
+
+			return '';
+		}
+
+		/**
+		 * Get the storage file path.
+		 *
+		 * @param Package $package  The package to locate the data storage
+		 * @param string  $path     The file path in target directory
+		 * @param string  $distCode The distribution code under the current domain
 		 *
 		 * @return string Return the file path URL or return empty string if the file is not exists
 		 */
@@ -778,15 +813,31 @@ namespace RazyFramework\Modular
 		{
 			if ($this === $package->getManager()) {
 				$distCode = $this->getIdentifyName(true, $distCode);
-				$filePath = append(SYSTEM_ROOT, 'data', $distCode, $path);
-				if (!is_file($filePath)) {
-					return '';
-				}
 
-				return append($this->getRootURL(), RELATIVE_ROOT, 'data', $distCode, $path);
+				return append(SYSTEM_ROOT, 'data', $distCode, $path);
 			}
 
 			return '';
+		}
+
+		/**
+		 * Prepare the storage folder by given path and distribution code.
+		 *
+		 * @param Package $package  The package to locate the data storage
+		 * @param string  $path     The file path in target directory
+		 * @param string  $distCode The distribution code under the current domain
+		 *
+		 * @return self Chainable
+		 */
+		private function prepareStorage(Package $package, string $path, string $distCode = '')
+		{
+			$distCode   = $this->getIdentifyName(true, $distCode);
+			$folderPath = append(SYSTEM_ROOT, 'data', $distCode, $path);
+			if (!is_dir($folderPath) && !is_file($folderPath)) {
+				mkdir($folderPath);
+			}
+
+			return $this;
 		}
 
 		/**
@@ -945,7 +996,7 @@ namespace RazyFramework\Modular
 					if (is_file($folder . 'package.php')) {
 						// Load the module if it has the package.php file
 						try {
-							$wrapper = $this->wrapper(['lock', 'updateVersion', 'saveConfig', 'getConfig', 'moveFile', 'getStorageFilePath', 'getTplManager', 'routeTo', 'notify']);
+							$wrapper = $this->wrapper(['lock', 'updateVersion', 'saveConfig', 'getConfig', 'moveFile', 'getStorageFileURL', 'getStorageFilePath', 'prepareStorage', 'getTplManager', 'routeTo', 'notify']);
 
 							$package = new Package($this, $folder, require $folder . 'package.php', $wrapper);
 
@@ -980,8 +1031,8 @@ namespace RazyFramework\Modular
 		/**
 		 * Get the identify name by its domain and distribution code.
 		 *
-		 * @param bool 		$safe 			Set true to ouput the file name safe string
-		 * @param string  $distCode   The distribution code under the current domain
+		 * @param bool   $safe     Set true to ouput the file name safe string
+		 * @param string $distCode The distribution code under the current domain
 		 *
 		 * @return string The identify name
 		 */
@@ -1010,6 +1061,20 @@ namespace RazyFramework\Modular
 					$this->wrappers[$package->getCode()]->notify($routedPackage->getCode());
 				}
 			}
+
+			return $this;
+		}
+
+		/**
+		 * Set the pointer focus on the givan package.
+		 *
+		 * @param Package $package The package which is ready to set to pointer
+		 *
+		 * @return self Chainable
+		 */
+		private function focus(Package $package)
+		{
+			$this->pointer = $package;
 
 			return $this;
 		}

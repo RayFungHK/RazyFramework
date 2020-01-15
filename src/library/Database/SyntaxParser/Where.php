@@ -142,7 +142,21 @@ namespace RazyFramework\Database\SyntaxParser
 							throw new ErrorHandler('JSON path should start with $.');
 						}
 
-						return '"' . $value . '"';
+						if (!$regex = RegexHelper::GetCache('select-syntax-json-path')) {
+							$regex = new RegexHelper('\.', 'select-syntax-json-path');
+							$regex->exclude(RegexHelper::EXCLUDE_ALL_QUOTES);
+						}
+
+						$jsonPath = '$';
+						$clips = $regex->split($value);
+						array_shift($clips);
+						foreach ($clips as $clip) {
+							if (\preg_match('/(?<quote>[\'"])(.+)\k<quote>/', $clip, $matches)) {
+								$jsonPath .= ".'" . \addslashes($matches[1]) . "'";
+							}
+						}
+
+						return '"' . $jsonPath . '"';
 					}
 
 					if ('json_object' === $dataType['type']) {
@@ -152,7 +166,7 @@ namespace RazyFramework\Database\SyntaxParser
 						}
 						if (\is_string($value) && preg_match('/^{.+?}$/', $value)) {
 							// Assume it is a JSON string
-							return '"' . $value . '"';
+							return '"' . addslashes($value) . '"';
 						}
 
 						throw new ErrorHandler('Only array and JSON string allowed for json_contains.');
@@ -312,6 +326,7 @@ namespace RazyFramework\Database\SyntaxParser
 			// :=          json path exists            string      json_extract
 			// ~=          json object contains        array       json_contains
 			// &=          json search value in        string      json_search
+			// @=          json has key         			 string      json_search with json_keys
 			//
 			// Function
 			// ======================================================================
@@ -325,7 +340,7 @@ namespace RazyFramework\Database\SyntaxParser
 			// HRS         column_name is "a"     Equal to "a"
 
 			if (!$regex = RegexHelper::GetCache('select-syntax-operator')) {
-				$regex = new RegexHelper('\s*[|*^$!:~&]?=\s*|\s*[><]=?\s*|\s+(?|(?:start|end) with|(?:less|greater) than(?: and equal to)?|json (?:path exists|object contains|search value in)|contains|is(?: not)?|in)\s+', 'select-syntax-operator');
+				$regex = new RegexHelper('\s*[|*^$!:@~&]?=\s*|\s*[><]=?\s*|\s+(?|(?:start|end) with|(?:less|greater) than(?: and equal to)?|json (?:path exists|object contains|search value in)|contains|is(?: not)?|in)\s+', 'select-syntax-operator');
 				$regex->exclude(RegexHelper::EXCLUDE_ALL_QUOTES | RegexHelper::EXCLUDE_ROUND_BRACKET);
 			}
 
@@ -535,6 +550,25 @@ namespace RazyFramework\Database\SyntaxParser
 				$rightHand = $this->createWildcard($rightHand, $flag);
 
 				$operand = $leftHand . ' LIKE ' . $rightHand;
+			} elseif ('@=' === $operator || 'json has key' === $operator) {
+				// MySQL JSON_SEARCH and JSON_KEYS
+				// JSON_SEARCH(JSON_KEYS(column_name), "one", "key")
+				$leftHand = $this->createJSONObject($leftHand);
+				if ('string' === $rightHand['type']) {
+					$rightHand = '"' . $rightHand['operand'] . '"';
+				} elseif ('parameter' === $rightHand['type']) {
+					$this->dataType[$rightHand['parameter']] = [
+						'type' => 'string',
+					];
+
+					$rightHand = $rightHand['operand'];
+				} elseif ('column' === $rightHand['type']) {
+					$rightHand = $rightHand['operand'];
+				} else {
+					throw new ErrorHandler('Invalid value passed to JSON_SEARCH');
+				}
+
+				$operand = 'JSON_SEARCH(JSON_KEYS(' . $leftHand . '), "one", ' . $rightHand . ') IS NOT NULL';
 			} elseif (':=' === $operator || 'json path exists' === $operator) {
 				// MySQL JSON_EXTRACT
 				// JSON_EXTRACT(column_name, "$.json.path")

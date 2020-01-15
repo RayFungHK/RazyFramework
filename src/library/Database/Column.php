@@ -142,6 +142,9 @@ namespace RazyFramework\Database
 			} elseif ('text' === $type) {
 				$this->type   = 'VARCHAR';
 				$this->length = '255';
+			} elseif ('full_text' === $type) {
+				$this->type   = 'TEXT';
+				$this->length = '';
 			} elseif ('long_text' === $type) {
 				$this->type   = 'LONGTEXT';
 				$this->length = '';

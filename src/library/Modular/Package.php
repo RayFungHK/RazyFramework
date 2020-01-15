@@ -400,16 +400,42 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Copy the file from source to target directory.
+		 * Get the file URL by given folder and distribution code.
 		 *
-		 * @param string  $path 	The file path in target directory
-		 * @param string  $distCode   The distribution code under the current domain
+		 * @param string $path     The file path in target directory
+		 * @param string $distCode The distribution code under the current domain
+		 *
+		 * @return string Return the file path URL or return empty string if the file is not exists
+		 */
+		public function getStorageFileURL(string $path, string $distCode = '')
+		{
+			return $this->wrapper->getStorageFileURL($path, $distCode);
+		}
+
+		/**
+		 * Get the file path by given folder and distribution code.
+		 *
+		 * @param string $path     The file path in target directory
+		 * @param string $distCode The distribution code under the current domain
 		 *
 		 * @return string Return the file path URL or return empty string if the file is not exists
 		 */
 		public function getStorageFilePath(string $path, string $distCode = '')
 		{
 			return $this->wrapper->getStorageFilePath($path, $distCode);
+		}
+
+		/**
+		 * Prepare the storage folder.
+		 *
+		 * @param string $path     The file path in target directory
+		 * @param string $distCode The distribution code under the current domain
+		 *
+		 * @return self Chainable
+		 */
+		public function prepareStorage(string $path, string $distCode = '')
+		{
+			return $this->wrapper->prepareStorage($path, $distCode);
 		}
 
 		/**
@@ -716,6 +742,7 @@ namespace RazyFramework\Modular
 
 			if (isset($this->api[$name])) {
 				$method = $this->api[$name];
+
 				// Check the methed is callable or not, protected and private method is not executable
 				if (method_exists($this->controller, $method)) {
 					// Method Reflection, get the method type
@@ -865,7 +892,7 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Send a standby signal to package
+		 * Send a standby signal to package.
 		 *
 		 * @return self Chainable
 		 */

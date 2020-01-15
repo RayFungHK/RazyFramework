@@ -11,6 +11,8 @@
 
 namespace RazyFramework\Database
 {
+	use RazyFramework\ErrorHandler;
+
 	/**
 	 * A database adapter used to connect the MySQL server.
 	 */

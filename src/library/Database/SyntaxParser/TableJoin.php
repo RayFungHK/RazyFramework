@@ -186,8 +186,8 @@ namespace RazyFramework\Database\SyntaxParser {
 						$object['condition_type']  = 'using';
 						$object['condition_alias'] = '';
 						$object['condition']       = $this->getUsingSyntax($object['condition']);
-					} elseif ($condition) {
-						if ($condition && '<' === $condition[0]) {
+					} elseif ($object['condition']) {
+						if ($object['condition'] && '<' === $object['condition'][0]) {
 							$object['condition_alias'] = $this->getAlias($object['condition']);
 						}
 						$object['condition_type'] = 'column';
@@ -210,7 +210,7 @@ namespace RazyFramework\Database\SyntaxParser {
 		private function getAlias(string &$condition)
 		{
 			if (preg_match('/^<(.+?)>/', $condition, $matches)) {
-				$condition = substr($condition, 0, \strlen($matches[0]));
+				$condition = substr($condition, \strlen($matches[0]));
 
 				return $matches[1];
 			}
@@ -261,7 +261,7 @@ namespace RazyFramework\Database\SyntaxParser {
 							// Using Syntax
 							$statement .= ' ' . $joinType . ' ' . $table['syntax'] . ' USING ' . $table['condition'];
 						} else {
-							$alias   = $clip['condition_alias'] ?? $primaryTable['alias'];
+							$alias   = $table['condition_alias'] ?? $primaryTable['alias'];
 							$columns = preg_split('/\s+,\s+/', $table['condition']);
 
 							// Shorten Join Condition with Primary Table

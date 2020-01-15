@@ -187,7 +187,7 @@ namespace RazyFramework\Database
 		public function limit(int $start, int $length = 20)
 		{
 			$this->startRecord = max($start, 0);
-			$this->fetchLength = max((int) $length, 5);
+			$this->fetchLength = max((int) $length, 1);
 
 			return $this;
 		}

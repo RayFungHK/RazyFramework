@@ -201,6 +201,16 @@ namespace RazyFramework\Modular
 			return true;
 		}
 
+		public function __onBeforeSendAPI(array $trace, string $method, array &$args)
+		{
+		 return true;
+		}
+
+		public function __onAfterSendAPI(array $trace, string $method, array $result)
+		{
+		 return true;
+		}
+
 		/**
 		 * It will be triggered if all module has prepared.
 		 *

@@ -113,6 +113,18 @@ namespace RazyFramework\Template
   	}
 
   	/**
+  	 * Check if the sub block is exists by given name.
+  	 *
+  	 * @param string $blockName The block name under current block level
+  	 *
+  	 * @return bool Return true id the block is exists
+  	 */
+  	public function hasBlock(string $blockName)
+  	{
+  		return $this->block->hasBlock($blockName);
+  	}
+
+  	/**
   	 * Create a new block or return the Entity object by the id if it is created.
   	 *
   	 * @param string $blockName The block name under current block level
@@ -300,13 +312,26 @@ namespace RazyFramework\Template
   	/**
   	 * Get the entity list by the given block name.
   	 *
-  	 * @param string $blockName [description]
+  	 * @param string $blockName The block name to obtain its entity
   	 *
-  	 * @return [type] [description]
+  	 * @return array An array contains entities
   	 */
   	public function getEntities(string $blockName)
   	{
   		return $this->entities[$blockName] ?? [];
+  	}
+
+  	/**
+  	 * Get the specify entity by the given block name and identity.
+  	 *
+  	 * @param string $blockName The block name to obtain its entity
+  	 * @param string $identity  The identity of the entity
+  	 *
+  	 * @return Entity An sub-block Entity
+  	 */
+  	public function getEntity(string $blockName, string $identity)
+  	{
+  		return $this->entities[$blockName][$identity] ?? null;
   	}
 
   	/**
@@ -563,7 +588,7 @@ namespace RazyFramework\Template
   	 *
   	 * @return string The block content which has replaced the parameter tag
   	 */
-  	private function replaceTag(string $content, string $closing = '')
+  	private function replaceTag(string $content)
   	{
   		$content = $this->replaceFunc($content);
   		if (!$regex = RegexHelper::GetCache('template-replace-tag')) {
