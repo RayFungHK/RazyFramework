@@ -56,49 +56,34 @@ namespace RazyFramework {
 		 */
 		private static $mode = self::MODE_HTML;
 
+		private $relatedException;
+
 		/**
 		 * ErrorHandler constructor.
 		 *
-		 * @param string $message    The error message
-		 * @param int    $statusCode The response status code
-		 * @param string $heading    The heading display in messgae
+		 * @param string     $message    The error message
+		 * @param int        $statusCode The response status code
+		 * @param string     $heading    The heading display in messgae
+		 * @param null|mixed $exception
 		 */
-		public function __construct(string $message, int $statusCode = 400, string $heading = 'There seems to is something wrong...')
+		public function __construct(string $message, int $statusCode = 400, string $heading = 'There seems to is something wrong...', $exception = null)
 		{
 			$this->heading = $heading;
 			parent::__construct($message, $statusCode);
-			self::ShowException($this);
-		}
-
-		/**
-		 * Get the heading.
-		 *
-		 * @return [type] [description]
-		 */
-		public function getHeading()
-		{
-			return $this->heading;
-		}
-
-		/**
-		 * Display 404 Not Found error page.
-		 */
-		public static function Show404()
-		{
-			new self('Page Not Found', 404);
-		}
-
-		/**
-		 * Display the exception via ErrorHandler.
-		 *
-		 * @param \Throwable $exception The throwable object, such as Error or Exception
-		 */
-		public static function ShowException(\Throwable $exception)
-		{
-			// Get the top stack exception
-			while ($previous = $exception->getPrevious()) {
-				$exception = $previous;
+			if ($exception) {
+				// Get the top stack exception
+				while ($previous = $exception->getPrevious()) {
+					$exception = $previous;
+				}
+				$this->relatedException = $exception;
+			} else {
+				$this->relatedException = $this;
 			}
+		}
+
+		public function __toString()
+		{
+			$exception = $this->relatedException;
 
 			ob_get_clean();
 			// Load the error page template file, if the template file not found, use 'any.html' instead
@@ -162,6 +147,34 @@ namespace RazyFramework {
 				ob_end_flush();
 			}
 			exit;
+		}
+
+		/**
+		 * Get the heading.
+		 *
+		 * @return string The exception page heading
+		 */
+		public function getHeading()
+		{
+			return $this->heading;
+		}
+
+		/**
+		 * Display 404 Not Found error page.
+		 */
+		public static function Show404()
+		{
+			new self('Page Not Found', 404);
+		}
+
+		/**
+		 * Display the exception via ErrorHandler.
+		 *
+		 * @param \Throwable $exception The throwable object, such as Error or Exception
+		 */
+		public static function ShowException(\Throwable $exception)
+		{
+			throw new self($exception->getMessage(), (int) $exception->getCode(), 'There seems to is something wrong...', $exception);
 		}
 
 		/**

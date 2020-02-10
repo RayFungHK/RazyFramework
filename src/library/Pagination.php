@@ -55,11 +55,20 @@ namespace RazyFramework
 
   	/**
   	 * Pagination constructor.
+  	 *
+  	 * @param array $settings An array contains the pagination settings
   	 */
-  	public function __construct()
+  	public function __construct(array $settings = [])
   	{
   		parse_str($_SERVER['QUERY_STRING'], $this->queryString);
   		$this->baseURL = SCRIPT_URL;
+
+  		if (isset($settings['item_per_page']) && is_scalar($settings['item_per_page'])) {
+  			$this->itemPerPage((int) $settings['item_per_page']);
+  		}
+  		if (isset($settings['display_page_count']) && is_scalar($settings['display_page_count'])) {
+  			$this->displayPageCount((int) $settings['display_page_count']);
+  		}
   	}
 
   	/**
@@ -89,7 +98,7 @@ namespace RazyFramework
   	 */
   	public function itemPerPage(int $itemPerPage)
   	{
-  		$this->itemPerPage = max($itemPerPage, 5);
+  		$this->itemPerPage = max($itemPerPage, 1);
 
   		return $this;
   	}

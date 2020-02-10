@@ -151,8 +151,8 @@ namespace RazyFramework\Database\SyntaxParser
 						$clips = $regex->split($value);
 						array_shift($clips);
 						foreach ($clips as $clip) {
-							if (\preg_match('/(?<quote>[\'"])(.+)\k<quote>/', $clip, $matches)) {
-								$jsonPath .= ".'" . \addslashes($matches[1]) . "'";
+							if (preg_match('/(?<quote>[\'"])(.+)\k<quote>/', $clip, $matches)) {
+								$jsonPath .= ".'" . addslashes($matches[1]) . "'";
 							}
 						}
 
@@ -186,6 +186,9 @@ namespace RazyFramework\Database\SyntaxParser
 					}
 
 					if ('string' === $dataType['type']) {
+						if (!is_scalar($this->parameters[$matches[2]])) {
+							return 'NULL';
+						}
 						return '"' . addslashes($this->parameters[$matches[2]]) . '"';
 					}
 
@@ -223,7 +226,7 @@ namespace RazyFramework\Database\SyntaxParser
 		private function convertOperand(string $operand)
 		{
 			// If the operand is a Column (Also contains json_contains operator)
-			if (preg_match('/^((\`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\\`])+\`|[a-z]\w*)(?:\.((?2)))?)(?:(->>?)([\'"])\$(.+)\5)?$/', $operand, $matches)) {
+			if ('null' !== strtolower($operand) && preg_match('/^((\`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\\`])+\`|[a-z]\w*)(?:\.((?2)))?)(?:(->>?)([\'"])\$(.+)\5)?$/', $operand, $matches)) {
 				$object = [
 					'type'    => 'column',
 					'operand' => $operand,
@@ -242,6 +245,14 @@ namespace RazyFramework\Database\SyntaxParser
 				}
 
 				return $object;
+			}
+
+			// If the operand is a null
+			if ('null' === strtolower($operand)) {
+				return [
+					'type'    => 'null',
+					'operand' => 'NULL',
+				];
 			}
 
 			// If the operand is a string wrapped by quotes
@@ -439,6 +450,10 @@ namespace RazyFramework\Database\SyntaxParser
 		 */
 		private function wildcard(string $text, int $flag = 0b11)
 		{
+			if (!is_scalar($text)) {
+				return "''";
+			}
+
 			$text = addslashes($text);
 			if (0b01 === ($flag & 0b01)) {
 				$text = $text . '%';
@@ -506,6 +521,26 @@ namespace RazyFramework\Database\SyntaxParser
 		}
 
 		/**
+		 * Determine the operand is a scalar.
+		 *
+		 * @param arrat $operand An array contains the parameters of the operand
+		 *
+		 * @return bool Return true if the operand is a scalar
+		 */
+		private function isScalar(array $operand)
+		{
+			if ('string' === $operand['type'] || 'column' === $operand['type'] || 'function' === $operand['type'] || 'syntax' === $operand['type']) {
+				return true;
+			}
+
+			if ('string' === $operand['parameter']) {
+				return !isset($operand['type']) || 'string' === $operand['type'];
+			}
+
+			return false;
+		}
+
+		/**
 		 * Parse the comparison syntax.
 		 *
 		 * @param string $operator  The operator of the comparison
@@ -518,8 +553,10 @@ namespace RazyFramework\Database\SyntaxParser
 		private function comparison(string $operator, array $leftHand, array $rightHand, bool $negative = false)
 		{
 			$operand = '';
-			// Special operator
-			if ('|=' === $operator || 'in' === $operator) {
+			if ('null' === $leftHand['type'] || 'null' === $rightHand['type']) {
+				// If either of the operands is null
+				$operand = $leftHand['operand'] . ' IS ' . (('!=' === $operator || 'is not' === $operator) ? 'NOT ' : '') . $rightHand['operand'];
+			} elseif ('|=' === $operator || 'in' === $operator) {
 				// MySQL IN
 				// column_name IN(data)
 				if ('parameter' === $rightHand['type']) {
@@ -544,6 +581,10 @@ namespace RazyFramework\Database\SyntaxParser
 					$flag = 0b10;
 				} else {
 					$flag = 0b11;
+				}
+
+				if (!$this->isScalar($leftHand) && !$this->isScalar($rightHand)) {
+					throw new ErrorHandler('Only string, column and parameter with datatype string allowed to pass to wildcard operator.');
 				}
 
 				$leftHand  = $leftHand['operand'];
@@ -609,7 +650,7 @@ namespace RazyFramework\Database\SyntaxParser
 						$rightHand = $rightHand['operand'];
 					}
 
-					$operand = 'JSON_SEARCH(' . $leftHand . ', "one", ' . $rightHand . ') IS NOT NULL';
+					$operand = 'CASE WHEN JSON_VALID(' . $leftHand . ') THEN JSON_SEARCH(' . $leftHand . ', "one", ' . $rightHand . ') ELSE NULL END IS NOT NULL';
 				}
 			}
 

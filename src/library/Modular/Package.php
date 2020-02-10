@@ -441,20 +441,46 @@ namespace RazyFramework\Modular
 		/**
 		 * Add module package routing.
 		 *
-		 * @param array|string $route  A string of the route path or an array contains a set of routing
-		 * @param string       $method The method will be called in controller if the route is match
+		 * @param array|string          $route    A string of the route path or an array contains a set of routing
+		 * @param array|callback|string $method   The method will be called in controller if the route is match
+		 * @param string                $relative The relative path of each node
 		 *
 		 * @return self Chainable
 		 */
-		public function addRoute($route, string $method = '')
+		public function addRoute($route, $method = '', $relative = '')
 		{
 			if (\is_array($route)) {
+				// If the $route is an array contains the route setting, extract it
 				foreach ($route as $routeName => $method) {
 					$this->addRoute($routeName, $method);
 				}
 			} else {
-				$route                = tidy('/' . $route, true, '/');
-				$this->routes[$route] = $method;
+				if (\is_array($method)) {
+					// If the method name is an array, extract it as sub path
+					foreach ($method as $node => $value) {
+						if ($node === '@self') {
+							$node = $route;
+						} else {
+							$node = tidy($route . '/' . $node, true, '/');
+						}
+
+						// If the node is `@self`, set the route as the parent node name
+						$this->addRoute($node, $value, $relative . '/' . $route);
+					}
+				} elseif (\is_string($method) || \is_callable($method)) {
+					if (\is_string($method) && $method) {
+						// Absolute path of the closure function file.
+						if ('@' === $method[0]) {
+							$method = substr($method, 1);
+						} else {
+							$method = trim(tidy($relative . '/' . $method, false, '/'), '/');
+						}
+					}
+					$route                = tidy('/' . $route, true, '/');
+					$this->routes[$route] = $method;
+				} else {
+					throw new ErrorHandler('Invalid method value in routing configuration.');
+				}
 			}
 
 			return $this;
