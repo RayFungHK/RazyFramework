@@ -12,6 +12,7 @@
 namespace RazyFramework\Template
 {
   use RazyFramework\ErrorHandler;
+  use RazyFramework\RegexHelper;
 
   /**
    * Template block contains the structure, such as its sub block, raw text and parameters.
@@ -90,7 +91,7 @@ namespace RazyFramework\Template
   		$concat = '';
   		while ($line = array_shift($content)) {
   			if (false !== strpos($line, '<!-- ')) {
-  				if (preg_match('/\h*<!-- (START|END|RECURSION) BLOCK: ([\w-]+) -->\h*/', $line, $matches)) {
+  				if (preg_match('/^\s*<!-- (START|END|RECURSION) BLOCK: (\w[\w-]*) -->\s*$/', $line, $matches)) {
   					if ($concat) {
   						$this->structure[] = $concat;
   						$concat            = '';
@@ -120,6 +121,24 @@ namespace RazyFramework\Template
 
   					continue;
   				}
+  			}
+
+  			if (!$regex = RegexHelper::GetCache('parameter-declare')) {
+  				$regex = new RegexHelper('/\{\$(\w+)((?:\[(?:\d+|\w+|(?<quoteAry>[\'"])((?:(?!\k<quoteAry>)[^\\\\\\\\]|\\\\.)*)\k<quoteAry>)?\])*)\s*:\s*(?:(true|false)|(-?\d+(?:\.\d+)?)|(?<quote>[\'"])((?:(?!\k<quote>)[^\\\\\\\\]|\\\\.)*)\k<quote>)\}/', 'parameter-declare');
+  			}
+
+  			if ($matches = $regex->match($line)) {
+  				$value = null;
+  				if (isset($matches[8])) {
+  					$value = $matches[8];
+  				} elseif (isset($matches[6])) {
+  					$value = (float) $matches[6];
+  				} else {
+  					$value = 'true' === $matches[5];
+  				}
+  				$this->declare($matches[1], $matches[2], $value);
+
+  				continue;
   			}
 
   			$concat .= $line;
@@ -305,6 +324,61 @@ namespace RazyFramework\Template
   		}
 
   		return $this->parent->hasParent($block);
+  	}
+
+  	/**
+  	 * Declare the parameter.
+  	 *
+  	 * @param string $name       The parameter name
+  	 * @param string $arrayIndex A string contains the index of the parameter
+  	 * @param mixed  $value      The value of the parameter
+  	 *
+  	 * @return self Chainable
+  	 */
+  	private function declare(string $name, string $arrayIndex, $value)
+  	{
+  		// If it is declaring a variable as an array
+  		if ($arrayIndex) {
+  			if (!$regex = RegexHelper::GetCache('parameter-declare-array')) {
+  				$regex = new RegexHelper('/\[(\d+|\w+|(?<quoteAry>[\'"])((?:(?!\k<quoteAry>)[^\\\\\\\\]|\\\\.)*)\k<quoteAry>)?\]/', 'parameter-declare-array');
+  			}
+
+  			if (!isset($this->parameters[$name]) || !\is_array($this->parameters[$name])) {
+  				$this->parameters[$name] = [];
+  			}
+
+  			$clips = $regex->extract($arrayIndex, function ($matches) {
+  				return $matches[3] ?? $matches[1] ?? '';
+  			});
+
+  			$param = &$this->parameters[$name];
+  			while (\count($clips)) {
+  				$clip = array_shift($clips);
+  				if (\count($clips)) {
+  					if (!$clip) {
+  						$param[] = [];
+  						// Get the last value of the array by reference
+  						end($param);
+  						$param = &$param[key($param)];
+  					} else {
+  						if (!isset($param[$clip])) {
+  							$param[$clip] = [];
+  						}
+  						$param = &$param[$clip];
+  					}
+  				} else {
+  					if ($clip) {
+  						$param[$clip] = $value;
+  					} else {
+  						$param[] = $value;
+  					}
+  				}
+  			}
+  		} else {
+  			$this->parameters[$name] = $value;
+  		}
+
+  		return $this;
   	}
   }
 }

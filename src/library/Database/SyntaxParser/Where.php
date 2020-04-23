@@ -101,12 +101,18 @@ namespace RazyFramework\Database\SyntaxParser
 		/**
 		 * Generate and return the SQL Statement.
 		 *
+		 * @param array|null $parameters An array of parameters
+		 *
 		 * @return string The where statement
 		 */
-		public function getStatement()
+		public function getStatement(?array $parameters = null)
 		{
 			if (!\count($this->extracted)) {
 				return '';
+			}
+
+			if (is_array($parameters)) {
+				$this->assign($parameters);
 			}
 
 			return $this->replaceParameter($this->combine($this->extracted));
@@ -640,7 +646,7 @@ namespace RazyFramework\Database\SyntaxParser
 					// MySQL JSON_CONTAINS
 					// JSON_CONTAINS(column_name, '{"json": "object"}')
 					$rightHand = $this->createJSONObject($rightHand);
-					$operand   = 'JSON_CONTAINS(' . $leftHand . ', ' . $rightHand . ') = 1';
+					$operand   = 'JSON_CONTAINS(CASE WHEN JSON_VALID(' . $leftHand . ') THEN ' . $leftHand . ' ELSE NULL END, ' . $rightHand . ') = 1';
 				} else {
 					// MySQL JSON_SEARCH
 					// JSON_SEARCH(column_name, "one", "text")

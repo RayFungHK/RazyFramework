@@ -87,15 +87,18 @@ namespace RazyFramework\Database\SyntaxParser {
 		/**
 		 * Generate and return the SQL Statement.
 		 *
+		 * @param null|array $parameters An array of parameters
+		 *
 		 * @return string The table join syntax
 		 */
-		public function getStatement()
+		public function getStatement(?array $parameters = null)
 		{
+			$parameters = $parameters ?? [];
 			if (!\count($this->extracted)) {
 				return '';
 			}
 
-			return $this->combine($this->extracted);
+			return $this->combine($this->extracted, $parameters);
 		}
 
 		/**
@@ -222,16 +225,17 @@ namespace RazyFramework\Database\SyntaxParser {
 		 * Combine all the statement clips together.
 		 *
 		 * @param array $clips        An array contains all table property
+		 * @param array|null $parameters An array of parameters
 		 * @param array $primaryTable An array conatins the primary table property
 		 *
 		 * @return string The SQL statement
 		 */
-		private function combine(array $clips, array &$primaryTable = null)
+		private function combine(array $clips, array $parameters = [], array &$primaryTable = null)
 		{
 			$statement = '';
 			$clip      = array_shift($clips);
 			if (\is_array($clip)) {
-				$statement .= '(' . $this->combine($clip, $primaryTable) . ')';
+				$statement .= '(' . $this->combine($clip, $parameters, $primaryTable) . ')';
 			} else {
 				$clip = $this->parseTable($clip);
 				if (!$primaryTable) {
@@ -246,7 +250,7 @@ namespace RazyFramework\Database\SyntaxParser {
 			foreach (array_chunk($clips, 2) as list($joinType, $table)) {
 				$joinType = self::JOIN_TYPE[$joinType];
 				if (\is_array($table)) {
-					$statement .= '(' . $this->combine($table, $primaryTable) . ')';
+					$statement .= '(' . $this->combine($table, $parameters, $primaryTable) . ')';
 				} else {
 					$table = $this->parseTable($table);
 					if ($table['condition']) {
@@ -256,7 +260,7 @@ namespace RazyFramework\Database\SyntaxParser {
 						if ('where' === $table['condition_type']) {
 							$whereSyntax = new Where($table['condition']);
 							// Where Syntax
-							$statement .= ' ' . $joinType . ' ' . $table['syntax'] . ' ON ' . $whereSyntax->getStatement();
+							$statement .= ' ' . $joinType . ' ' . $table['syntax'] . ' ON ' . $whereSyntax->getStatement($parameters);
 						} elseif ('using' === $table['condition_type']) {
 							// Using Syntax
 							$statement .= ' ' . $joinType . ' ' . $table['syntax'] . ' USING ' . $table['condition'];

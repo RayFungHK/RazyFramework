@@ -53,8 +53,6 @@ namespace RazyFramework\Template
   	 */
   	private $entities = [];
 
-  	private $output = [];
-
   	/**
   	 * Entity constructor.
   	 *
@@ -319,6 +317,35 @@ namespace RazyFramework\Template
   	public function getEntities(string $blockName)
   	{
   		return $this->entities[$blockName] ?? [];
+  	}
+
+  	/**
+  	 * Check if currenct contains specified entity by the given block name.
+  	 *
+  	 * @param string $blockName The block name to obtain its entity
+  	 * @param string $identity  The identity of the entity
+  	 *
+  	 * @return bool Return true if exists
+  	 */
+  	public function hasEntity(string $blockName, string $identity = '')
+  	{
+  		if ($identity) {
+  			return isset($this->entities[$blockName][$identity]);
+  		}
+
+  		return \count($this->entities[$blockName] ?? []) > 0;
+  	}
+
+  	/**
+  	 * Get the total number of entities by the given block name.
+  	 *
+  	 * @param string $blockName The block name to obtain its entity
+  	 *
+  	 * @return int
+  	 */
+  	public function getEntityCount(string $blockName)
+  	{
+  		return \count($this->entities[$blockName] ?? []);
   	}
 
   	/**

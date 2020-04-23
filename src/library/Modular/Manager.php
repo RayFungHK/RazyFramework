@@ -123,6 +123,13 @@ namespace RazyFramework\Modular
 		private $routingPrefixMap = [];
 
 		/**
+		 * An array contains all package's view folder path.
+		 *
+		 * @var array
+		 */
+		private $packageViewDirectory = [];
+
+		/**
 		 * A ConfigFile object contains each package version.
 		 *
 		 * @var ConfigFile
@@ -198,6 +205,7 @@ namespace RazyFramework\Modular
 				throw new ErrorHandler('Invalid domain name or IP.');
 			}
 
+			$distPath     = '';
 			$urlQuery     = trim($urlQuery);
 			$domain       = trim(ltrim($domain, '.'));
 			$this->domain = $domain;
@@ -308,6 +316,7 @@ namespace RazyFramework\Modular
 					if (Package::STATUS_ACTIVE === $package->getStatus()) {
 						$this->wrappers[$package->getCode()]->ready($this->urlQuery);
 						$this->routingPrefixMap[$package->getRoutingPrefix()] = $package;
+						$this->packageViewDirectory[$package->getCode()]      = $package->getViewURL();
 					}
 				}
 
@@ -473,7 +482,9 @@ namespace RazyFramework\Modular
 		}
 
 		/**
-		 * Get the module view url path by given package code
+		 * Get the module view url path by given package code.
+		 *
+		 * @param mixed $code
 		 *
 		 * @return string The package view url path
 		 */
@@ -482,6 +493,7 @@ namespace RazyFramework\Modular
 			if (isset($this->packages[$code])) {
 				return $this->packages[$code]->getViewURL();
 			}
+
 			return '';
 		}
 
@@ -740,6 +752,16 @@ namespace RazyFramework\Modular
 			}
 
 			return $object;
+		}
+
+		/**
+		 * Return the package view path directory.
+		 *
+		 * @return array An array contains all package view paths.
+		 */
+		public function getPackageViewDirectory()
+		{
+			return $this->packageViewDirectory;
 		}
 
 		/**

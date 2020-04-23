@@ -205,6 +205,18 @@ namespace RazyFramework\Database
 		}
 
 		/**
+		 * Clear the executed SQL statement history.
+		 *
+		 * @return self Chainable
+		 */
+		public function clearQueried()
+		{
+			$this->queried = [];
+
+			return $this;
+		}
+
+		/**
 		 * Get a list of the executed SQL statement.
 		 *
 		 * @return array An array contains the executed SQL statement

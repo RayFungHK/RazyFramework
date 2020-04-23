@@ -393,7 +393,7 @@ namespace RazyFramework\Database
 			if ('select' === $this->queryType) {
 				if ($this->tableJoinSyntax) {
 					$sql = 'SELECT ' . implode(', ', $this->columns) . ' FROM ';
-					$sql .= (\is_string($this->tableJoinSyntax)) ? $this->tableJoinSyntax : $this->tableJoinSyntax->getStatement();
+					$sql .= (\is_string($this->tableJoinSyntax)) ? $this->tableJoinSyntax : $this->tableJoinSyntax->getStatement($this->parameters);
 					if ($this->whereSyntax) {
 						$syntax = $this->getWhereSyntax($this->whereSyntax);
 						if ($syntax) {

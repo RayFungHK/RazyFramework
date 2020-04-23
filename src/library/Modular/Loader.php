@@ -150,9 +150,10 @@ namespace RazyFramework\Modular
 
 			$source = $this->package->getTplManager()->load(append($this->package->getViewPath(), $filename));
 			$source->assign([
-				'site_root'   => $this->package->getManager()->getSiteURL(),
-				'module_root' => $this->package->getRootURL(),
-				'module_view' => $this->package->getViewURL(),
+				'site_root'        => $this->package->getManager()->getSiteURL(),
+				'module_root'      => $this->package->getRootURL(),
+				'module_view'      => $this->package->getViewURL(),
+				'module_view_dict' => $this->package->getManager()->getPackageViewDirectory(),
 			]);
 
 			return $source;
