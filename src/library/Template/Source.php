@@ -54,6 +54,13 @@ namespace RazyFramework\Template
   	private $manager;
 
   	/**
+  	 * The template source located directory.
+  	 *
+  	 * @var string
+  	 */
+  	private $fileDirectory = '';
+
+  	/**
   	 * Template Source constructor.
   	 *
   	 * @param string  $tplPath The path of template file
@@ -64,8 +71,9 @@ namespace RazyFramework\Template
   		if (!is_file($tplPath)) {
   			throw new ErrorHandler('Template file ' . $tplPath . ' is not exists.');
   		}
-  		$content       = file($tplPath);
-  		$this->manager = $manager;
+  		$content             = file($tplPath);
+  		$this->fileDirectory = \dirname(realpath($tplPath));
+  		$this->manager       = $manager;
 
   		$this->root = new Entity(new Block('_ROOT', $content, $this));
   		$this->id   = sprintf('%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff));
@@ -177,6 +185,16 @@ namespace RazyFramework\Template
   	public function getRootBlock()
   	{
   		return $this->root;
+  	}
+
+  	/**
+  	 * Get the template file located directory.
+  	 *
+  	 * @return string The directory of the template file
+  	 */
+  	public function getFileDirectory()
+  	{
+  		return $this->fileDirectory;
   	}
 
   	/**

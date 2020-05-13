@@ -123,11 +123,12 @@ namespace RazyFramework\Template
   				}
   			}
 
-  			if (!$regex = RegexHelper::GetCache('parameter-declare')) {
-  				$regex = new RegexHelper('/\{\$(\w+)((?:\[(?:\d+|\w+|(?<quoteAry>[\'"])((?:(?!\k<quoteAry>)[^\\\\\\\\]|\\\\.)*)\k<quoteAry>)?\])*)\s*:\s*(?:(true|false)|(-?\d+(?:\.\d+)?)|(?<quote>[\'"])((?:(?!\k<quote>)[^\\\\\\\\]|\\\\.)*)\k<quote>)\}/', 'parameter-declare');
+        // Parameter Declare
+  			if (!$pdRegex = RegexHelper::GetCache('parameter-declare')) {
+  				$pdRegex = new RegexHelper('/\{\$(\w+)((?:\[(?:\d+|\w+|(?<quoteAry>[\'"])((?:(?!\k<quoteAry>)[^\\\\\\\\]|\\\\.)*)\k<quoteAry>)?\])*)\s*:\s*(?:(true|false)|(-?\d+(?:\.\d+)?)|(?<quote>[\'"])((?:(?!\k<quote>)[^\\\\\\\\]|\\\\.)*)\k<quote>)\}/', 'parameter-declare');
   			}
 
-  			if ($matches = $regex->match($line)) {
+  			if ($matches = $pdRegex->match($line)) {
   				$value = null;
   				if (isset($matches[8])) {
   					$value = $matches[8];
@@ -140,6 +141,19 @@ namespace RazyFramework\Template
 
   				continue;
   			}
+
+        // Include Template
+  			if (!$tiRegex = RegexHelper::GetCache('template-include')) {
+  				$tiRegex = new RegexHelper('/\{@include (?:(?<quote>[\'"])((?:(?!\k<quote>)[^\\\\\\\\]|\\\\.)*)\k<quote>|([^{}\s]+))\}/', 'template-include');
+  			}
+
+  			if ($matches = $tiRegex->match($line)) {
+          $path = realpath(append($this->source->getFileDirectory(), $matches[3] ?? $matches[2] ?? ''));
+          if ($path) {
+            $content = array_merge(file($path), $content);
+          }
+          continue;
+        }
 
   			$concat .= $line;
   		}
