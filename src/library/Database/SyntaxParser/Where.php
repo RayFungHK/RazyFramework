@@ -89,7 +89,7 @@ namespace RazyFramework\Database\SyntaxParser
 		{
 			$whereSyntax = trim($whereSyntax);
 
-			// Extrac the parens
+			// Extract the parens
 			$structure = RegexHelper::ParensParser($whereSyntax, RegexHelper::EXCLUDE_ALL_QUOTES | RegexHelper::EXCLUDE_CUSTOM, [
 				['regex' => '[^,|(]\('],
 			]);
@@ -233,9 +233,20 @@ namespace RazyFramework\Database\SyntaxParser
 		{
 			// If the operand is a Column (Also contains json_contains operator)
 			if ('null' !== strtolower($operand) && preg_match('/^((\`(?:[\x00-\x5B\x5D-\x5F\x61-x7F]++|\\\\[\\\\\`])+\`|[a-z]\w*)(?:\.((?2)))?)(?:(->>?)([\'"])\$(.+)\5)?$/', $operand, $matches)) {
+				$standardize = '';
+				if (isset($matches[3])) {
+					// Column name with alias
+					$standardize = $matches[2] . '.`' . $matches[3] . '`';
+				} elseif ('null' !== strtolower($operand)) {
+					// Column name with alias
+					$standardize = '`' . $matches[2] . '`';
+				} else {
+					$standardize = 'NULL';
+				}
+
 				$object = [
 					'type'    => 'column',
-					'operand' => $operand,
+					'operand' => $standardize,
 				];
 
 				if (isset($matches[3]) && $matches[3]) {
@@ -357,7 +368,7 @@ namespace RazyFramework\Database\SyntaxParser
 			// HRS         column_name is "a"     Equal to "a"
 
 			if (!$regex = RegexHelper::GetCache('select-syntax-operator')) {
-				$regex = new RegexHelper('\s*[|*^$!:@~&]?=\s*|\s*[><]=?\s*|\s+(?|(?:start|end) with|(?:less|greater) than(?: and equal to)?|json (?:path exists|object contains|search value in)|contains|is(?: not)?|in)\s+', 'select-syntax-operator');
+				$regex = new RegexHelper('(?:\s*[|*^$!:@~&]?=\s*)|(?:\s*[><]=?\s*)|\s+(?|(?:start|end) with|(?:less|greater) than(?: and equal to)?|json (?:path exists|object contains|search value in)|contains|is(?: not)?|in)\s+', 'select-syntax-operator');
 				$regex->exclude(RegexHelper::EXCLUDE_ALL_QUOTES | RegexHelper::EXCLUDE_ROUND_BRACKET);
 			}
 
@@ -412,7 +423,6 @@ namespace RazyFramework\Database\SyntaxParser
 					}
 
 					$this->setDefaultDataType($leftHand)->setDefaultDataType($rightHand);
-
 					return $this->comparison($operator, $leftHand, $rightHand, $negative);
 				}
 

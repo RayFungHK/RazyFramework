@@ -757,7 +757,7 @@ namespace RazyFramework\Modular
 		/**
 		 * Return the package view path directory.
 		 *
-		 * @return array An array contains all package view paths.
+		 * @return array an array contains all package view paths
 		 */
 		public function getPackageViewDirectory()
 		{
@@ -771,17 +771,19 @@ namespace RazyFramework\Modular
 		 * @param string  $sourcePath The file source
 		 * @param string  $directory  The directory in distribution folder
 		 * @param string  $filename   The filename in target directory, leave blank as the source file name
+		 * @param string  $relative   Return the relative path
 		 *
 		 * @return string The target path
 		 */
-		private function moveFile(Package $package, string $sourcePath, string $directory = '/', string $filename = '')
+		private function moveFile(Package $package, string $sourcePath, string $directory = '/', string $filename = '', bool $relative = false)
 		{
 			if ($this === $package->getManager()) {
 				if (is_file($sourcePath)) {
 					if (!$filename) {
 						$filename = basename($sourcePath);
 					}
-					$directory = append(SYSTEM_ROOT, 'data', $this->getIdentifyName(true), $directory);
+					$storagePath = realpath(append(SYSTEM_ROOT, 'data', $this->getIdentifyName(true)));
+					$directory   = append($storagePath, $directory);
 					if (!is_dir($directory)) {
 						if (is_file($directory)) {
 							throw new ErrorHandler($directory . ' is not a directory.');
@@ -793,6 +795,11 @@ namespace RazyFramework\Modular
 					$target = append($directory, $filename);
 					if (!copy($sourcePath, $target)) {
 						return '';
+					}
+
+					$target = realpath($target);
+					if ($relative) {
+						return preg_replace('/^' . preg_quote($storagePath) . '/', '', $target);
 					}
 
 					return $target;

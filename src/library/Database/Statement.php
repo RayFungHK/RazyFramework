@@ -214,7 +214,7 @@ namespace RazyFramework\Database
 
 			$this->groupby = [];
 			foreach ($columns as &$column) {
-				$this->groupby[] = trim($column);
+				$this->groupby[] = '`' . trim($column) . '`';
 			}
 
 			return $this;
@@ -303,7 +303,8 @@ namespace RazyFramework\Database
 
 			$this->columns = [];
 			foreach ($columns as &$column) {
-				$this->columns[] = trim($column);
+				$column = trim($column);
+				$this->columns[] = (preg_match('/^\w+$/', $column)) ? '`' . $column . '`' : $column;
 			}
 
 			return $this;
@@ -381,6 +382,33 @@ namespace RazyFramework\Database
 		public function getTableJoinSyntax()
 		{
 			return $this->tableJoinSyntax;
+		}
+
+		/**
+		 * Fork the target table name as a Statement.
+		 *
+		 * @param string $name A string of the table name to override
+		 *
+		 * @return Statement A Statement object
+		 */
+		public function fork($name)
+		{
+			$name = trim($name);
+			if (!\strlen($name)) {
+				throw new ErrorHandler('Invalid table name');
+			}
+
+			if (!($this->tableJoinSyntax instanceof TableJoin)) {
+				throw new ErrorHandler('You cannot fork the statement because there is no TableJoin Syntax declared.');
+			}
+
+			$override = $this->tableJoinSyntax->getOverrideStatement($name);
+			if (!($override instanceof self)) {
+				$override = new self($this->adapter);
+				$this->tableJoinSyntax->override($name, $override);
+			}
+
+			return $override;
 		}
 
 		/**

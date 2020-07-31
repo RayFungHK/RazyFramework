@@ -64,6 +64,27 @@ namespace RazyFramework\Modular
 		const STATUS_ACTIVE = 5;
 
 		/**
+		 * Package request method: none.
+		 *
+		 * @var int
+		 */
+		const REQUEST_NONE = 0;
+
+		/**
+		 * Package request method: route.
+		 *
+		 * @var int
+		 */
+		const REQUEST_ROUTE = 1;
+
+		/**
+		 * Package request method: API.
+		 *
+		 * @var int
+		 */
+		const REQUEST_API = 2;
+
+		/**
 		 * The module code, it is unique in distribution.
 		 *
 		 * @var string
@@ -181,6 +202,13 @@ namespace RazyFramework\Modular
 		 * @var Wrapper
 		 */
 		private $wrapper;
+
+		/**
+		 * Current Package request method.
+		 *
+		 * @var int
+		 */
+		private $requestMethod = 0;
 
 		/**
 		 * Module package constructor.
@@ -391,12 +419,13 @@ namespace RazyFramework\Modular
 		 * @param string $sourcePath The file source
 		 * @param string $directory  The directory in distribution folder
 		 * @param string $filename   The filename in target directory, leave blank as the source file name
+		 * @param string $relative   Return the relative path
 		 *
 		 * @return string The target path
 		 */
-		public function moveFile(string $sourcePath, string $directory = '/', string $filename = '')
+		public function moveFile(string $sourcePath, string $directory = '/', string $filename = '', bool $relative = false)
 		{
-			return $this->wrapper->moveFile($sourcePath, $directory, $filename);
+			return $this->wrapper->moveFile($sourcePath, $directory, $filename, $relative);
 		}
 
 		/**
@@ -444,10 +473,11 @@ namespace RazyFramework\Modular
 		 * @param array|string          $route    A string of the route path or an array contains a set of routing
 		 * @param array|callback|string $method   The method will be called in controller if the route is match
 		 * @param string                $relative The relative path of each node
+		 * @param mixed                 $parent
 		 *
 		 * @return self Chainable
 		 */
-		public function addRoute($route, $method = '', $relative = '')
+		public function addRoute($route, $method = '', $parent = '')
 		{
 			if (\is_array($route)) {
 				// If the $route is an array contains the route setting, extract it
@@ -458,14 +488,14 @@ namespace RazyFramework\Modular
 				if (\is_array($method)) {
 					// If the method name is an array, extract it as sub path
 					foreach ($method as $node => $value) {
-						if ($node === '@self') {
+						if ('@self' === $node) {
 							$node = $route;
 						} else {
 							$node = tidy($route . '/' . $node, true, '/');
 						}
 
 						// If the node is `@self`, set the route as the parent node name
-						$this->addRoute($node, $value, $relative . '/' . $route);
+						$this->addRoute($node, $value, $route);
 					}
 				} elseif (\is_string($method) || \is_callable($method)) {
 					if (\is_string($method) && $method) {
@@ -473,7 +503,7 @@ namespace RazyFramework\Modular
 						if ('@' === $method[0]) {
 							$method = substr($method, 1);
 						} else {
-							$method = trim(tidy($relative . '/' . $method, false, '/'), '/');
+							$method = trim(tidy($parent . '/' . $method, false, '/'), '/');
 						}
 					}
 					$route                = tidy('/' . $route, true, '/');
@@ -752,6 +782,16 @@ namespace RazyFramework\Modular
 		}
 
 		/**
+		 * Get the current request method.
+		 *
+		 * @return int The method of request
+		 */
+		public function getRequestMethod()
+		{
+			return $this->requestMethod;
+		}
+
+		/**
 		 * Execute the registered API method.
 		 *
 		 * @param string $name  The API name
@@ -780,8 +820,19 @@ namespace RazyFramework\Modular
 				}
 
 				if ($this->controller->__onAPICall($trace, $name, $args)) {
+					// Store the current request method
+					$previousRequest = $this->requestMethod;
+
+					// Set request method to API
+					$this->requestMethod = self::REQUEST_API;
+
 					// Pass all arguments to routed method
-					return \call_user_func_array([$this->controller, $method], $args);
+					$result = \call_user_func_array([$this->controller, $method], $args);
+
+					// Reset the request method
+					$this->requestMethod = $previousRequest;
+
+					return $result;
 				}
 			}
 
@@ -815,8 +866,17 @@ namespace RazyFramework\Modular
 					}
 
 					if ($this->controller->__onEventTrigger($trace, $name, $args)) {
+						// Store the current request method
+						$previousRequest = $this->requestMethod;
+
+						// Set request method to none
+						$this->requestMethod = self::REQUEST_NONE;
+
 						// Pass all arguments to routed method
 						$result = \call_user_func_array([$this->controller, $method], $args);
+
+						// Reset the request method
+						$this->requestMethod = $previousRequest;
 					}
 				}
 			}
@@ -878,6 +938,9 @@ namespace RazyFramework\Modular
 
 					// Pass the arguments to package before execute the routing method
 					$this->controller->__onBeforeRoute($args);
+
+					// Set request method to none
+					$this->requestMethod = self::REQUEST_ROUTE;
 
 					// Store the result from the closure function
 					$result = (bool) \call_user_func_array([$this->controller, $method], $args);

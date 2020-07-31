@@ -71,7 +71,10 @@ namespace RazyFramework\DOM\Control
 					$this->addOption($val, $label);
 				}
 			} else {
-				$this->options[$value] = $label;
+				$this->options[] = [
+          'value' => $value,
+          'label' => $label
+        ];
 			}
 
 			return $this;
@@ -100,8 +103,8 @@ namespace RazyFramework\DOM\Control
 		public function saveHTML()
 		{
 			$this->text = '';
-			foreach ($this->options as $value => $label) {
-				$this->text .= $this->getOptionHTML($label, $value);
+			foreach ($this->options as $data) {
+				$this->text .= $this->getOptionHTML($data['label'], $data['value']);
 			}
 
 			return parent::saveHTML();

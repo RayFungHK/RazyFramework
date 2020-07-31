@@ -255,7 +255,11 @@ namespace RazyFramework\Database
 				throw new ErrorHandler('Dataset should not be empty');
 			}
 
-			return $this->prepare('INSERT INTO ' . $tableName . ' (' . implode(', ', $dataset) . ') VALUES (:' . implode(', :', $dataset) . ')');
+			$values = $dataset;
+			array_walk($dataset, function(&$val, $key) {
+				$val = '`' . $val . '`';
+			});
+			return $this->prepare('INSERT INTO ' . $tableName . ' (' . implode(', ', $dataset) . ') VALUES (:' . implode(', :', $values) . ')');
 		}
 
 		/**

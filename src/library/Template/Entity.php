@@ -388,6 +388,184 @@ namespace RazyFramework\Template
   	}
 
   	/**
+  	 * Get the value by the parameter tag pattern.
+  	 *
+  	 * @param string $text A pattern of the parameter tag
+  	 *
+  	 * @return string The value of the parameter
+  	 */
+  	public function getValueByParameter(string $content)
+  	{
+  		if (!$regex = RegexHelper::GetCache('parameter-tag-pattern')) {
+  			$regex = new RegexHelper('/(?<content>\w+|(?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>)|(?:(?<tag>\$(\w+)((?:\[\d+\]|\.(?P>content))*))((?:\|\w+(?::(?P>content))*)*))/', 'parameter-tag-pattern');
+  		}
+
+  		if ($matches = $regex->match($content, $offset)) {
+  			if (isset($matches[4])) {
+  				// Get the parameter value
+  				$value = $this->processParameter($matches[4], $matches[5] ?? '');
+
+  				// Pass the value to modifier
+  				$value = $this->processModifier($value, $matches[6] ?? '');
+  			} else {
+  				$value = $this->unquote($matches[1]);
+  			}
+
+  			return $value;
+  		}
+
+  		return null;
+  	}
+
+  	/**
+  	 * Replace the parameter tag.
+  	 *
+  	 * @param string $content A clip of block content
+  	 *
+  	 * @return string The block content which has replaced the parameter tag
+  	 */
+  	public function replaceTag(string $content)
+  	{
+  		$content = $this->replaceFunc($content);
+  		if (!$regex = RegexHelper::GetCache('template-replace-tag')) {
+  			$regex = new RegexHelper('/{(!)?(?<tag>\$(\w+)((?:\[\d+\]|\.(?<content>\w+|(?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>))*))(\|\w+(?::(?P>content))*)*(\s?(?:[<>]|(?:\s?[!*$^><])?=)\s?(?:(?P>tag)|(?P>content)))?(?:\s*#(\w+(?:\.\w+)*))?}/', 'template-replace-tag');
+  		}
+
+  		$result = '';
+  		while ($matches = $regex->match($content, $offset)) {
+  			// Get the parameter value
+  			$value = $this->processParameter($matches[3], $matches[4] ?? '');
+
+  			// Pass the value to modifier
+  			$value = $this->processModifier($value, $matches[6] ?? '');
+
+  			// If the comparison is given
+  			if (isset($matches[7])) {
+  				if (!is_scalar($value)) {
+  					$value = false;
+  				} else {
+  					$value = $this->comparison($value, trim($matches[7]));
+  				}
+  			}
+
+  			// Negative symbol is given
+  			if (isset($matches[1]) && $matches[1]) {
+  				$value = !$value;
+  			}
+
+  			$result .= substr($content, 0, $offset[0]);
+  			$content = substr($content, $offset[0] + \strlen($matches[0]));
+
+  			// If the bookmark is given, find the closing tag with the given bookmark name.
+  			if (isset($matches[9])) {
+  				$closingTag = '{/#' . $matches[9] . '}';
+  			} else {
+  				$closingTag = '{/$' . $matches[3] . ($matches[4] ?? '') . '}';
+  			}
+
+  			if (false !== ($pos = strpos($content, $closingTag))) {
+  				// If the value is true, return the wrapped content as the value
+  				if ($value) {
+  					// Replace the parameter tag inside the wrapped content
+  					$value = $this->replaceTag(substr($content, 0, $pos));
+  				} else {
+  					$value = null;
+  				}
+
+  				$content = substr($content, $pos + \strlen($closingTag));
+  			}
+
+  			if (is_scalar($value)) {
+  				$result .= $value;
+  			}
+  		}
+  		$result .= $content;
+
+  		return $result;
+  	}
+
+  	/**
+  	 * Extract the parameter key and value.
+  	 *
+  	 * @param string $parmString The parameter string
+  	 *
+  	 * @return array An array contains the parameter key and value
+  	 */
+  	public function extractParams(string $parmString)
+  	{
+  		if (!$regex = RegexHelper::GetCache('template-extract-params')) {
+  			$regex = new RegexHelper('/(?:\A|\s+)(\w+)(?:=(?:\$(\w+)((?:\.(?<content>\w+|(?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>))*)|((\d+(?:\.\d+)?|(?P>content)))))?/', 'template-extract-params');
+  		}
+
+  		$result = [];
+  		$regex->extract($parmString, function ($matches) use (&$result) {
+  			$value = null;
+  			if (isset($matches[2]) && $matches[2]) {
+  				// Variable paramater
+  				$value = $this->processParameter($matches[2], $matches[3] ?? '');
+  			} else {
+  				// Static paramater
+  				$value = $this->unquote($matches[6]);
+  			}
+
+  			$result[$matches[1]] = $value;
+  		});
+
+  		return $result;
+  	}
+
+  	/**
+  	 * Compare the value with the given string.
+  	 *
+  	 * @param string $value      The value of parameter
+  	 * @param string $comparison The value to compare
+  	 *
+  	 * @return bool Return true if matched
+  	 */
+  	public function comparison(string $value, string $comparison)
+  	{
+  		if (!$regex = RegexHelper::GetCache('template-comparison')) {
+  			$regex = new RegexHelper('/^\s*((?:[!*$^<>])?=|[><])\s*(.+)$/', 'template-comparison');
+  		}
+  		$matches = $regex->match($comparison);
+
+  		// If the matched comparison is a parameter tag
+  		if ($matches[2] && '$' === $matches[2][0]) {
+  			$operand = $this->replaceTag('{' . $matches[2] . '}');
+  		} else {
+  			$operand = $this->unquote($matches[2] ?? '');
+  		}
+
+  		if (isset($matches[1]) && $matches[1]) {
+  			if ('!=' === $matches[1]) {
+  				return $value !== $operand;
+  			}
+
+  			if ('^=' === $matches[1]) {
+  				$operand = '/^.*' . preg_quote($operand) . '/';
+  			} elseif ('$=' === $matches[1]) {
+  				$operand = '/' . preg_quote($operand) . '.*$/';
+  			} elseif ('*=' === $matches[1]) {
+  				$operand = '/' . preg_quote($operand) . '/';
+  			} elseif ('>' === $matches[1]) {
+  				return $value > $operand;
+  			} elseif ('>=' === $matches[1]) {
+  				return $value >= $operand;
+  			} elseif ('<' === $matches[1]) {
+  				return $value < $operand;
+  			} elseif ('<=' === $matches[1]) {
+  				return $value <= $operand;
+  			} elseif ('=' === $matches[1]) {
+  				return $operand === $value;
+  			}
+
+  			return preg_match($operand, $value);
+  		}
+
+  		return $value === $operand;
+  	}
+
+  	/**
   	 * Convert the argument string into an array.
   	 *
   	 * @param string $argumentString The string ready to convert to an array
@@ -521,186 +699,67 @@ namespace RazyFramework\Template
   	}
 
   	/**
-  	 * Compare the value with the given string.
-  	 *
-  	 * @param string $value      The value of parameter
-  	 * @param string $comparison The value to compare
-  	 *
-  	 * @return bool Return true if matched
-  	 */
-  	private function comparision(string $value, string $comparison)
-  	{
-  		if (!$regex = RegexHelper::GetCache('template-comparison')) {
-  			$regex = new RegexHelper('/^\s*((?:[!*$^<>])?=|[><])\s*(.+)$/', 'template-comparison');
-  		}
-  		$matches = $regex->match($comparison);
-
-  		$operand = $this->unquote($matches[2] ?? '');
-  		if (isset($matches[1]) && $matches[1]) {
-  			if ('!=' === $matches[1]) {
-  				return $value !== $operand;
-  			}
-
-  			if ('^=' === $matches[1]) {
-  				$operand = '/^.*' . preg_quote($operand) . '/';
-  			} elseif ('$=' === $matches[1]) {
-  				$operand = '/' . preg_quote($operand) . '.*$/';
-  			} elseif ('*=' === $matches[1]) {
-  				$operand = '/' . preg_quote($operand) . '/';
-  			} elseif ('>' === $matches[1]) {
-  				return $value > $operand;
-  			} elseif ('>=' === $matches[1]) {
-  				return $value >= $operand;
-  			} elseif ('<' === $matches[1]) {
-  				return $value < $operand;
-  			} elseif ('<=' === $matches[1]) {
-  				return $value <= $operand;
-  			} elseif ('=' === $matches[1]) {
-  				return $operand === $value;
-  			}
-
-  			return preg_match($operand, $value);
-  		}
-
-  		return $value === $operand;
-  	}
-
-  	/**
   	 * Replace the function tag.
   	 *
   	 * @param string $content A clip of block content
+  	 * @param string $opening The opening tag
+  	 * @param string $level   The level of the function structure
   	 *
   	 * @return string The block content which has replaced the function tag
   	 */
-  	private function replaceFunc(string $content)
+  	private function replaceFunc(string &$content, string $opening = '', int $level = 0)
   	{
   		$result = '';
   		if (!$regex = RegexHelper::GetCache('template-replace-func')) {
-  			$regex = new RegexHelper('/{(\w+)((?:\s+\w+(?:=(?:\$\w+(?:\.(?<content>\w+|(?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>))*|\d+(?:\.\d+)?|(?P>content)))?)*)}/', 'template-replace-func');
+  			$regex = new RegexHelper('/{@(\w+)(?:\s+((?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>(*SKIP)(*FAIL)|[^{}]*))?}|{\/(\w+)}/', 'template-replace-func');
   		}
-  		while ($matches = $regex->match($content, $offset)) {
-  			$func = $matches[1];
 
+  		while ($matches = $regex->match($content, $offset)) {
+  			// Put the previous content into result
   			$result .= substr($content, 0, $offset[0]);
 
-  			$content    = substr($content, $offset[0] + \strlen($matches[0]));
-  			$parameters = $this->extractParams($matches[2]);
-
-  			$structure = $this->block->getManager()->plugin('structure', $func);
-  			if ($structure) {
-  				$closingTag = '{/' . $matches[1] . '}';
-
-  				if (false !== ($pos = strpos($content, $closingTag))) {
-  					$wrapped = substr($content, 0, $pos);
-  					$content = substr($content, $pos + \strlen($closingTag));
-  				}
-  				$result .= \call_user_func($structure, $wrapped, $parameters);
-  			} else {
-  				$function = $this->block->getManager()->plugin('function', $func);
-  				$function = $function->bindTo($this);
-  				if ($function) {
-  					$result .= \call_user_func($function, $parameters);
-  				}
-  			}
-  		}
-  		$result .= $content;
-
-  		return $result;
-  	}
-
-  	/**
-  	 * Replace the parameter tag.
-  	 *
-  	 * @param string &$content A clip of block content
-  	 *
-  	 * @return string The block content which has replaced the parameter tag
-  	 */
-  	private function replaceTag(string $content)
-  	{
-  		$content = $this->replaceFunc($content);
-  		if (!$regex = RegexHelper::GetCache('template-replace-tag')) {
-  			$regex = new RegexHelper('/{(!)?\$(\w+)((?:\[\d+\]|\.(?<content>\w+|(?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>))*)(\|\w+(?::(?P>content))*)*(\s?(?:[<>]|(?:\s?[!*$^><])?=)\s?(?P>content))?(?:\s*#(\w+(?:\.\w+)*))?}/', 'template-replace-tag');
-  		}
-
-  		$result = '';
-  		while ($matches = $regex->match($content, $offset)) {
-  			// Get the parameter value
-  			$value = $this->processParameter($matches[2], $matches[3] ?? '');
-
-  			// Pass the value to modifier
-  			$value = $this->processModifier($value, $matches[6] ?? '');
-
-  			// If the comparison is given
-  			if (isset($matches[7])) {
-  				if (!is_scalar($value)) {
-  					$value = false;
-  				} else {
-  					$value = $this->comparision($value, trim($matches[7]));
-  				}
-  			}
-
-  			// Negative symbol is given
-  			if (isset($matches[1]) && $matches[1]) {
-  				$value = !$value;
-  			}
-
-  			$result .= substr($content, 0, $offset[0]);
+  			// Crop the content after the matched element
   			$content = substr($content, $offset[0] + \strlen($matches[0]));
 
-  			// If the bookmark is given, find the closing tag with the given bookmark name.
-  			if (isset($matches[8])) {
-  				$closingTag = '{/#' . $matches[8] . '}';
-  			} else {
-  				$closingTag = '{/$' . $matches[2] . ($matches[3] ?? '') . '}';
-  			}
-
-  			if (false !== ($pos = strpos($content, $closingTag))) {
-  				// If the value is true, return the wrapped content as the value
-  				if ($value) {
-  					// Replace the parameter tag inside the wrapped content
-  					$value = $this->replaceTag(substr($content, 0, $pos));
-  				} else {
-  					$value = null;
+  			if (isset($matches[4])) {
+  				if ($level > 1) {
+  					$result .= $matches[0];
   				}
 
-  				$content = substr($content, $pos + \strlen($closingTag));
-  			}
-
-  			if (is_scalar($value)) {
-  				$result .= $value;
-  			}
-  		}
-  		$result .= $content;
-
-  		return $result;
-  	}
-
-  	/**
-  	 * Extract the parameter key and value.
-  	 *
-  	 * @param string $parmString The parameter string
-  	 *
-  	 * @return array An array contains the parameter key and value
-  	 */
-  	private function extractParams(string $parmString)
-  	{
-  		if (!$regex = RegexHelper::GetCache('template-extract-params')) {
-  			$regex = new RegexHelper('/\s+(\w+)(?:=(?:\$(\w+)((?:\.(?<content>\w+|(?<quote>[\'"])(?>(?!\k<quote>)[^\\\\\\\\]|\\\\.)*\k<quote>))*)|((\d+(?:\.\d+)?|(?P>content)))))?/', 'template-extract-params');
-  		}
-
-  		$result = [];
-  		$regex->extract($parmString, function ($matches) use (&$result) {
-  			$value = null;
-  			if (isset($matches[2]) && $matches[2]) {
-  				// Variable paramater
-  				$value = $this->processParameter($matches[2], $matches[3] ?? '');
+  				if ($opening && $matches[4] === $opening) {
+  					return $result;
+  				}
   			} else {
-  				// Static paramater
-  				$value = $this->unquote($matches[6]);
-  			}
+  				// If the matched text is opening tag
+  				$closingTag = '{/' . $matches[1] . '}';
+  				// Check if the function has closing tag
+  				$callback = $this->block->getManager()->plugin('function', $matches[1]);
 
-  			$result[$matches[1]] = $value;
-  		});
+  				if (!$callback) {
+  					$result .= $matches[0];
+  				} else {
+  					$callback = $callback->bindTo($this);
+  					// Check if the closing tag is exists in remaining content
+  					if (false !== strpos($content, $closingTag)) {
+  						$wrapped = $this->replaceFunc($content, $matches[1], $level + 1);
+  						if ($opening) {
+  							$result .= $matches[0];
+  						} else {
+  							$wrapped = \call_user_func($callback, $matches[2] ?? '', $wrapped);
+  						}
+  						$result .= $wrapped;
+  					} else {
+  						if ($opening) {
+  							$result .= $matches[0];
+  						} else {
+  							$result .= \call_user_func($callback, $matches[2] ?? '', null);
+  						}
+  					}
+  				}
+  			}
+  		}
+
+  		$result .= $content;
 
   		return $result;
   	}

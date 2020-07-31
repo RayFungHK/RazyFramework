@@ -179,10 +179,10 @@ function is_ssl()
  */
 function getFilesizeString(float $size, int $decPoint = 2, bool $upperCase = false, string $separator = '')
 {
-	$unitScale  = ['byte', 'kb', 'mb', 'gb', 'tb', 'pb', 'eb', 'zb', 'yb'];
-	$unit       = 'byte';
-	$scale      = 0;
-	$decPoint   = ($decPoint < 1) ? 0 : $decPoint;
+	$unitScale = ['byte', 'kb', 'mb', 'gb', 'tb', 'pb', 'eb', 'zb', 'yb'];
+	$unit      = 'byte';
+	$scale     = 0;
+	$decPoint  = ($decPoint < 1) ? 0 : $decPoint;
 
 	while ($size >= 1024 && isset($unitScale[$scale + 1])) {
 		$size /= 1024;
@@ -226,9 +226,9 @@ function getIP()
 }
 
 /**
- * Refactor an array of data into a new data set by given key set
+ * Refactor an array of data into a new data set by given key set.
  *
- * @param array $source An array of data
+ * @param array  $source  An array of data
  * @param string ...$keys An array of key to extract
  *
  * @return array An array of refactored data set
@@ -251,4 +251,98 @@ function refactor(array $source, string ...$keys)
 	}
 
 	return $result;
+}
+
+/**
+ * Compare two value by provided comparison operator.
+ *
+ * @param mixed  $valueA   The value of A
+ * @param mixed  $valueB   The value of B
+ * @param string $operator The comparison operator
+ * @param bool   $strict   if the strict is set to TRUE it will also check the types of the both values
+ *
+ * @return bool Return the comparison result
+ */
+function comparison($valueA = null, $valueB = null, string $operator = '=', bool $strict = false)
+{
+	if (!$strict) {
+		$valueA = (is_scalar($valueA)) ? (string) $valueA : $valueA;
+		$valueB = (is_scalar($valueB)) ? (string) $valueB : $valueB;
+	}
+
+	// Equal
+	if ('=' === $operator) {
+		return $valueA === $valueB;
+	}
+
+	// Not equal
+	if ('!=' === $operator) {
+		return $valueA !== $valueB;
+	}
+
+	// Greater than
+	if ('>' === $operator) {
+		return $valueA > $valueB;
+	}
+
+	// Greater than and eqaul with
+	if ('>=' === $operator) {
+		return $valueA >= $valueB;
+	}
+
+	// Less than
+	if ('<' === $operator) {
+		return $valueA < $valueB;
+	}
+
+	// Less than and eqaul with
+	if ('<=' === $operator) {
+		return $valueA <= $valueB;
+	}
+
+	// Includes in
+	if ('|=' === $operator) {
+		if (!is_scalar($valueA) || !is_array($valueB)) {
+			return false;
+		}
+
+		return in_array($valueA, $valueB, true);
+	}
+
+	if ('^=' === $operator) {
+		// Begining with
+		$valueB = '/^.*' . preg_quote($valueB) . '/';
+	} elseif ('$=' === $operator) {
+		// End with
+		$valueB = '/' . preg_quote($valueB) . '.*$/';
+	} elseif ('*=' === $operator) {
+		// Include
+		$valueB = '/' . preg_quote($valueB) . '/';
+	}
+
+	return (bool) preg_match($valueB, $valueA);
+}
+
+/**
+ * Generate the GUID by give length.
+ *
+ * @param int $length The length of the guid clip, each clip has 4 characters. Detault value: 4
+ *
+ * @return bool Return The GUID
+ */
+function guid(int $length = 4)
+{
+	$length  = max(1, $length);
+	$pattern = '%04X';
+	if ($length > 1) {
+		$pattern .= str_repeat('-%04X', $length - 1);
+	}
+
+	$args = array_fill(1, $length, '');
+	array_walk($args, function (&$item) {
+		$item = mt_rand(0, 65535);
+	});
+	array_unshift($args, $pattern);
+
+	return strtolower(call_user_func_array('sprintf', $args));
 }
